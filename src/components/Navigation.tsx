@@ -211,6 +211,21 @@ export default function Navigation() {
 
           {/* Theme Switch & Actions */}
           <div className="flex items-center gap-2 md:gap-3">
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined" && (window as any).triggerPwaInstall) {
+                  (window as any).triggerPwaInstall();
+                } else {
+                  alert("To install ValarchiX, tap the browser menu and select 'Add to Home Screen' or 'Install App'.");
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald/40 bg-emerald/10 text-emerald hover:bg-emerald hover:text-navy-bg transition-all text-xs font-extrabold cursor-pointer shadow-sm shadow-emerald/20"
+              title="Install ValarchiX App"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">Install App</span>
+            </button>
+
             {pathname !== "/" && (
               <button
                 onClick={() => window.print()}
@@ -224,7 +239,7 @@ export default function Navigation() {
             
             <button
               onClick={toggleTheme}
-              className="p-2 md:p-2.5 rounded-xl border border-border-navy bg-navy-card/30 text-emerald hover:text-white hover:border-emerald/40 transition-all"
+              className="p-2 md:p-2.5 rounded-xl border border-border-navy bg-navy-card/30 text-emerald hover:text-white hover:border-emerald/40 transition-all cursor-pointer"
               title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}

@@ -1,125 +1,171 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
-import { Calculator, Info, HelpCircle, Plus, Trash2, Calendar, TrendingUp } from "lucide-react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { Calculator, Info, HelpCircle, Plus, Trash2, Calendar, TrendingUp, Download, Upload, AlertCircle, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import NumericInput from "@/components/NumericInput";
 
-interface Transaction {
+type FlowType = "invested" | "withdrawn";
+type Frequency = "one-off" | "monthly" | "quarterly" | "yearly";
+
+interface CustomFlow {
   id: string;
+  type: FlowType;
+  amount: number;
   date: string;
-  amount: number; // negative for investment, positive for redemptions
+  frequency: Frequency;
+  count?: number; // for recurring series
 }
 
 export default function XirrCalculator() {
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    { id: "1", date: "2024-01-01", amount: -100000 },
-    { id: "2", date: "2024-07-01", amount: -10000 },
-    { id: "3", date: "2025-01-01", amount: -10000 },
-    { id: "4", date: "2025-07-01", amount: 145000 }
+  const [activeTab, setActiveTab] = useState<"sip" | "custom">("custom");
+  const [currency, setCurrency] = useState("INR");
+
+  // --- Quick SIP Mode State ---
+  const [sipMonthly, setSipMonthly] = useState(5000);
+  const [sipDuration, setSipDuration] = useState(3);
+  const [sipDurationUnit, setSipDurationUnit] = useState<"years" | "months">("years");
+  const [sipCurrentValue, setSipCurrentValue] = useState(220000);
+
+  // --- Custom Cash Flows Mode State ---
+  const [customFlows, setCustomFlows] = useState<CustomFlow[]>([
+    { id: "1", type: "invested", amount: 100000, date: "2025-07-24", frequency: "one-off" },
+    { id: "2", type: "withdrawn", amount: 135000, date: "2026-07-24", frequency: "one-off" }
   ]);
 
-  const [adjustInflation, setAdjustInflation] = useState(true);
+  const [adjustInflation, setAdjustInflation] = useState(false);
   const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/rates")
       .then((res) => res.json())
-      .then((data) => {
-        setRates(data);
-        setInflation(data.inflationRate);
-      })
+      .then((data) => setInflation(data.inflationRate || 5.09))
       .catch((err) => console.error("Error loading rates", err));
   }, []);
 
-  const addTransaction = () => {
-    // Pick the day after the last transaction date
-    let lastDate = "2025-07-02";
-    if (transactions.length > 0) {
-      const dates = transactions.map(t => new Date(t.date).getTime());
-      const maxDate = new Date(Math.max(...dates));
-      maxDate.setDate(maxDate.getDate() + 30); // default to 1 month later
-      lastDate = maxDate.toISOString().split("T")[0];
-    }
-    
-    setTransactions([
-      ...transactions,
+  // --- Helper to add a custom flow ---
+  const addFlow = (type: FlowType) => {
+    const today = new Date().toISOString().split("T")[0];
+    setCustomFlows([
+      ...customFlows,
       {
         id: Math.random().toString(),
-        date: lastDate,
-        amount: 10000
+        type,
+        amount: 10000,
+        date: today,
+        frequency: "one-off"
       }
     ]);
   };
 
-  const removeTransaction = (id: string) => {
-    if (transactions.length <= 2) {
-      alert("At least 2 transactions are required to calculate XIRR.");
+  const removeFlow = (id: string) => {
+    if (customFlows.length <= 1) {
+      alert("At least 1 flow row is required.");
       return;
     }
-    setTransactions(transactions.filter(t => t.id !== id));
+    setCustomFlows(customFlows.filter((f) => f.id !== id));
   };
 
-  const updateTransaction = (id: string, field: keyof Transaction, val: any) => {
-    setTransactions(
-      transactions.map(t => (t.id === id ? { ...t, [field]: val } : t))
+  const updateFlow = (id: string, field: keyof CustomFlow, val: any) => {
+    setCustomFlows(
+      customFlows.map((f) => (f.id === id ? { ...f, [field]: val } : f))
     );
   };
 
-  // Robust XIRR Solver (Newton-Raphson)
-  const calculateXirrResult = useMemo(() => {
-    // Validation: Needs at least one positive and one negative cashflow
-    const amounts = transactions.map(t => t.amount);
-    const hasNegative = amounts.some(a => a < 0);
-    const hasPositive = amounts.some(a => a > 0);
-
-    if (!hasNegative || !hasPositive) {
-      return { success: false, error: "XIRR requires both cash outflows (negative) and inflows/valuations (positive)." };
+  // --- Expand recurring custom flows into explicit cash flows ---
+  const expandedCashFlows = useMemo(() => {
+    if (activeTab === "sip") {
+      const totalMonths = sipDurationUnit === "years" ? sipDuration * 12 : sipDuration;
+      const flows: { date: Date; amount: number }[] = [];
+      const startDate = new Date();
+      
+      for (let m = 0; m < totalMonths; m++) {
+        const d = new Date(startDate);
+        d.setMonth(d.getMonth() + m);
+        flows.push({ date: d, amount: -sipMonthly });
+      }
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + totalMonths);
+      flows.push({ date: endDate, amount: sipCurrentValue });
+      return flows;
     }
 
-    // Sort cash flows by date
-    const parsedFlows = transactions
-      .map(t => ({
-        date: new Date(t.date),
-        amount: t.amount
-      }))
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    // Custom Mode Expansion
+    const flows: { date: Date; amount: number }[] = [];
+    customFlows.forEach((item) => {
+      const baseDate = new Date(item.date);
+      const sign = item.type === "invested" ? -1 : 1;
+      const val = Math.abs(item.amount) * sign;
 
-    const d1 = parsedFlows[0].date.getTime();
+      if (item.frequency === "one-off") {
+        flows.push({ date: baseDate, amount: val });
+      } else {
+        const occurrences = item.count || 12;
+        const monthStep = item.frequency === "monthly" ? 1 : item.frequency === "quarterly" ? 3 : 12;
+        for (let i = 0; i < occurrences; i++) {
+          const d = new Date(baseDate);
+          d.setMonth(d.getMonth() + i * monthStep);
+          flows.push({ date: d, amount: val });
+        }
+      }
+    });
 
-    // Equation f(r) = sum( C_k / (1+r)^((d_k-d_1)/365) )
+    return flows.sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [activeTab, sipMonthly, sipDuration, sipDurationUnit, sipCurrentValue, customFlows]);
+
+  // --- XIRR Solver Engine (Newton-Raphson + Bisection) ---
+  const xirrResult = useMemo(() => {
+    const amounts = expandedCashFlows.map((f) => f.amount);
+    const hasNegative = amounts.some((a) => a < 0);
+    const hasPositive = amounts.some((a) => a > 0);
+
+    if (!hasNegative || !hasPositive || expandedCashFlows.length < 2) {
+      return {
+        success: false,
+        error: "XIRR requires both investment cashflows (negative) and redemption/valuation cashflows (positive).",
+        xirrNominal: "0.00",
+        xirrReal: "0.00",
+        totalInvested: 0,
+        totalRedeemed: 0,
+        netGain: 0,
+        absoluteReturn: "0.0",
+        daysDuration: 0,
+        yearsDuration: "0.00",
+        isExtremeAnnualized: false
+      };
+    }
+
+    const d1 = expandedCashFlows[0].date.getTime();
+    const dLast = expandedCashFlows[expandedCashFlows.length - 1].date.getTime();
+    const daysDuration = Math.max(1, (dLast - d1) / (1000 * 60 * 60 * 24));
+    const yearsDuration = daysDuration / 365;
+
     const f = (r: number) => {
       let sum = 0;
-      for (let i = 0; i < parsedFlows.length; i++) {
-        const days = (parsedFlows[i].date.getTime() - d1) / (1000 * 60 * 60 * 24);
-        sum += parsedFlows[i].amount / Math.pow(1 + r, days / 365);
+      for (let i = 0; i < expandedCashFlows.length; i++) {
+        const days = (expandedCashFlows[i].date.getTime() - d1) / (1000 * 60 * 60 * 24);
+        sum += expandedCashFlows[i].amount / Math.pow(1 + r, days / 365);
       }
       return sum;
     };
 
-    // Derivative df(r)
     const df = (r: number) => {
       let sum = 0;
-      for (let i = 0; i < parsedFlows.length; i++) {
-        const days = (parsedFlows[i].date.getTime() - d1) / (1000 * 60 * 60 * 24);
-        sum -= (days / 365) * parsedFlows[i].amount / Math.pow(1 + r, (days / 365) + 1);
+      for (let i = 0; i < expandedCashFlows.length; i++) {
+        const days = (expandedCashFlows[i].date.getTime() - d1) / (1000 * 60 * 60 * 24);
+        sum -= (days / 365) * expandedCashFlows[i].amount / Math.pow(1 + r, (days / 365) + 1);
       }
       return sum;
     };
 
-    // Solver iteration
-    let r = 0.1; // initial guess
-    const maxIterations = 100;
-    const precision = 1e-7;
+    let r = 0.1;
     let converged = false;
-
-    for (let iter = 0; iter < maxIterations; iter++) {
+    for (let iter = 0; iter < 100; iter++) {
       const val = f(r);
       const deriv = df(r);
       if (Math.abs(deriv) < 1e-12) break;
-      
       const nextR = r - val / deriv;
-      if (Math.abs(nextR - r) < precision) {
+      if (Math.abs(nextR - r) < 1e-7) {
         r = nextR;
         converged = true;
         break;
@@ -128,9 +174,8 @@ export default function XirrCalculator() {
     }
 
     if (!converged) {
-      // Fallback: try bisection method in range [-0.99, 5]
       let low = -0.99;
-      let high = 5.0;
+      let high = 10.0;
       for (let iter = 0; iter < 100; iter++) {
         const mid = (low + high) / 2;
         const val = f(mid);
@@ -139,30 +184,25 @@ export default function XirrCalculator() {
           converged = true;
           break;
         }
-        if (f(low) * val < 0) {
-          high = mid;
-        } else {
-          low = mid;
-        }
+        if (f(low) * val < 0) high = mid;
+        else low = mid;
       }
-    }
-
-    if (!converged) {
-      return { success: false, error: "XIRR solver did not converge. Check date sequence and amounts." };
     }
 
     const xirrNominal = r * 100;
     const infRate = inflation / 100;
-    // Real XIRR = (1 + XIRR) / (1 + inflation) - 1
     const xirrReal = ((1 + r) / (1 + infRate) - 1) * 100;
 
-    // Summary calculations
     let totalInvested = 0;
     let totalRedeemed = 0;
-    amounts.forEach(a => {
+    amounts.forEach((a) => {
       if (a < 0) totalInvested += Math.abs(a);
       else totalRedeemed += a;
     });
+
+    const netGain = totalRedeemed - totalInvested;
+    const absoluteReturn = totalInvested > 0 ? (netGain / totalInvested) * 100 : 0;
+    const isExtremeAnnualized = Math.abs(xirrNominal) > 200 && yearsDuration < 1.0;
 
     return {
       success: true,
@@ -170,241 +210,312 @@ export default function XirrCalculator() {
       xirrReal: xirrReal.toFixed(2),
       totalInvested,
       totalRedeemed,
-      netGain: totalRedeemed - totalInvested
+      netGain,
+      absoluteReturn: absoluteReturn.toFixed(1),
+      daysDuration: Math.round(daysDuration),
+      yearsDuration: yearsDuration.toFixed(2),
+      isExtremeAnnualized
     };
-  }, [transactions, inflation]);
+  }, [expandedCashFlows, inflation]);
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0
-    }).format(val);
+  const fmt = (v: number) =>
+    new Intl.NumberFormat("en-IN", { style: "currency", currency: currency, maximumFractionDigits: 0 }).format(v);
+
+  const fmtCompact = (v: number) => {
+    if (v >= 10000000) return `₹${(v / 10000000).toFixed(2)}Cr`;
+    if (v >= 100000) return `₹${(v / 100000).toFixed(1)}L`;
+    if (v >= 1000) return `₹${(v / 1000).toFixed(0)}K`;
+    return `₹${v}`;
   };
 
   return (
-    <div className="space-y-10 py-6 animate-fadeIn text-light-grey">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border-navy pb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <Calculator className="text-emerald" />
-            XIRR Calculator
-          </h1>
-          <p className="text-sm text-muted-grey mt-1">
-            Calculate the Extended Internal Rate of Return (XIRR) for irregular transaction cash flows, adjusted for inflation.
-          </p>
-        </div>
-        <div className="text-xs font-semibold text-emerald bg-emerald/5 border border-emerald/20 px-3 py-1.5 rounded-lg">
-          💡 Motto: We don&apos;t tell what to pick, we tell how to pick.
-        </div>
+    <div className="space-y-8 py-6 animate-fadeIn text-light-grey max-w-5xl mx-auto">
+      {/* Header Title */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
+          <Calculator className="text-emerald" size={32} />
+          XIRR Calculator
+        </h1>
+        <p className="text-sm text-muted-grey max-w-2xl mx-auto">
+          Find the true annualized return on your SIPs, mutual funds, and any investments made on different dates. Enter your cash flows and get your XIRR instantly.
+        </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Cashflow Input Column */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="p-6 glass-card space-y-4">
-            <div className="flex justify-between items-center border-b border-border-navy/60 pb-3">
-              <h2 className="text-lg font-bold text-white">Cash Flow Ledger</h2>
-              <button
-                onClick={addTransaction}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald text-navy-bg font-extrabold rounded-lg hover:bg-emerald/90 text-xs transition-colors cursor-pointer"
-              >
-                <Plus size={14} />
-                Add Cash Flow
-              </button>
-            </div>
+      {/* Main Container */}
+      <div className="p-6 md:p-8 glass-card border border-border-navy/80 rounded-3xl space-y-6 shadow-2xl">
+        {/* Top Controls Bar: Tabs & Currency */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-border-navy/60 pb-4">
+          <div className="grid grid-cols-2 bg-navy-bg p-1 rounded-xl border border-border-navy/80 w-full sm:w-80">
+            <button
+              onClick={() => setActiveTab("sip")}
+              className={`py-2 px-4 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                activeTab === "sip" ? "bg-emerald text-navy-bg shadow-md" : "text-muted-grey hover:text-white"
+              }`}
+            >
+              SIP Mode
+            </button>
+            <button
+              onClick={() => setActiveTab("custom")}
+              className={`py-2 px-4 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                activeTab === "custom" ? "bg-emerald text-navy-bg shadow-md" : "text-muted-grey hover:text-white"
+              }`}
+            >
+              Custom cash flows
+            </button>
+          </div>
 
-            {/* Input list header */}
-            <div className="hidden sm:grid grid-cols-12 gap-4 text-[10px] uppercase font-bold text-muted-grey px-2">
-              <div className="col-span-4">Transaction Date</div>
-              <div className="col-span-6">Amount (Negative: Invested / Positive: Redeemed)</div>
-              <div className="col-span-2 text-right">Action</div>
-            </div>
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <span className="text-muted-grey">Currency</span>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="bg-navy-bg border border-border-navy/80 rounded-lg px-3 py-1.5 text-xs text-white outline-none cursor-pointer"
+            >
+              <option value="INR">INR (₹)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+            </select>
+          </div>
+        </div>
 
-            {/* Input list */}
-            <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-              {transactions.map((t) => (
-                <div key={t.id} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-2 rounded-xl bg-navy-bg border border-border-navy/60 hover:border-emerald/30 transition-all">
-                  
-                  {/* Date Input */}
-                  <div className="col-span-4 relative flex items-center gap-2">
-                    <Calendar className="text-muted-grey shrink-0" size={14} />
-                    <input
-                      type="date"
-                      value={t.date}
-                      onChange={(e) => updateTransaction(t.id, "date", e.target.value)}
-                      className="bg-transparent text-xs font-bold text-white outline-none border-b border-border-navy/60 focus:border-emerald pb-0.5 w-full cursor-pointer"
-                    />
+        {/* --- TAB 1: QUICK SIP MODE --- */}
+        {activeTab === "sip" && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-grey">Monthly investment</label>
+                <NumericInput
+                  value={sipMonthly}
+                  onChange={setSipMonthly}
+                  min={100}
+                  max={10000000}
+                  step={500}
+                  type="currency"
+                  className="w-full text-left bg-navy-bg py-2.5 rounded-xl border-border-navy text-sm font-bold"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-grey">Invested for</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={sipDuration}
+                    onChange={(e) => setSipDuration(Math.max(1, Number(e.target.value)))}
+                    className="w-full bg-navy-bg border border-border-navy/80 rounded-xl px-3 py-2 text-sm font-bold text-white outline-none focus:border-emerald"
+                  />
+                  <div className="grid grid-cols-2 bg-navy-bg p-0.5 rounded-lg border border-border-navy/80 shrink-0">
+                    <button
+                      onClick={() => setSipDurationUnit("years")}
+                      className={`px-2.5 py-1 text-[11px] font-bold rounded cursor-pointer ${
+                        sipDurationUnit === "years" ? "bg-emerald/20 text-emerald" : "text-muted-grey"
+                      }`}
+                    >
+                      Years
+                    </button>
+                    <button
+                      onClick={() => setSipDurationUnit("months")}
+                      className={`px-2.5 py-1 text-[11px] font-bold rounded cursor-pointer ${
+                        sipDurationUnit === "months" ? "bg-emerald/20 text-emerald" : "text-muted-grey"
+                      }`}
+                    >
+                      Months
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-grey">Current value</label>
+                <NumericInput
+                  value={sipCurrentValue}
+                  onChange={setSipCurrentValue}
+                  min={0}
+                  max={1000000000}
+                  step={5000}
+                  type="currency"
+                  className="w-full text-left bg-navy-bg py-2.5 rounded-xl border-border-navy text-sm font-bold"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB 2: CUSTOM CASH FLOWS MODE --- */}
+        {activeTab === "custom" && (
+          <div className="space-y-4 animate-fadeIn">
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+              {customFlows.map((flow) => (
+                <div
+                  key={flow.id}
+                  className={`grid grid-cols-2 sm:grid-cols-12 gap-2.5 items-center p-3 rounded-2xl bg-navy-bg border ${
+                    flow.type === "invested" ? "border-emerald/40" : "border-blue-500/40"
+                  } transition-all`}
+                >
+                  {/* Type Selector */}
+                  <div className="col-span-2 sm:col-span-3">
+                    <select
+                      value={flow.type}
+                      onChange={(e) => updateFlow(flow.id, "type", e.target.value as FlowType)}
+                      className={`w-full bg-navy-card/80 border rounded-xl px-3 py-2 text-xs font-extrabold outline-none cursor-pointer ${
+                        flow.type === "invested" ? "border-emerald/40 text-emerald" : "border-blue-500/40 text-blue-400"
+                      }`}
+                    >
+                      <option value="invested">📉 Invested</option>
+                      <option value="withdrawn">📈 Withdrawn</option>
+                    </select>
                   </div>
 
                   {/* Amount Input */}
-                  <div className="col-span-6 flex items-center gap-2">
+                  <div className="col-span-2 sm:col-span-3">
                     <NumericInput
-                      value={t.amount}
-                      onChange={(val) => updateTransaction(t.id, "amount", val)}
-                      min={-1000000000}
+                      value={flow.amount}
+                      onChange={(val) => updateFlow(flow.id, "amount", val)}
+                      min={0}
                       max={1000000000}
-                      step={500}
+                      step={1000}
                       type="currency"
-                      className="w-full text-left"
+                      className="w-full text-left text-xs font-bold"
                     />
-                    <span className="text-[9px] text-muted-grey shrink-0 leading-none">
-                      {t.amount < 0 ? "📉 Outflow (Buy)" : "📈 Inflow (Sell/Val)"}
-                    </span>
+                  </div>
+
+                  {/* Date Input */}
+                  <div className="col-span-1 sm:col-span-3">
+                    <input
+                      type="date"
+                      value={flow.date}
+                      onChange={(e) => updateFlow(flow.id, "date", e.target.value)}
+                      className="w-full bg-navy-card/80 border border-border-navy rounded-xl px-2 sm:px-3 py-2 text-xs font-bold text-white outline-none cursor-pointer focus:border-emerald"
+                    />
+                  </div>
+
+                  {/* Frequency Input */}
+                  <div className="col-span-1 sm:col-span-2">
+                    <select
+                      value={flow.frequency}
+                      onChange={(e) => updateFlow(flow.id, "frequency", e.target.value as Frequency)}
+                      className="w-full bg-navy-card/80 border border-border-navy rounded-xl px-2 py-2 text-xs font-semibold text-white outline-none cursor-pointer"
+                    >
+                      <option value="one-off">One-off</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="quarterly">Quarterly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
                   </div>
 
                   {/* Remove Button */}
-                  <div className="col-span-2 text-right">
+                  <div className="col-span-2 sm:col-span-1 flex justify-end">
                     <button
-                      onClick={() => removeTransaction(t.id)}
-                      className="p-1.5 text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer inline-flex border border-red-500/20"
-                      title="Remove transaction"
+                      onClick={() => removeFlow(flow.id)}
+                      className="p-1.5 text-muted-grey hover:text-red-400 transition-colors cursor-pointer"
+                      title="Remove flow"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="text-[10px] text-muted-grey leading-relaxed p-3 bg-navy-bg border border-border-navy/60 rounded-xl space-y-1">
-              <span className="font-bold text-white block">💡 Dynamic Valuation Rule:</span>
-              To evaluate a running portfolio, the **last transaction** should be the **current date** with a **positive amount** representing the current valuation of your holdings. All past buys should be entered as negative amounts.
+            {/* Actions: + Investment / + Withdrawal */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => addFlow("invested")}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald/10 border border-emerald/30 text-emerald hover:bg-emerald hover:text-navy-bg rounded-xl text-xs font-extrabold transition-all cursor-pointer"
+                >
+                  <Plus size={14} /> + Investment
+                </button>
+                <button
+                  onClick={() => addFlow("withdrawn")}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white rounded-xl text-xs font-extrabold transition-all cursor-pointer"
+                >
+                  <Plus size={14} /> + Withdrawal
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-grey">
+                Set a frequency to add a whole series in one card. Skip years by just not adding them.
+              </p>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Results Column */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="p-6 glass-card space-y-6">
-            <h2 className="text-lg font-bold text-white">XIRR Calculations</h2>
-
-            {/* Inflation Toggle */}
-            <div className="space-y-4 border-b border-border-navy/60 pb-4">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-muted-grey flex items-center gap-1.5">
-                  Adjust for Inflation
-                  <span className="text-muted-grey/60 cursor-help inline-flex" title="Reduces cash flow values to calculate real rate of return."><HelpCircle size={14} /></span>
-                </label>
-                <input
-                  type="checkbox"
-                  checked={adjustInflation}
-                  onChange={(e) => setAdjustInflation(e.target.checked)}
-                  className="rounded border-border-navy text-emerald focus:ring-emerald accent-emerald h-4 w-4"
-                />
+        {/* --- HERO RESULTS DISPLAY BOX (FINBOOM EXACT DESIGN) --- */}
+        <div className="p-6 rounded-2xl bg-navy-bg/90 border border-border-navy/80 space-y-6">
+          {xirrResult.success ? (
+            <div className="space-y-6">
+              {/* Header result row */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border-navy/60 pb-4">
+                <div>
+                  <span className="text-xs font-bold text-muted-grey block">Annualized return (XIRR)</span>
+                  {adjustInflation && (
+                    <span className="text-[10px] text-amber-500 font-semibold">Real (Inflation Adjusted @ {inflation}%)</span>
+                  )}
+                </div>
+                <div className="text-right">
+                  <span className="text-4xl md:text-5xl font-black text-emerald tracking-tight">
+                    {adjustInflation ? `${xirrResult.xirrReal}%` : `${xirrResult.xirrNominal}%`}
+                  </span>
+                </div>
               </div>
 
-              {adjustInflation && (
-                <div className="space-y-2 animate-fadeIn">
-                  <div className="flex justify-between items-center text-xs font-semibold">
-                    <span className="text-muted-grey">Expected Inflation Rate</span>
-                    <NumericInput
-                      value={inflation}
-                      onChange={setInflation}
-                      min={0}
-                      max={25}
-                      step={0.1}
-                      type="percent"
-                      className="text-amber-500 focus-within:border-amber-500/50"
-                    />
-                  </div>
-                  <input
-                    type="range"
-                    min={3}
-                    max={12}
-                    step={0.5}
-                    value={inflation}
-                    onChange={(e) => setInflation(Number(e.target.value))}
-                    className="w-full accent-amber-500 bg-navy-bg h-1 rounded-lg cursor-pointer"
+              {/* 4 Key Metrics Bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                <div>
+                  <span className="text-muted-grey block text-[10px] uppercase font-bold">Invested</span>
+                  <span className="font-extrabold text-white text-base mt-0.5 block">{fmt(xirrResult.totalInvested)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-grey block text-[10px] uppercase font-bold">Current value</span>
+                  <span className="font-extrabold text-white text-base mt-0.5 block">{fmt(xirrResult.totalRedeemed)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-grey block text-[10px] uppercase font-bold">Gain</span>
+                  <span className="font-extrabold text-emerald text-base mt-0.5 block">{fmt(xirrResult.netGain)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-grey block text-[10px] uppercase font-bold">Absolute return</span>
+                  <span className="font-extrabold text-emerald text-base mt-0.5 block">{xirrResult.absoluteReturn}%</span>
+                </div>
+              </div>
+
+              {/* Ratio Progress Bar */}
+              <div className="space-y-1.5 pt-2">
+                <div className="h-3 w-full bg-navy-card rounded-full overflow-hidden flex border border-border-navy/40">
+                  <div
+                    className="bg-muted-grey/40 h-full transition-all"
+                    style={{ width: `${Math.min(100, (xirrResult.totalInvested / Math.max(xirrResult.totalRedeemed, 1)) * 100)}%` }}
+                  />
+                  <div
+                    className="bg-emerald h-full transition-all flex-1"
                   />
                 </div>
-              )}
+                <div className="flex justify-between text-[10px] text-muted-grey font-bold">
+                  <span>Invested {fmtCompact(xirrResult.totalInvested)}</span>
+                  <span>Gains {fmtCompact(xirrResult.netGain)}</span>
+                </div>
+              </div>
             </div>
-
-            {/* Calculations results */}
-            {calculateXirrResult.success ? (
-              <div className="space-y-6">
-                {/* Nominal vs Real Output */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl border border-border-navy bg-navy-light/10 text-center">
-                    <span className="text-[10px] uppercase font-bold text-muted-grey block">Nominal XIRR</span>
-                    <p className="text-2xl font-black text-emerald mt-1">{calculateXirrResult.xirrNominal}%</p>
-                  </div>
-                  <div className="p-4 rounded-xl border border-emerald/20 bg-emerald/5 text-center">
-                    <span className="text-[10px] uppercase font-bold text-emerald block">Real XIRR</span>
-                    <p className="text-2xl font-black text-white mt-1">
-                      {adjustInflation ? `${calculateXirrResult.xirrReal}%` : "—"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Ledger metrics */}
-                <div className="space-y-2 border-t border-border-navy/60 pt-4 text-xs font-semibold text-light-grey">
-                  <div className="flex justify-between">
-                    <span className="text-muted-grey">Total Cash Invested:</span>
-                    <span>{formatCurrency(calculateXirrResult.totalInvested || 0)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-grey">Total Payout/Value:</span>
-                    <span>{formatCurrency(calculateXirrResult.totalRedeemed || 0)}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-border-navy/40 pt-2 text-emerald">
-                    <span>Net Gain:</span>
-                    <span className="font-bold">{formatCurrency(calculateXirrResult.netGain || 0)}</span>
-                  </div>
-                </div>
-
-                {adjustInflation && (
-                  <div className="p-3 bg-amber-500/5 border border-amber-500/20 text-light-grey rounded-lg text-[10px] leading-relaxed">
-                    <span className="font-bold text-amber-500 mr-0.5">⚠️ Real Growth Reality:</span>
-                    Your nominal compound rate is <strong>{calculateXirrResult.xirrNominal}%</strong>. Factoring in <strong>{inflation}%</strong> price inflation, the real rate at which your capital grew in purchasing power is <strong>{calculateXirrResult.xirrReal}%</strong> p.a.
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="p-4 bg-red-500/5 border border-red-500/20 text-red-400 rounded-lg text-xs font-bold leading-normal">
-                {calculateXirrResult.error}
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="p-4 bg-red-500/5 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold">
+              {xirrResult.error}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Guide Section */}
+      {/* Educational Guide */}
       <section className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
-        <h3 className="text-lg font-bold text-white flex items-center gap-1.5">
-          <Info className="text-emerald" size={20} />
-          XIRR (Extended Internal Rate of Return) Explained
+        <h3 className="text-base font-bold text-white flex items-center gap-1.5">
+          <Info className="text-emerald" size={18} />
+          Why XIRR is the number that matters
         </h3>
-        <div className="grid md:grid-cols-2 gap-6 text-xs leading-relaxed text-muted-grey">
-          <div className="space-y-3">
-            <h4 className="text-white font-bold uppercase tracking-wider">Nominal XIRR vs. Simple Returns</h4>
-            <p>
-              When you invest money periodically (like monthly mutual fund SIPs, partial lumpsum additions, or erratic buy-and-sell transactions), calculating simple absolute return or basic CAGR is highly misleading because they ignore **when** each cash flow took place.
-            </p>
-            <p>
-              <strong>XIRR (Extended Internal Rate of Return):</strong> This calculates the single annualized rate of return that matches the present value of all irregular cash flows (both buys and sells/valuations) to zero. It is the only mathematically correct metric to assess the compounding power of real-world portfolios with periodic additions or withdrawals.
-            </p>
-          </div>
-          <div className="space-y-3">
-            <h4 className="text-white font-bold uppercase tracking-wider">How Inflation-Adjusted XIRR is Computed</h4>
-            <p>
-              Just as nominal XIRR represents your nominal compound return, **Real XIRR** represents the rate at which your actual purchasing power grew.
-            </p>
-            <p>
-              To calculate it, we discount each transaction cash flow to the initial investment date using the inflation rate:
-              <div className="bg-navy-bg p-2 border border-border-navy my-1 rounded text-[10px] text-center font-mono">
-                C&apos;_k = C_k / (1 + inflation)^((d_k - d_1)/365)
-              </div>
-              Then we run the XIRR numerical solver on these discounted cash flows. This is mathematically identical to the Fisher Equation:
-              <div className="bg-navy-bg p-2 border border-border-navy my-1 rounded text-[10px] text-center font-mono">
-                Real XIRR = (1 + Nominal XIRR) / (1 + Inflation) - 1
-              </div>
-              Real XIRR reveals whether your active portfolio allocation beats inflation, or if your gains are largely an illusion.
-            </p>
-          </div>
-        </div>
+        <p className="text-xs text-muted-grey leading-relaxed">
+          Most people judge an investment by how much it grew: put in 1 lakh, now it is worth 1.35 lakh, so a 35% gain. That absolute return hides the one thing that lets you compare investments fairly: <strong className="text-white">time</strong>. A 35% gain over six months is extraordinary; the same gain over ten years barely keeps up with inflation.
+        </p>
+        <p className="text-xs text-muted-grey leading-relaxed">
+          XIRR (Extended Internal Rate of Return) solves this by calculating your exact money-weighted annualized return, accounting for the timing and amount of every single cash flow.
+        </p>
       </section>
     </div>
   );
