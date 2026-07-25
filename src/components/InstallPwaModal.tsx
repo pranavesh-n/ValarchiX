@@ -32,12 +32,11 @@ export default function InstallPwaModal() {
         .catch((err) => console.warn("ServiceWorker registration failed:", err));
     }
 
-    // 2. Check if already running inside standalone PWA mode or installed
-    const checkInstalled = async () => {
+    // 2. Check if already running inside standalone PWA mode
+    const checkInstalled = () => {
       if (typeof window === "undefined") return false;
 
       const isPwaWindow =
-        !window.matchMedia("(display-mode: browser)").matches ||
         window.matchMedia("(display-mode: standalone)").matches ||
         window.matchMedia("(display-mode: window-controls-overlay)").matches ||
         window.matchMedia("(display-mode: minimal-ui)").matches ||
@@ -45,38 +44,22 @@ export default function InstallPwaModal() {
         (navigator as any).standalone === true ||
         document.referrer.includes("android-app://");
 
-      if (isPwaWindow || localStorage.getItem("valarchix_is_installed") === "true") {
+      if (isPwaWindow) {
         setIsInstalled(true);
         return true;
       }
-
-      if ("getInstalledRelatedApps" in navigator) {
-        try {
-          const relatedApps = await (navigator as any).getInstalledRelatedApps();
-          if (relatedApps && relatedApps.length > 0) {
-            localStorage.setItem("valarchix_is_installed", "true");
-            setIsInstalled(true);
-            return true;
-          }
-        } catch (e) {}
-      }
-
       return false;
     };
 
+    const installed = checkInstalled();
+
     let autoOpenTimer: NodeJS.Timeout | null = null;
 
-    checkInstalled().then((alreadyInstalled) => {
-      if (!alreadyInstalled) {
-        // Automatically trigger popup after 1.5s if not installed
-        const dismissedInSession = sessionStorage.getItem("valarchix_pwa_dismissed");
-        if (!dismissedInSession) {
-          autoOpenTimer = setTimeout(() => {
-            setIsOpen(true);
-          }, 1500);
-        }
-      }
-    });
+    if (!installed) {
+      autoOpenTimer = setTimeout(() => {
+        setIsOpen(true);
+      }, 1000);
+    }
 
     // 3. Listen for beforeinstallprompt & appinstalled events
     const handleBeforeInstallPrompt = (e: Event) => {

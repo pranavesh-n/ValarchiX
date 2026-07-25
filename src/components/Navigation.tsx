@@ -136,13 +136,12 @@ export default function Navigation() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [isInstalled, setIsInstalled] = useState(false);
 
-  // Check if app is installed or running in standalone PWA mode
+  // Check if app is running in standalone PWA mode
   useEffect(() => {
-    const checkInstalledStatus = async () => {
+    const checkInstalledStatus = () => {
       if (typeof window === "undefined") return;
       
       const isPwaWindow =
-        !window.matchMedia("(display-mode: browser)").matches ||
         window.matchMedia("(display-mode: standalone)").matches ||
         window.matchMedia("(display-mode: window-controls-overlay)").matches ||
         window.matchMedia("(display-mode: minimal-ui)").matches ||
@@ -150,45 +149,18 @@ export default function Navigation() {
         (navigator as any).standalone === true ||
         document.referrer.includes("android-app://");
 
-      if (isPwaWindow || localStorage.getItem("valarchix_is_installed") === "true") {
-        setIsInstalled(true);
-        return;
-      }
-
-      if ("getInstalledRelatedApps" in navigator) {
-        try {
-          const relatedApps = await (navigator as any).getInstalledRelatedApps();
-          if (relatedApps && relatedApps.length > 0) {
-            localStorage.setItem("valarchix_is_installed", "true");
-            setIsInstalled(true);
-            return;
-          }
-        } catch (e) {}
-      }
-
-      setIsInstalled(false);
+      setIsInstalled(isPwaWindow);
     };
 
     checkInstalledStatus();
 
-    const mq = window.matchMedia("(display-mode: browser)");
-    const handleMqChange = () => checkInstalledStatus();
-    try {
-      mq.addEventListener("change", handleMqChange);
-    } catch (e) {
-      mq.addListener(handleMqChange);
-    }
+    const handleAppInstalled = () => setIsInstalled(true);
 
-    window.addEventListener("appinstalled", checkInstalledStatus);
+    window.addEventListener("appinstalled", handleAppInstalled);
     window.addEventListener("valarchix_pwa_status_change", checkInstalledStatus);
 
     return () => {
-      try {
-        mq.removeEventListener("change", handleMqChange);
-      } catch (e) {
-        mq.removeListener(handleMqChange);
-      }
-      window.removeEventListener("appinstalled", checkInstalledStatus);
+      window.removeEventListener("appinstalled", handleAppInstalled);
       window.removeEventListener("valarchix_pwa_status_change", checkInstalledStatus);
     };
   }, []);
