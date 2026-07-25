@@ -16,8 +16,12 @@ export default function InstallPwaModal() {
   const [showIosGuide, setShowIosGuide] = useState(false);
 
   useEffect(() => {
-    // Check if already in standalone mode
-    if (window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone) {
+    // Check if already in standalone / installed PWA mode
+    if (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as any).standalone ||
+      document.referrer.includes("android-app://")
+    ) {
       setIsInstalled(true);
       return;
     }
@@ -39,9 +43,6 @@ export default function InstallPwaModal() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setTimeout(() => {
-        setIsOpen(true);
-      }, 3000);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -52,14 +53,14 @@ export default function InstallPwaModal() {
       setDeferredPrompt(null);
     });
 
-    if (iosDevice && (!dismissedAt || now - parseInt(dismissedAt, 10) >= SEVEN_DAYS)) {
-      setTimeout(() => {
-        setIsOpen(true);
-      }, 4000);
-    }
+    // Automatically trigger the popup modal within 1.5 seconds of user visit
+    const autoOpenTimer = setTimeout(() => {
+      setIsOpen(true);
+    }, 1500);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      clearTimeout(autoOpenTimer);
     };
   }, []);
 
@@ -72,10 +73,8 @@ export default function InstallPwaModal() {
       }
       setDeferredPrompt(null);
       setIsOpen(false);
-    } else if (isIos) {
-      setShowIosGuide(true);
     } else {
-      alert("To install ValarchiX, click the Install icon in your browser address bar.");
+      setShowIosGuide(true);
     }
   };
 
@@ -132,10 +131,10 @@ export default function InstallPwaModal() {
         </div>
 
         {showIosGuide && (
-          <div className="p-3 bg-emerald/10 border border-emerald/30 rounded-xl text-xs text-emerald space-y-1">
-            <p className="font-bold">On iOS (Safari):</p>
-            <p>1. Tap the Share button at the bottom of your screen.</p>
-            <p>2. Scroll down and tap &quot;Add to Home Screen&quot;.</p>
+          <div className="p-3.5 bg-emerald/10 border border-emerald/30 rounded-xl text-xs text-emerald space-y-1.5 animate-fadeIn">
+            <p className="font-bold text-white">How to Install ValarchiX:</p>
+            <p><strong>Mobile (Safari / Chrome):</strong> Tap menu / share button → Select &quot;Add to Home Screen&quot; or &quot;Install App&quot;.</p>
+            <p><strong>Desktop (Chrome / Edge):</strong> Click the install icon <Download size={12} className="inline mx-1" /> in your address bar or browser menu.</p>
           </div>
         )}
 
