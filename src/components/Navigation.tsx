@@ -136,16 +136,15 @@ export default function Navigation() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [isInstalled, setIsInstalled] = useState(false);
 
-  // Check if app is installed / running in standalone mode
+  // Check if app is running in standalone PWA mode
   useEffect(() => {
     const checkInstalledStatus = () => {
       if (typeof window === "undefined") return;
-      const installed =
+      const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
         (navigator as any).standalone === true ||
-        document.referrer.includes("android-app://") ||
-        localStorage.getItem("valarchix_app_installed") === "true";
-      setIsInstalled(installed);
+        document.referrer.includes("android-app://");
+      setIsInstalled(isStandalone);
     };
 
     checkInstalledStatus();

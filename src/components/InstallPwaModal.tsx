@@ -24,7 +24,13 @@ export default function InstallPwaModal() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // 1. Register Service Worker immediately to satisfy browser PWA installability criteria
+    // Clear any stale local flags from previous test sessions
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("valarchix_app_installed");
+      sessionStorage.removeItem("valarchix_pwa_dismissed");
+    }
+
+    // 1. Register Service Worker immediately to satisfy browser PWA criteria
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/" })
@@ -32,13 +38,12 @@ export default function InstallPwaModal() {
         .catch((err) => console.warn("ServiceWorker registration failed:", err));
     }
 
-    // 2. Check if already running in standalone / installed PWA mode
+    // 2. Check if already running inside standalone / installed PWA mode
     const checkInstalled = () => {
       const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
         (navigator as any).standalone === true ||
-        document.referrer.includes("android-app://") ||
-        localStorage.getItem("valarchix_app_installed") === "true";
+        document.referrer.includes("android-app://");
       if (isStandalone) {
         setIsInstalled(true);
       }
@@ -59,7 +64,6 @@ export default function InstallPwaModal() {
       setIsOpen(false);
       setDeferredPrompt(null);
       globalDeferredPrompt = null;
-      localStorage.setItem("valarchix_app_installed", "true");
       window.dispatchEvent(new Event("valarchix_pwa_status_change"));
     };
 
@@ -73,19 +77,18 @@ export default function InstallPwaModal() {
     // 4. Global trigger function for manual header button click
     (window as any).triggerPwaInstall = () => {
       if (checkInstalled()) {
-        alert("ValarchiX is already installed on your device!");
+        alert("ValarchiX is already running in standalone app mode!");
         return;
       }
       setIsOpen(true);
     };
 
-    // 5. Auto trigger popup after 1.5s if not installed & not dismissed in current session
-    const dismissedInSession = sessionStorage.getItem("valarchix_pwa_dismissed");
+    // 5. Automatically trigger popup after 1s if not running in standalone app
     let autoOpenTimer: NodeJS.Timeout | null = null;
-    if (!installed && !dismissedInSession) {
+    if (!installed) {
       autoOpenTimer = setTimeout(() => {
         setIsOpen(true);
-      }, 1500);
+      }, 1000);
     }
 
     return () => {
@@ -103,7 +106,6 @@ export default function InstallPwaModal() {
         const choiceResult = await promptEvent.userChoice;
         if (choiceResult.outcome === "accepted") {
           setIsInstalled(true);
-          localStorage.setItem("valarchix_app_installed", "true");
           window.dispatchEvent(new Event("valarchix_pwa_status_change"));
         }
         setDeferredPrompt(null);
@@ -118,8 +120,6 @@ export default function InstallPwaModal() {
   };
 
   const handleDismiss = () => {
-    sessionStorage.setItem("valarchix_pwa_dismissed", "true");
-    localStorage.removeItem("valarchix_pwa_dismissed");
     setIsOpen(false);
   };
 
