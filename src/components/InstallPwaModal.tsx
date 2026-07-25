@@ -31,12 +31,9 @@ export default function InstallPwaModal() {
     const iosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIos(iosDevice);
 
-    // Check if user dismissed prompt recently
-    const dismissedAt = localStorage.getItem("valarchix_pwa_dismissed");
-    const now = Date.now();
-    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-
-    if (dismissedAt && now - parseInt(dismissedAt, 10) < SEVEN_DAYS) {
+    // Check if user dismissed prompt in current browser session
+    const dismissedInSession = sessionStorage.getItem("valarchix_pwa_dismissed");
+    if (dismissedInSession) {
       return;
     }
 
@@ -79,7 +76,8 @@ export default function InstallPwaModal() {
   };
 
   const handleDismiss = () => {
-    localStorage.setItem("valarchix_pwa_dismissed", Date.now().toString());
+    sessionStorage.setItem("valarchix_pwa_dismissed", "true");
+    localStorage.removeItem("valarchix_pwa_dismissed"); // Clear old 7-day lock
     setIsOpen(false);
   };
 
