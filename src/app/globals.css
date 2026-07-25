@@ -8,7 +8,7 @@
   --color-light-grey: var(--text-main-color);
   --color-muted-grey: var(--text-muted-color);
   --color-border-navy: var(--border-color);
-  --color-white: #ffffff;
+  --color-white: var(--text-main-color);
   --color-footer-bg: var(--footer-bg-color);
   --font-sans: var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono), monospace;

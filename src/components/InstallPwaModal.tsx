@@ -92,11 +92,11 @@ export default function InstallPwaModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md bg-white dark:bg-[#0a182e] border border-border-navy rounded-2xl p-6 shadow-2xl space-y-6 text-light-grey">
+      <div className="relative w-full max-w-md bg-navy-card border border-border-navy rounded-2xl p-6 shadow-2xl space-y-6 text-light-grey">
         {/* Close Button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-4 right-4 text-muted-grey hover:text-light-grey p-1 rounded-lg transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-muted-grey hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <X size={18} />
@@ -110,13 +110,13 @@ export default function InstallPwaModal() {
             className="w-14 h-14 rounded-2xl shadow-md border border-emerald/30 object-contain shrink-0"
           />
           <div>
-            <h3 className="text-xl font-bold text-light-grey tracking-tight">Install ValarchiX</h3>
+            <h3 className="text-xl font-bold text-white tracking-tight">Install ValarchiX</h3>
             <p className="text-xs text-muted-grey">Add to your home screen or desktop</p>
           </div>
         </div>
 
         {/* Feature Highlights */}
-        <div className="space-y-3 bg-slate-50 dark:bg-navy-bg/70 p-4 rounded-xl border border-border-navy/80">
+        <div className="space-y-3 bg-navy-light/40 p-4 rounded-xl border border-border-navy/80">
           <div className="flex items-center gap-3 text-xs text-light-grey">
             <Smartphone size={16} className="text-emerald shrink-0" />
             <span>Opens instantly — no browser, no tabs</span>
@@ -143,14 +143,14 @@ export default function InstallPwaModal() {
         <div className="space-y-2 pt-2">
           <button
             onClick={handleInstallClick}
-            className="w-full py-3 px-4 bg-emerald text-slate-950 font-black rounded-xl hover:bg-emerald/90 text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald/20 cursor-pointer"
+            className="w-full py-3 px-4 bg-emerald text-[#030a16] font-black rounded-xl hover:bg-emerald/90 text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald/20 cursor-pointer"
           >
             <Download size={16} />
             Install App
           </button>
           <button
             onClick={handleDismiss}
-            className="w-full py-2.5 px-4 text-xs font-semibold text-muted-grey hover:text-light-grey transition-colors cursor-pointer text-center"
+            className="w-full py-2.5 px-4 text-xs font-semibold text-muted-grey hover:text-white transition-colors cursor-pointer text-center"
           >
             Not now
           </button>
