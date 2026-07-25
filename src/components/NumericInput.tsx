@@ -74,24 +74,15 @@ export default function NumericInput({
     setIsFocused(false);
     let parsed = Number(tempValue);
     if (isNaN(parsed) || tempValue === "") {
-      parsed = min;
+      parsed = 0;
     }
-    // Clamp to min/max range
-    const clamped = Math.max(min, Math.min(max, parsed));
     
-    // Standardize to step value if defined
-    let rounded = clamped;
-    if (step) {
-      rounded = Math.round(clamped / step) * step;
-      // Re-clamp in case rounding pushes it out of bounds
-      rounded = Math.max(min, Math.min(max, rounded));
-    }
+    // Allow any non-negative number typed by the user without step-rounding or clamping to artificial high minimums
+    const validNumber = Math.max(0, parsed);
+    const finalVal = Number(validNumber.toFixed(4));
 
-    // Fix floating point issues e.g. 5.090000000000001
-    rounded = Number(rounded.toFixed(4));
-
-    onChange(rounded);
-    setTempValue(formatValue(rounded));
+    onChange(finalVal);
+    setTempValue(formatValue(finalVal));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -112,7 +103,7 @@ export default function NumericInput({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        step={step}
+        step="any"
         className="w-full bg-transparent text-emerald font-bold text-right outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       {type === "percent" && (

@@ -25,7 +25,7 @@ export default function RoiCalculator() {
 
   const calculations = useMemo(() => {
     const data = [];
-    const initial = Math.max(1, initialInvestment);
+    const initial = Math.max(0.0001, initialInvestment);
     const final = Math.max(0, finalValue);
     const y = Math.max(0.1, years);
     const infRate = inflation / 100;
@@ -319,6 +319,61 @@ export default function RoiCalculator() {
           </div>
         </div>
       </div>
+
+      {/* Inflation Masterclass Educational Section */}
+      <section className="p-6 md:p-8 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-navy-card/60 to-emerald/5 space-y-6">
+        <div className="flex items-center gap-3 border-b border-border-navy/60 pb-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 font-bold text-xl shrink-0">
+            🔥
+          </div>
+          <div>
+            <h3 className="text-lg font-extrabold text-white tracking-tight">
+              Why Inflation Matters & Why ValarchiX Is Different
+            </h3>
+            <p className="text-xs text-muted-grey">
+              Understand the silent killer of wealth with a simple real-world example.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 text-xs text-muted-grey">
+          <div className="p-4 rounded-xl border border-border-navy bg-navy-bg/60 space-y-2">
+            <div className="flex items-center gap-2 text-white font-bold text-sm">
+              <span>☕ The ₹100 Coffee Example</span>
+            </div>
+            <p className="leading-relaxed">
+              If a cup of coffee costs <strong>₹100 today</strong>, at a <strong>6% annual inflation rate</strong>, that exact same cup will cost <strong>₹179 in 10 years</strong> and <strong>₹320 in 20 years</strong>.
+            </p>
+            <p className="text-amber-400 font-semibold pt-1">
+              Prices double roughly every 12 years at 6% inflation!
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl border border-border-navy bg-navy-bg/60 space-y-2">
+            <div className="flex items-center gap-2 text-white font-bold text-sm">
+              <span>📉 The Silent Wealth Erosion</span>
+            </div>
+            <p className="leading-relaxed">
+              If your money earns <strong>7% in an FD</strong>, but inflation is <strong>6%</strong> and income tax takes <strong>30%</strong> (2.1%), your real return is <strong>-1.1% per year</strong>! You lose purchasing power every day.
+            </p>
+            <p className="text-red-400 font-semibold pt-1">
+              Nominal gains create the illusion of wealth while real purchasing power shrinks.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl border border-emerald/30 bg-emerald/10 space-y-2">
+            <div className="flex items-center gap-2 text-emerald font-extrabold text-sm">
+              <span>💡 The ValarchiX Edge</span>
+            </div>
+            <p className="leading-relaxed text-light-grey">
+              Standard commercial calculators only show <strong>nominal paper gains</strong> to make investments look pretty.
+            </p>
+            <p className="text-emerald font-semibold pt-1 leading-relaxed">
+              ValarchiX calculates <strong>Real CAGR & Real Purchasing Power</strong> using live inflation data so you know what your money will <em>actually</em> buy!
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Guide */}
       <section className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
