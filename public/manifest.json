@@ -7,7 +7,13 @@
   "background_color": "#030a16",
   "theme_color": "#081c3a",
   "orientation": "any",
-  "scope": "/",
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://valarchix.vercel.app/manifest.json"
+    }
+  ],
   "icons": [
     {
       "src": "/logo.svg",

@@ -37,6 +37,7 @@ export default function InstallPwaModal() {
       if (typeof window === "undefined") return false;
 
       const isPwaWindow =
+        !window.matchMedia("(display-mode: browser)").matches ||
         window.matchMedia("(display-mode: standalone)").matches ||
         window.matchMedia("(display-mode: window-controls-overlay)").matches ||
         window.matchMedia("(display-mode: minimal-ui)").matches ||
@@ -135,7 +136,11 @@ export default function InstallPwaModal() {
         console.error("PWA install error:", err);
       }
     } else {
-      alert("To install ValarchiX: Click the Install icon (⊕ / ⬇) in your browser address bar or menu (⋮) -> 'Install ValarchiX'.");
+      setIsInstalled(true);
+      localStorage.setItem("valarchix_is_installed", "true");
+      window.dispatchEvent(new Event("valarchix_pwa_status_change"));
+      setIsOpen(false);
+      alert("ValarchiX is already installed on your device! Click 'Open in app' in your browser address bar to launch it.");
     }
   };
 

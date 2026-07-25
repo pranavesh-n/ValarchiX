@@ -142,6 +142,7 @@ export default function Navigation() {
       if (typeof window === "undefined") return;
       
       const isPwaWindow =
+        !window.matchMedia("(display-mode: browser)").matches ||
         window.matchMedia("(display-mode: standalone)").matches ||
         window.matchMedia("(display-mode: window-controls-overlay)").matches ||
         window.matchMedia("(display-mode: minimal-ui)").matches ||
@@ -170,10 +171,23 @@ export default function Navigation() {
 
     checkInstalledStatus();
 
+    const mq = window.matchMedia("(display-mode: browser)");
+    const handleMqChange = () => checkInstalledStatus();
+    try {
+      mq.addEventListener("change", handleMqChange);
+    } catch (e) {
+      mq.addListener(handleMqChange);
+    }
+
     window.addEventListener("appinstalled", checkInstalledStatus);
     window.addEventListener("valarchix_pwa_status_change", checkInstalledStatus);
 
     return () => {
+      try {
+        mq.removeEventListener("change", handleMqChange);
+      } catch (e) {
+        mq.removeListener(handleMqChange);
+      }
       window.removeEventListener("appinstalled", checkInstalledStatus);
       window.removeEventListener("valarchix_pwa_status_change", checkInstalledStatus);
     };
