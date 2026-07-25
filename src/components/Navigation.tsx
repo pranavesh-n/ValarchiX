@@ -134,6 +134,30 @@ export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  // Check if app is installed / running in standalone mode
+  useEffect(() => {
+    const checkInstalledStatus = () => {
+      if (typeof window === "undefined") return;
+      const installed =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as any).standalone === true ||
+        document.referrer.includes("android-app://") ||
+        localStorage.getItem("valarchix_app_installed") === "true";
+      setIsInstalled(installed);
+    };
+
+    checkInstalledStatus();
+
+    window.addEventListener("appinstalled", checkInstalledStatus);
+    window.addEventListener("valarchix_pwa_status_change", checkInstalledStatus);
+
+    return () => {
+      window.removeEventListener("appinstalled", checkInstalledStatus);
+      window.removeEventListener("valarchix_pwa_status_change", checkInstalledStatus);
+    };
+  }, []);
 
   // Load and apply theme on mount
   useEffect(() => {
@@ -211,20 +235,22 @@ export default function Navigation() {
 
           {/* Theme Switch & Actions */}
           <div className="flex items-center gap-2 md:gap-3">
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined" && (window as any).triggerPwaInstall) {
-                  (window as any).triggerPwaInstall();
-                } else {
-                  alert("To install ValarchiX, tap the browser menu and select 'Add to Home Screen' or 'Install App'.");
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald/40 bg-emerald/10 text-emerald hover:bg-emerald hover:text-navy-bg transition-all text-xs font-extrabold cursor-pointer shadow-sm shadow-emerald/20"
-              title="Install ValarchiX App"
-            >
-              <Download size={14} />
-              <span className="hidden sm:inline">Install App</span>
-            </button>
+            {!isInstalled && (
+              <button
+                onClick={() => {
+                  if (typeof window !== "undefined" && (window as any).triggerPwaInstall) {
+                    (window as any).triggerPwaInstall();
+                  } else {
+                    alert("To install ValarchiX, tap the browser menu and select 'Add to Home Screen' or 'Install App'.");
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald/40 bg-emerald/10 text-emerald hover:bg-emerald hover:text-navy-bg transition-all text-xs font-extrabold cursor-pointer shadow-sm shadow-emerald/20"
+                title="Install ValarchiX App"
+              >
+                <Download size={14} />
+                <span className="hidden sm:inline">Install App</span>
+              </button>
+            )}
 
             {pathname !== "/" && (
               <button
