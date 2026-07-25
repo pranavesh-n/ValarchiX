@@ -134,46 +134,6 @@ export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [isInstalled, setIsInstalled] = useState(false);
-
-  // Check if app is running in standalone PWA mode
-  useEffect(() => {
-    const checkInstalledStatus = () => {
-      if (typeof window === "undefined") return;
-      
-      const isPwaWindow =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        window.matchMedia("(display-mode: window-controls-overlay)").matches ||
-        window.matchMedia("(display-mode: minimal-ui)").matches ||
-        window.matchMedia("(display-mode: fullscreen)").matches ||
-        (navigator as any).standalone === true ||
-        document.referrer.includes("android-app://");
-
-      if (isPwaWindow) {
-        setIsInstalled(true);
-      }
-    };
-
-    checkInstalledStatus();
-
-    // Run delayed checks to catch PWA display mode state after hydration
-    const t1 = setTimeout(checkInstalledStatus, 100);
-    const t2 = setTimeout(checkInstalledStatus, 500);
-
-    const handleAppInstalled = () => setIsInstalled(true);
-
-    window.addEventListener("appinstalled", handleAppInstalled);
-    window.addEventListener("valarchix_pwa_status_change", checkInstalledStatus);
-    window.addEventListener("focus", checkInstalledStatus);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      window.removeEventListener("appinstalled", handleAppInstalled);
-      window.removeEventListener("valarchix_pwa_status_change", checkInstalledStatus);
-      window.removeEventListener("focus", checkInstalledStatus);
-    };
-  }, []);
 
   // Load and apply theme on mount
   useEffect(() => {
@@ -251,22 +211,6 @@ export default function Navigation() {
 
           {/* Theme Switch & Actions */}
           <div className="flex items-center gap-2 md:gap-3">
-            {!isInstalled && (
-              <button
-                onClick={() => {
-                  if (typeof window !== "undefined" && (window as any).triggerPwaInstall) {
-                    (window as any).triggerPwaInstall();
-                  } else {
-                    alert("To install ValarchiX, tap the browser menu and select 'Add to Home Screen' or 'Install App'.");
-                  }
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald/40 bg-emerald/10 text-emerald hover:bg-emerald hover:text-navy-bg transition-all text-xs font-extrabold cursor-pointer shadow-sm shadow-emerald/20"
-                title="Install ValarchiX App"
-              >
-                <Download size={14} />
-                <span className="hidden sm:inline">Install App</span>
-              </button>
-            )}
 
             {pathname !== "/" && (
               <button
