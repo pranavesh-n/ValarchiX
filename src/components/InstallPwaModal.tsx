@@ -8,32 +8,31 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
+
+// Catch beforeinstallprompt as early as possible on window load
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    globalDeferredPrompt = e as BeforeInstallPromptEvent;
+  });
+}
+
 export default function InstallPwaModal() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => globalDeferredPrompt);
   const [isOpen, setIsOpen] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [showIosGuide, setShowIosGuide] = useState(false);
-  const [isIncognito, setIsIncognito] = useState(false);
 
   useEffect(() => {
-    // 1. Detect Incognito mode (Chrome/Edge restrict PWA in Incognito)
-    if (typeof window !== "undefined" && navigator.storage && navigator.storage.estimate) {
-      navigator.storage.estimate().then(({ quota }) => {
-        if (quota && quota < 120000000) {
-          setIsIncognito(true);
-        }
-      }).catch(() => {});
-    }
-
-    // 2. Register Service Worker to ensure PWA installability criteria are met in browsers
+    // 1. Register Service Worker immediately to satisfy browser PWA installability criteria
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/sw.js")
+        .register("/sw.js", { scope: "/" })
         .then((reg) => console.log("ServiceWorker registered:", reg.scope))
         .catch((err) => console.warn("ServiceWorker registration failed:", err));
     }
 
-    // 3. Check if already running in standalone / installed PWA mode
+    // 2. Check if already running in standalone / installed PWA mode
     const checkInstalled = () => {
       const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
@@ -48,9 +47,10 @@ export default function InstallPwaModal() {
 
     const installed = checkInstalled();
 
-    // 4. Listen for beforeinstallprompt event ALWAYS
+    // 3. Listen for beforeinstallprompt & appinstalled events
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      globalDeferredPrompt = e as BeforeInstallPromptEvent;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
@@ -58,6 +58,7 @@ export default function InstallPwaModal() {
       setIsInstalled(true);
       setIsOpen(false);
       setDeferredPrompt(null);
+      globalDeferredPrompt = null;
       localStorage.setItem("valarchix_app_installed", "true");
       window.dispatchEvent(new Event("valarchix_pwa_status_change"));
     };
@@ -65,17 +66,20 @@ export default function InstallPwaModal() {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleAppInstalled);
 
-    // 5. Register global trigger function for manual header button click
+    if (globalDeferredPrompt) {
+      setDeferredPrompt(globalDeferredPrompt);
+    }
+
+    // 4. Global trigger function for manual header button click
     (window as any).triggerPwaInstall = () => {
       if (checkInstalled()) {
         alert("ValarchiX is already installed on your device!");
         return;
       }
-      setShowIosGuide(true);
       setIsOpen(true);
     };
 
-    // 6. Automatically trigger popup after 1.5s if not installed & not dismissed in session
+    // 5. Auto trigger popup after 1.5s if not installed & not dismissed in current session
     const dismissedInSession = sessionStorage.getItem("valarchix_pwa_dismissed");
     let autoOpenTimer: NodeJS.Timeout | null = null;
     if (!installed && !dismissedInSession) {
@@ -92,23 +96,24 @@ export default function InstallPwaModal() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
+    const promptEvent = deferredPrompt || globalDeferredPrompt;
+    if (promptEvent) {
       try {
-        await deferredPrompt.prompt();
-        const choiceResult = await deferredPrompt.userChoice;
+        await promptEvent.prompt();
+        const choiceResult = await promptEvent.userChoice;
         if (choiceResult.outcome === "accepted") {
           setIsInstalled(true);
           localStorage.setItem("valarchix_app_installed", "true");
           window.dispatchEvent(new Event("valarchix_pwa_status_change"));
         }
         setDeferredPrompt(null);
+        globalDeferredPrompt = null;
         setIsOpen(false);
       } catch (err) {
         console.error("PWA install error:", err);
-        setShowIosGuide(true);
       }
     } else {
-      setShowIosGuide(true);
+      alert("To install ValarchiX: Click the Install icon (⊕ / ⬇) in your browser address bar or menu (⋮) -> 'Install ValarchiX'.");
     }
   };
 
@@ -161,46 +166,15 @@ export default function InstallPwaModal() {
           </div>
         </div>
 
-        {/* Incognito Alert */}
-        {isIncognito && (
-          <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 space-y-1 animate-fadeIn">
-            <p className="font-bold text-amber-200 flex items-center gap-1.5">
-              <span>⚠️ Incognito Mode Detected</span>
-            </p>
-            <p className="leading-relaxed">
-              Chrome &amp; Edge disable PWA web app installation in Incognito windows. Please open <strong>valarchix.vercel.app</strong> in a normal browser tab to install with 1-click!
-            </p>
-          </div>
-        )}
-
-        {/* Guide / Instructions */}
-        {(showIosGuide || !deferredPrompt) && !isIncognito && (
-          <div className="p-3.5 bg-emerald/10 border border-emerald/30 rounded-xl text-xs text-emerald space-y-1.5 animate-fadeIn">
-            <p className="font-bold text-white">How to Install ValarchiX:</p>
-            <p><strong>Desktop (Chrome / Edge):</strong> Look for the install icon <Download size={12} className="inline mx-1" /> in your browser address bar or click menu (⋮) → &quot;Install ValarchiX&quot;.</p>
-            <p><strong>Mobile (Safari / Chrome):</strong> Tap browser menu / share button → Select &quot;Add to Home Screen&quot; or &quot;Install App&quot;.</p>
-          </div>
-        )}
-
         {/* Action Buttons */}
         <div className="space-y-2 pt-2">
-          {deferredPrompt ? (
-            <button
-              onClick={handleInstallClick}
-              className="w-full py-3 px-4 bg-emerald text-[#030a16] font-black rounded-xl hover:bg-emerald/90 text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald/20 cursor-pointer"
-            >
-              <Download size={16} />
-              Install App Now
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowIosGuide(true)}
-              className="w-full py-3 px-4 bg-emerald/20 border border-emerald/40 text-emerald font-bold rounded-xl hover:bg-emerald hover:text-navy-bg text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Download size={16} />
-              Installation Steps Shown Above
-            </button>
-          )}
+          <button
+            onClick={handleInstallClick}
+            className="w-full py-3 px-4 bg-emerald text-[#030a16] font-black rounded-xl hover:bg-emerald/90 text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald/20 cursor-pointer"
+          >
+            <Download size={16} />
+            Install App
+          </button>
           <button
             onClick={handleDismiss}
             className="w-full py-2.5 px-4 text-xs font-semibold text-muted-grey hover:text-white transition-colors cursor-pointer text-center"
