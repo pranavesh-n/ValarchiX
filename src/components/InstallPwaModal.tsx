@@ -85,10 +85,10 @@ export default function InstallPwaModal() {
     }
 
     // 4. Global trigger function for manual header button click
-    (window as any).triggerPwaInstall = async () => {
-      const isAlreadyInstalled = await checkInstalled();
-      if (isAlreadyInstalled) {
-        alert("ValarchiX is already installed on your device!");
+    (window as any).triggerPwaInstall = () => {
+      if (checkInstalled()) {
+        setIsInstalled(true);
+        window.dispatchEvent(new Event("valarchix_pwa_status_change"));
         return;
       }
       setIsOpen(true);

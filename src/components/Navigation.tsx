@@ -149,19 +149,29 @@ export default function Navigation() {
         (navigator as any).standalone === true ||
         document.referrer.includes("android-app://");
 
-      setIsInstalled(isPwaWindow);
+      if (isPwaWindow) {
+        setIsInstalled(true);
+      }
     };
 
     checkInstalledStatus();
+
+    // Run delayed checks to catch PWA display mode state after hydration
+    const t1 = setTimeout(checkInstalledStatus, 100);
+    const t2 = setTimeout(checkInstalledStatus, 500);
 
     const handleAppInstalled = () => setIsInstalled(true);
 
     window.addEventListener("appinstalled", handleAppInstalled);
     window.addEventListener("valarchix_pwa_status_change", checkInstalledStatus);
+    window.addEventListener("focus", checkInstalledStatus);
 
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
       window.removeEventListener("appinstalled", handleAppInstalled);
       window.removeEventListener("valarchix_pwa_status_change", checkInstalledStatus);
+      window.removeEventListener("focus", checkInstalledStatus);
     };
   }, []);
 
