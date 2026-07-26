@@ -197,7 +197,7 @@ export default function Navigation() {
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <Link href="/" className="flex items-center gap-2">
-              <img src="/logo.svg" alt="ValarchiX" className="h-7 w-7 md:h-8 md:w-8 rounded-lg" />
+              <img src="/logo.svg" alt="ValarchiX" className="h-7 w-7 md:h-8 md:w-8 rounded-full" />
               <span className="text-lg md:text-xl font-bold tracking-wider text-white">
                 Valarchi<span className="text-emerald font-extrabold">X</span>
               </span>

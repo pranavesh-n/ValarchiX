@@ -127,7 +127,7 @@ export const compoundInterestCalc = tool(
  * Compares real returns after tax and inflation
  */
 export const fdVsMfCompare = tool(
-  async ({ amount, fdRate, mfReturn, years, taxSlab, inflationRate }) => {
+  async ({ amount = 100000, fdRate = 7, mfReturn = 12, years = 5, taxSlab = 30, inflationRate = 6 }: any) => {
     // FD: Interest taxed at income slab every year
     const fdTaxRate = taxSlab / 100;
     const fdPostTaxRate = fdRate * (1 - fdTaxRate) / 100;

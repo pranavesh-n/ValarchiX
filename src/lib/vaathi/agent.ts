@@ -105,11 +105,20 @@ export async function executeSinglePassVaathi(
           } else if (tc.name === "goalPlanner") {
             calculations.push(`To reach your target goal of **₹${(data.goalAmount || 0).toLocaleString("en-IN")}** in **${data.years} years** (assuming ${data.expectedReturn}% return & ${data.inflationRate || 6}% inflation), you need a monthly SIP of **₹${(data.requiredMonthlySIP || 0).toLocaleString("en-IN")}**.`);
           } else if (tc.name === "retirementCalc") {
-            calculations.push(`To retire at age **${data.retireAge || 50}** with today's monthly expense of **₹${(data.currentMonthlyExpense || 50000).toLocaleString("en-IN")}**, your required retirement corpus is **₹${(data.requiredCorpus || 0).toLocaleString("en-IN")}**. A monthly SIP of **₹${(data.requiredMonthlySip || 0).toLocaleString("en-IN")}** is recommended to build this corpus.`);
+            const corpus = data.corpusNeeded ?? data.requiredCorpus ?? 0;
+            const monthlySip = data.requiredMonthlySIP ?? data.requiredMonthlySip ?? 0;
+            calculations.push(`To retire at age **${data.retireAge || 60}** with today's monthly expense of **₹${(data.currentMonthlyExpense || 50000).toLocaleString("en-IN")}**, your required retirement corpus is **₹${corpus.toLocaleString("en-IN")}**. A monthly SIP of **₹${monthlySip.toLocaleString("en-IN")}** is recommended to build this corpus.`);
           } else if (tc.name === "taxCompare") {
-            calculations.push(`**Tax Regime Comparison:**\n- Old Tax Regime: ₹${(data.oldRegimeTax || 0).toLocaleString("en-IN")}\n- New Tax Regime: ₹${(data.newRegimeTax || 0).toLocaleString("en-IN")}\n- Recommended: **${data.recommendedRegime || "New Tax Regime"}** (Savings: ₹${(data.taxSavings || 0).toLocaleString("en-IN")}).`);
+            const oldTax = data.oldRegime?.taxPayable ?? data.oldRegimeTax ?? 0;
+            const newTax = data.newRegime?.taxPayable ?? data.newRegimeTax ?? 0;
+            const recommendation = data.recommendation || data.recommendedRegime || (oldTax > newTax ? "New Tax Regime" : "Old Tax Regime");
+            calculations.push(`**Tax Regime Comparison:**\n- Old Tax Regime: **₹${oldTax.toLocaleString("en-IN")}**\n- New Tax Regime: **₹${newTax.toLocaleString("en-IN")}**\n- Recommendation: **${recommendation}**`);
           } else if (tc.name === "fdVsMfCompare") {
-            calculations.push(`**FD vs Mutual Fund Yield:**\n- 5-Year Fixed Deposit (Post-Tax): ₹${(data.fdMaturityPostTax || 0).toLocaleString("en-IN")}\n- 5-Year Equity Mutual Fund (Post-Tax): ₹${(data.mfMaturityPostTax || 0).toLocaleString("en-IN")}\n- Extra Wealth Gained in MF: **₹${(data.extraWealthInMf || 0).toLocaleString("en-IN")}**.`);
+            const fdPost = data.fd?.postTaxNominal ?? data.fdMaturityPostTax ?? 0;
+            const mfPost = data.mutualFund?.postTaxNominal ?? data.mfMaturityPostTax ?? 0;
+            const diff = mfPost - fdPost;
+            const verdictText = data.verdict || (diff > 0 ? `Mutual Fund wins by ₹${diff.toLocaleString("en-IN")} in real purchasing power` : `FD vs MF comparison complete`);
+            calculations.push(`**FD vs Mutual Fund Yield:**\n- ${data.years || 5}-Year Fixed Deposit (Post-Tax): **₹${fdPost.toLocaleString("en-IN")}**\n- ${data.years || 5}-Year Equity Mutual Fund (Post-Tax): **₹${mfPost.toLocaleString("en-IN")}**\n- Verdict: **${verdictText}**`);
           } else if (tc.name === "ppfCalc") {
             calculations.push(`**Public Provident Fund (PPF):**\nAn annual deposit of **₹${(data.annualDeposit || 0).toLocaleString("en-IN")}** at **7.1% tax-free interest** over **${data.years || 15} years** matures at **₹${(data.maturityAmount || 0).toLocaleString("en-IN")}** (Total Deposited: ₹${(data.totalInvested || 0).toLocaleString("en-IN")}, Tax-Free Interest Earned: ₹${(data.interestEarned || 0).toLocaleString("en-IN")}).`);
           } else if (tc.name === "emiCalc") {

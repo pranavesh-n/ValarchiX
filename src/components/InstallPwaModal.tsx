@@ -55,10 +55,12 @@ export default function InstallPwaModal() {
 
     let autoOpenTimer: NodeJS.Timeout | null = null;
 
-    if (!installed) {
+    const isDismissed = typeof window !== "undefined" && localStorage.getItem("valarchix_pwa_dismissed") === "true";
+
+    if (!installed && !isDismissed) {
       autoOpenTimer = setTimeout(() => {
         setIsOpen(true);
-      }, 1000);
+      }, 4000);
     }
 
     // 3. Listen for beforeinstallprompt & appinstalled events
@@ -128,6 +130,9 @@ export default function InstallPwaModal() {
   };
 
   const handleDismiss = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("valarchix_pwa_dismissed", "true");
+    }
     setIsOpen(false);
   };
 
@@ -150,7 +155,7 @@ export default function InstallPwaModal() {
           <img
             src="/logo.svg"
             alt="ValarchiX Logo"
-            className="w-14 h-14 rounded-2xl shadow-md border border-emerald/30 object-contain shrink-0"
+            className="w-14 h-14 rounded-full shadow-md border border-emerald/30 object-contain shrink-0"
           />
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Install ValarchiX</h3>

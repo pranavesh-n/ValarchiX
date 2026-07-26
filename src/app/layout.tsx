@@ -15,9 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ValarchiX - Operating System for Financial Knowledge",
+  title: "ValarchiX | Financial Knowledge OS",
   description: "Learn. Analyze. Invest Smarter. Understand businesses, mutual funds, taxes, retirement, and personal finance through data-driven education.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/icon-192x192.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
