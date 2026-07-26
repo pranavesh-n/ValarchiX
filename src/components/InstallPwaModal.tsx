@@ -32,32 +32,43 @@ export default function InstallPwaModal() {
         .catch((err) => console.warn("ServiceWorker registration failed:", err));
     }
 
-    // 2. Check if already running inside standalone PWA mode or previously installed
+    // 2. Check if running inside standalone PWA window
     const checkInstalled = () => {
       if (typeof window === "undefined") return false;
 
-      const isPwaWindow =
+      const isStandaloneMode =
         window.matchMedia("(display-mode: standalone)").matches ||
         window.matchMedia("(display-mode: window-controls-overlay)").matches ||
         window.matchMedia("(display-mode: minimal-ui)").matches ||
         window.matchMedia("(display-mode: fullscreen)").matches ||
         (navigator as any).standalone === true ||
-        localStorage.getItem("valarchix_is_installed") === "true" ||
         document.referrer.includes("android-app://");
 
-      if (isPwaWindow) {
+      if (isStandaloneMode) {
         setIsInstalled(true);
         return true;
       }
+
+      // Check stored flag only if no beforeinstallprompt has arrived
+      if (localStorage.getItem("valarchix_is_installed") === "true" && !globalDeferredPrompt) {
+        setIsInstalled(true);
+        return true;
+      }
+
       return false;
     };
 
-    // 2b. Native browser installed related apps check (Chrome / Edge / Android)
+    // 2b. Real-time native OS installation check (Chrome / Edge / Android)
     if (typeof window !== "undefined" && "navigator" in window && "getInstalledRelatedApps" in navigator) {
       (navigator as any).getInstalledRelatedApps().then((relatedApps: any[]) => {
         if (relatedApps && relatedApps.length > 0) {
           setIsInstalled(true);
           localStorage.setItem("valarchix_is_installed", "true");
+          window.dispatchEvent(new Event("valarchix_pwa_status_change"));
+        } else if (!window.matchMedia("(display-mode: standalone)").matches) {
+          // App is uninstalled! Clear stale localStorage flag
+          localStorage.removeItem("valarchix_is_installed");
+          setIsInstalled(false);
           window.dispatchEvent(new Event("valarchix_pwa_status_change"));
         }
       }).catch(() => {});
@@ -75,11 +86,16 @@ export default function InstallPwaModal() {
       }, 1500);
     }
 
-    // 3. Listen for beforeinstallprompt & appinstalled events
+    // 3. Listen for beforeinstallprompt & appinstalled events for real-time monitoring
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       globalDeferredPrompt = e as BeforeInstallPromptEvent;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+
+      // beforeinstallprompt firing proves the app is NOT installed! Clear stale state
+      localStorage.removeItem("valarchix_is_installed");
+      setIsInstalled(false);
+      window.dispatchEvent(new Event("valarchix_pwa_status_change"));
     };
 
     const handleAppInstalled = () => {

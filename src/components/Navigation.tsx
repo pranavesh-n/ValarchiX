@@ -157,10 +157,12 @@ export default function Navigation() {
 
     window.addEventListener("valarchix_pwa_status_change", handlePwaStatusChange);
     window.addEventListener("appinstalled", handlePwaStatusChange);
+    window.addEventListener("beforeinstallprompt", handlePwaStatusChange);
 
     return () => {
       window.removeEventListener("valarchix_pwa_status_change", handlePwaStatusChange);
       window.removeEventListener("appinstalled", handlePwaStatusChange);
+      window.removeEventListener("beforeinstallprompt", handlePwaStatusChange);
     };
   }, []);
 
