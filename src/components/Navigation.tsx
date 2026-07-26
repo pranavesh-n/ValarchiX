@@ -134,6 +134,35 @@ export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  // Check PWA installation state
+  useEffect(() => {
+    const checkIsInstalled = () => {
+      if (typeof window === "undefined") return false;
+      return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: window-controls-overlay)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        (navigator as any).standalone === true ||
+        localStorage.getItem("valarchix_is_installed") === "true"
+      );
+    };
+
+    setIsInstalled(checkIsInstalled());
+
+    const handlePwaStatusChange = () => {
+      setIsInstalled(checkIsInstalled());
+    };
+
+    window.addEventListener("valarchix_pwa_status_change", handlePwaStatusChange);
+    window.addEventListener("appinstalled", handlePwaStatusChange);
+
+    return () => {
+      window.removeEventListener("valarchix_pwa_status_change", handlePwaStatusChange);
+      window.removeEventListener("appinstalled", handlePwaStatusChange);
+    };
+  }, []);
 
   // Load and apply theme on mount
   useEffect(() => {
@@ -211,6 +240,20 @@ export default function Navigation() {
 
           {/* Theme Switch & Actions */}
           <div className="flex items-center gap-2 md:gap-3">
+            {!isInstalled && (
+              <button
+                onClick={() => {
+                  if (typeof window !== "undefined" && (window as any).triggerPwaInstall) {
+                    (window as any).triggerPwaInstall();
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-xl border border-emerald/40 bg-emerald/10 text-emerald hover:bg-emerald hover:text-navy-bg transition-all text-xs font-bold cursor-pointer"
+                title="Install ValarchiX App"
+              >
+                <Download size={14} />
+                <span className="hidden sm:inline">Install App</span>
+              </button>
+            )}
 
             {pathname !== "/" && (
               <button

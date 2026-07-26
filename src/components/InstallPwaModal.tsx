@@ -55,12 +55,17 @@ export default function InstallPwaModal() {
 
     let autoOpenTimer: NodeJS.Timeout | null = null;
 
-    const isDismissed = typeof window !== "undefined" && localStorage.getItem("valarchix_pwa_dismissed") === "true";
+    // Clear legacy permanent localStorage dismissal if present
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("valarchix_pwa_dismissed");
+    }
 
-    if (!installed && !isDismissed) {
+    const isDismissedInSession = typeof window !== "undefined" && sessionStorage.getItem("valarchix_pwa_dismissed_session") === "true";
+
+    if (!installed && !isDismissedInSession) {
       autoOpenTimer = setTimeout(() => {
         setIsOpen(true);
-      }, 4000);
+      }, 1500);
     }
 
     // 3. Listen for beforeinstallprompt & appinstalled events
@@ -113,25 +118,26 @@ export default function InstallPwaModal() {
           setIsInstalled(true);
           localStorage.setItem("valarchix_is_installed", "true");
           window.dispatchEvent(new Event("valarchix_pwa_status_change"));
+          setIsOpen(false);
         }
         setDeferredPrompt(null);
         globalDeferredPrompt = null;
-        setIsOpen(false);
       } catch (err) {
         console.error("PWA install error:", err);
       }
     } else {
-      setIsInstalled(true);
-      localStorage.setItem("valarchix_is_installed", "true");
-      window.dispatchEvent(new Event("valarchix_pwa_status_change"));
-      setIsOpen(false);
-      alert("ValarchiX is already installed on your device! Click 'Open in app' in your browser address bar to launch it.");
+      alert(
+        "To install ValarchiX:\n\n" +
+        "• Desktop Chrome/Edge: Click the 'Install' icon [⬇] in your browser address bar.\n" +
+        "• Mobile Chrome/Brave: Tap the ⋮ menu -> 'Add to Home Screen'.\n" +
+        "• iOS Safari: Tap Share -> 'Add to Home Screen'."
+      );
     }
   };
 
   const handleDismiss = () => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("valarchix_pwa_dismissed", "true");
+      sessionStorage.setItem("valarchix_pwa_dismissed_session", "true");
     }
     setIsOpen(false);
   };
