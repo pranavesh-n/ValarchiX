@@ -32,7 +32,7 @@ export default function InstallPwaModal() {
         .catch((err) => console.warn("ServiceWorker registration failed:", err));
     }
 
-    // 2. Check if already running inside standalone PWA mode
+    // 2. Check if already running inside standalone PWA mode or previously installed
     const checkInstalled = () => {
       if (typeof window === "undefined") return false;
 
@@ -42,6 +42,7 @@ export default function InstallPwaModal() {
         window.matchMedia("(display-mode: minimal-ui)").matches ||
         window.matchMedia("(display-mode: fullscreen)").matches ||
         (navigator as any).standalone === true ||
+        localStorage.getItem("valarchix_is_installed") === "true" ||
         document.referrer.includes("android-app://");
 
       if (isPwaWindow) {
@@ -51,14 +52,20 @@ export default function InstallPwaModal() {
       return false;
     };
 
+    // 2b. Native browser installed related apps check (Chrome / Edge / Android)
+    if (typeof window !== "undefined" && "navigator" in window && "getInstalledRelatedApps" in navigator) {
+      (navigator as any).getInstalledRelatedApps().then((relatedApps: any[]) => {
+        if (relatedApps && relatedApps.length > 0) {
+          setIsInstalled(true);
+          localStorage.setItem("valarchix_is_installed", "true");
+          window.dispatchEvent(new Event("valarchix_pwa_status_change"));
+        }
+      }).catch(() => {});
+    }
+
     const installed = checkInstalled();
 
     let autoOpenTimer: NodeJS.Timeout | null = null;
-
-    // Clear legacy permanent localStorage dismissal if present
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("valarchix_pwa_dismissed");
-    }
 
     const isDismissedInSession = typeof window !== "undefined" && sessionStorage.getItem("valarchix_pwa_dismissed_session") === "true";
 
@@ -92,11 +99,24 @@ export default function InstallPwaModal() {
     }
 
     // 4. Global trigger function for manual header button click
-    (window as any).triggerPwaInstall = () => {
-      if (checkInstalled()) {
-        setIsInstalled(true);
-        window.dispatchEvent(new Event("valarchix_pwa_status_change"));
-        return;
+    (window as any).triggerPwaInstall = async () => {
+      const promptEvent = deferredPrompt || globalDeferredPrompt;
+      if (promptEvent) {
+        try {
+          await promptEvent.prompt();
+          const choiceResult = await promptEvent.userChoice;
+          if (choiceResult.outcome === "accepted") {
+            setIsInstalled(true);
+            localStorage.setItem("valarchix_is_installed", "true");
+            window.dispatchEvent(new Event("valarchix_pwa_status_change"));
+            setIsOpen(false);
+          }
+          setDeferredPrompt(null);
+          globalDeferredPrompt = null;
+          return;
+        } catch (err) {
+          console.error("PWA install trigger error:", err);
+        }
       }
       setIsOpen(true);
     };
