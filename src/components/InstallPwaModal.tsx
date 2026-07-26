@@ -155,7 +155,7 @@ export default function InstallPwaModal() {
           <img
             src="/logo.svg"
             alt="ValarchiX Logo"
-            className="w-14 h-14 rounded-full shadow-md border border-emerald/30 object-contain shrink-0"
+            className="w-14 h-14 rounded-2xl shadow-md border border-emerald/30 object-contain shrink-0"
           />
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Install ValarchiX</h3>
