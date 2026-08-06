@@ -221,7 +221,7 @@ export default function CreditCardPayoffCalculator() {
                       [`Fixed ${fmt(fixedPayment)}`]: (Math.max(0, balance * Math.pow(1 + annualRate / 100 / 12, i) - fixedPayment * ((Math.pow(1 + annualRate / 100 / 12, i) - 1) / (annualRate / 100 / 12)))) / discountFactor,
                     };
                   }) : []}
-                  margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
+                  margin={{ top: 5, right: 15, left: 5, bottom: 5 }}
                 >
                   <defs>
                     <linearGradient id="min" x1="0" y1="0" x2="0" y2="1">
@@ -233,7 +233,7 @@ export default function CreditCardPayoffCalculator() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" />
                   <XAxis dataKey="month" tick={{ fill: "#6b8cba", fontSize: 10 }} tickLine={false} interval={11} />
-                  <YAxis tick={{ fill: "#6b8cba", fontSize: 10 }} tickLine={false} tickFormatter={(v) => v >= 100000 ? `${(v / 100000).toFixed(0)}L` : `${(v / 1000).toFixed(0)}K`} />
+                  <YAxis tick={{ fill: "#6b8cba", fontSize: 10 }} tickLine={false} width={75} tickFormatter={(v) => v >= 10000000 ? `₹${(v / 10000000).toFixed(1)}Cr` : v >= 100000 ? `₹${(v / 100000).toFixed(0)}L` : `₹${(v / 1000).toFixed(0)}K`} />
                   <Tooltip formatter={(v: any) => fmt(Math.max(0, v))} contentStyle={{ background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 8, fontSize: 11 }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Area type="monotone" dataKey="Minimum Payment" stroke="#ef4444" fill="url(#min)" strokeWidth={2} />

@@ -53,7 +53,7 @@ export default function SwpCalculator() {
     const data = [];
     const monthlyRate = expectedReturn / 100 / 12;
     const infRate = inflation / 100;
-    
+
     let currentCorpus = initialCorpus;
     let totalWithdrawn = 0;
     let depletionYear = null;
@@ -67,7 +67,7 @@ export default function SwpCalculator() {
 
     for (let y = 1; y <= years; y++) {
       let yearlyWithdrawn = 0;
-      
+
       // Calculate month by month for the year
       for (let m = 1; m <= 12; m++) {
         if (currentCorpus > 0) {
@@ -76,7 +76,7 @@ export default function SwpCalculator() {
           // 2. Subtract withdrawal
           const withdrawAmt = Math.min(currentCorpus, baseWithdrawal);
           currentCorpus = currentCorpus - withdrawAmt;
-          
+
           yearlyWithdrawn += withdrawAmt;
           totalWithdrawn += withdrawAmt;
 
@@ -204,27 +204,24 @@ export default function SwpCalculator() {
                 <button
                   type="button"
                   onClick={() => handleWithdrawalRateChange(3.0)}
-                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
-                    withdrawalRate === 3.0 ? "bg-emerald text-navy-bg" : "text-emerald border border-emerald/20 bg-emerald/5 hover:bg-emerald/10"
-                  }`}
+                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${withdrawalRate === 3.0 ? "bg-emerald text-navy-bg" : "text-emerald border border-emerald/20 bg-emerald/5 hover:bg-emerald/10"
+                    }`}
                 >
                   🇮🇳 3.0% (India Safe)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleWithdrawalRateChange(4.0)}
-                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
-                    withdrawalRate === 4.0 ? "bg-emerald text-navy-bg" : "text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light"
-                  }`}
+                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${withdrawalRate === 4.0 ? "bg-emerald text-navy-bg" : "text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light"
+                    }`}
                 >
                   4.0% (Trinity)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleWithdrawalRateChange(6.0)}
-                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
-                    withdrawalRate === 6.0 ? "bg-amber-400 text-navy-bg" : "text-amber-400 border border-amber-400/20 bg-amber-400/5 hover:bg-amber-400/10"
-                  }`}
+                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${withdrawalRate === 6.0 ? "bg-amber-400 text-navy-bg" : "text-amber-400 border border-amber-400/20 bg-amber-400/5 hover:bg-amber-400/10"
+                    }`}
                 >
                   6.0% (Moderate)
                 </button>
@@ -448,12 +445,12 @@ export default function SwpCalculator() {
                 >
                   <defs>
                     <linearGradient id="colorCorpus" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorWithdrawn" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#112d55" vertical={false} />
@@ -510,15 +507,15 @@ export default function SwpCalculator() {
                 When the two lines cross (e.g. around Year 37), it simply means <strong>you have taken out more money in total pension than what currently remains in your fund</strong>. It does <em>NOT</em> mean your corpus is exhausted!
               </p>
               <p>
-                <strong>When is the corpus actually exhausted?</strong> Your money is ONLY depleted if the <span className="text-emerald font-semibold">Green Line drops to ₹0</span>. Because your 9.6 Crore corpus compounds at 8% p.a., it generates enough growth to pay out over ₹50 Crores in total pension while still retaining ₹36+ Crores in principal!
+                <strong>When is the corpus actually exhausted?</strong> Your money is ONLY depleted if the <span className="text-emerald font-semibold">Green Line drops to ₹0</span>. Because your corpus compounds at a certain interest rate-annually compounded, it generates enough growth to pay out, your monthly withdrawal amount in total pension while still retaining principal amount in corpus!
               </p>
             </div>
           </div>
 
           {/* Collapsible Math Audit Section */}
           <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
-            <button 
-              onClick={() => setShowAudit(!showAudit)} 
+            <button
+              onClick={() => setShowAudit(!showAudit)}
               className="w-full flex justify-between items-center text-sm font-bold text-white hover:text-emerald transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-1.5">
@@ -527,7 +524,7 @@ export default function SwpCalculator() {
               </span>
               <ChevronDown className={`w-4 h-4 transform transition-transform ${showAudit ? 'rotate-180' : ''}`} />
             </button>
-            
+
             {showAudit && (
               <div className="text-xs text-muted-grey leading-relaxed space-y-4 pt-4 border-t border-border-navy/60 animate-fadeIn">
                 <div className="space-y-2">

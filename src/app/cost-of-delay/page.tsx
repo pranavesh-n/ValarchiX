@@ -179,7 +179,7 @@ export default function CostOfDelayCalculator() {
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Corpus Growth — 3 Scenarios</h3>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <AreaChart data={chartData} margin={{ top: 5, right: 15, left: 5, bottom: 5 }}>
                   <defs>
                     <linearGradient id="s0" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} /><stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
@@ -193,7 +193,7 @@ export default function CostOfDelayCalculator() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" />
                   <XAxis dataKey="year" tick={{ fill: "#6b8cba", fontSize: 10 }} tickLine={false} interval={Math.floor(totalYears / 6)} />
-                  <YAxis tick={{ fill: "#6b8cba", fontSize: 10 }} tickLine={false} tickFormatter={(v) => v >= 10000000 ? `${(v / 10000000).toFixed(1)}Cr` : `${(v / 100000).toFixed(0)}L`} />
+                  <YAxis tick={{ fill: "#6b8cba", fontSize: 10 }} tickLine={false} width={75} tickFormatter={(v) => v >= 10000000 ? `₹${(v / 10000000).toFixed(1)}Cr` : v >= 100000 ? `₹${(v / 100000).toFixed(0)}L` : `₹${(v / 1000).toFixed(0)}K`} />
                   <Tooltip formatter={(v: any) => fmt(v)} contentStyle={{ background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 8, fontSize: 11 }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Area type="monotone" dataKey="Start Today" stroke="#22c55e" fill="url(#s0)" strokeWidth={2.5} />

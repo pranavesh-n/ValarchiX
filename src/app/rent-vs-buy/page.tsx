@@ -225,10 +225,10 @@ export default function RentVsBuyCalculator() {
             <h3 className="text-sm font-bold text-white">Net Equity Wealth Trajectory Over Time</h3>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
+                <AreaChart data={chartData} margin={{ top: 5, right: 15, left: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                   <XAxis dataKey="year" stroke="#64748b" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="#64748b" tickFormatter={(v) => `₹${(v / 100000).toFixed(0)}L`} tick={{ fontSize: 10 }} />
+                  <YAxis stroke="#64748b" width={75} tickFormatter={(v) => v >= 10000000 ? `₹${(v / 10000000).toFixed(1)}Cr` : v >= 100000 ? `₹${(v / 100000).toFixed(0)}L` : `₹${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 10 }} />
                   <Tooltip formatter={(v: any) => fmt(v)} />
                   <Legend />
                   <Area type="monotone" dataKey="Buyer Net Equity" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={2} />

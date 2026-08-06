@@ -235,7 +235,7 @@ export default function LatteFactorCalculator() {
             </h3>
             <div className="h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <AreaChart data={chartData} margin={{ top: 5, right: 15, left: 5, bottom: 5 }}>
                   <defs>
                     <linearGradient id="invested" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
@@ -248,7 +248,7 @@ export default function LatteFactorCalculator() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" />
                   <XAxis dataKey="year" tick={{ fill: "#6b8cba", fontSize: 10 }} tickLine={false} interval={Math.floor(years / 5)} />
-                  <YAxis tick={{ fill: "#6b8cba", fontSize: 10 }} tickLine={false} tickFormatter={(v) => v >= 100000 ? `₹${(v / 100000).toFixed(0)}L` : `₹${(v / 1000).toFixed(0)}K`} />
+                  <YAxis tick={{ fill: "#6b8cba", fontSize: 10 }} tickLine={false} width={75} tickFormatter={(v) => v >= 10000000 ? `₹${(v / 10000000).toFixed(1)}Cr` : v >= 100000 ? `₹${(v / 100000).toFixed(0)}L` : `₹${(v / 1000).toFixed(0)}K`} />
                   <Tooltip formatter={(v: any) => fmt(v)} contentStyle={{ background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 8, fontSize: 11 }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Area type="monotone" dataKey="If Invested" stroke="#22c55e" fill="url(#invested)" strokeWidth={2} />
