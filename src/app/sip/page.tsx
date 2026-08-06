@@ -23,11 +23,11 @@ const FREQUENCY_MAP = {
 };
 
 const SIP_LIMITS_MAP = {
-  daily: { default: 500, min: 100, max: 20000, step: 100, minSlider: 100, maxSlider: 10000 },
-  weekly: { default: 2000, min: 200, max: 100000, step: 500, minSlider: 200, maxSlider: 50000 },
-  monthly: { default: 10000, min: 500, max: 2000000, step: 500, minSlider: 500, maxSlider: 100000 },
-  quarterly: { default: 25000, min: 1000, max: 5000000, step: 1000, minSlider: 1000, maxSlider: 250000 },
-  yearly: { default: 100000, min: 5000, max: 20000000, step: 5000, minSlider: 5000, maxSlider: 1000000 }
+  daily: { default: 500, min: 100, max: 50000, step: 100, minSlider: 100, maxSlider: 50000 },
+  weekly: { default: 2000, min: 200, max: 200000, step: 500, minSlider: 200, maxSlider: 200000 },
+  monthly: { default: 10000, min: 500, max: 2000000, step: 500, minSlider: 500, maxSlider: 500000 },
+  quarterly: { default: 25000, min: 1000, max: 5000000, step: 1000, minSlider: 1000, maxSlider: 1000000 },
+  yearly: { default: 100000, min: 5000, max: 20000000, step: 5000, minSlider: 5000, maxSlider: 5000000 }
 };
 
 export default function SipCalculator() {
@@ -89,14 +89,12 @@ export default function SipCalculator() {
       const freqObj = FREQUENCY_MAP[sipFrequency];
       const p = freqObj.periods;
       const ratePerPeriod = r / p;
-      const infRatePerPeriod = infRate / p;
-      const realRatePerPeriod = (1 + ratePerPeriod) / (1 + infRatePerPeriod) - 1;
 
       for (let y = 1; y <= years; y++) {
         const totalPeriods = y * p;
         const fvValue = amount * (((Math.pow(1 + ratePerPeriod, totalPeriods) - 1) / ratePerPeriod) * (1 + ratePerPeriod));
         const invested = amount * totalPeriods;
-        const infAdjustedFv = amount * (((Math.pow(1 + realRatePerPeriod, totalPeriods) - 1) / realRatePerPeriod) * (1 + realRatePerPeriod));
+        const infAdjustedFv = fvValue / Math.pow(1 + infRate, y);
 
         totalInvested = invested;
         futureValue = fvValue;

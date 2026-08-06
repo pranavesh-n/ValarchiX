@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Calculator, Info, HelpCircle, TrendingUp } from "lucide-react";
+import { Calculator, Info, HelpCircle, TrendingUp, ChevronDown } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line } from "recharts";
 import NumericInput from "@/components/NumericInput";
 
 export default function IncomeTaxCalculator() {
+  const [showAudit, setShowAudit] = useState(false);
   const [grossIncome, setGrossIncome] = useState(1200000);
   
   // Deductions for Old Regime
@@ -521,6 +522,58 @@ export default function IncomeTaxCalculator() {
           </div>
         </div>
       </section>
+
+      {/* Collapsible Math Audit Section */}
+      <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
+        <button 
+          onClick={() => setShowAudit(!showAudit)} 
+          className="w-full flex justify-between items-center text-sm font-bold text-white hover:text-emerald transition-colors cursor-pointer"
+        >
+          <span className="flex items-center gap-1.5">
+            <HelpCircle className="text-emerald" size={18} />
+            Tax Computation Mechanics & Bracket Creep Excel Formula
+          </span>
+          <ChevronDown className={`w-4 h-4 transform transition-transform ${showAudit ? 'rotate-180' : ''}`} />
+        </button>
+        
+        {showAudit && (
+          <div className="text-xs text-muted-grey leading-relaxed space-y-4 pt-4 border-t border-border-navy/60 animate-fadeIn">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-white">Regime Tax Slabs Summary</h4>
+              <div className="bg-navy-bg/50 p-3 rounded-xl space-y-2 font-mono">
+                <p>
+                  <strong>New Regime:</strong> Standard Deduction ₹75,000 + Standard Slabs (0-3L 0%, 3-7L 5%, 7-10L 10%, 10-12L 15%, 12-15L 20%, &gt;15L 30%). Rebate Sec 87A up to ₹7 Lakhs taxable income.
+                </p>
+                <p>
+                  <strong>Old Regime:</strong> Standard Deduction ₹50,000 + 80C + 80D + HRA + Home Loan Interest + 80CCD(1B). Rebate Sec 87A up to ₹5 Lakhs taxable income.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-semibold text-white">Bracket Creep & Real Income Discounting Formula</h4>
+              <table className="w-full text-[10px] border-collapse border border-border-navy/80 mt-2">
+                <thead>
+                  <tr className="bg-navy-bg/60">
+                    <th className="border border-border-navy/80 p-2 text-left">Calculation</th>
+                    <th className="border border-border-navy/80 p-2 text-left">Excel / Sheets Formula</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-border-navy/80 p-2 font-medium text-white">Projected Nominal Salary (Year Y)</td>
+                    <td className="border border-border-navy/80 p-2 font-mono text-emerald">=Gross_Income * ((1 + {salaryGrowth}%)^{`Y`})</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-border-navy/80 p-2 font-medium text-white">Real Purchasing Power Salary</td>
+                    <td className="border border-border-navy/80 p-2 font-mono text-emerald">=Nominal_Salary / ((1 + {inflation}%)^{`Y`})</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

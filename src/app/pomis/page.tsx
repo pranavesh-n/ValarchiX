@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Coins, Info, HelpCircle } from "lucide-react";
+import { Coins, Info, HelpCircle, ChevronDown } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import NumericInput from "@/components/NumericInput";
 
 export default function PomisCalculator() {
+  const [showAudit, setShowAudit] = useState(false);
   const [deposit, setDeposit] = useState(450000);
   const [isJoint, setIsJoint] = useState(false);
   const [adjustInflation, setAdjustInflation] = useState(true);
@@ -336,6 +337,58 @@ export default function PomisCalculator() {
           </div>
         </div>
       </section>
+
+      {/* Collapsible Math Audit Section */}
+      <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
+        <button 
+          onClick={() => setShowAudit(!showAudit)} 
+          className="w-full flex justify-between items-center text-sm font-bold text-white hover:text-emerald transition-colors cursor-pointer"
+        >
+          <span className="flex items-center gap-1.5">
+            <HelpCircle className="text-emerald" size={18} />
+            POMIS Payout Calculation & Excel Replication
+          </span>
+          <ChevronDown className={`w-4 h-4 transform transition-transform ${showAudit ? 'rotate-180' : ''}`} />
+        </button>
+        
+        {showAudit && (
+          <div className="text-xs text-muted-grey leading-relaxed space-y-4 pt-4 border-t border-border-navy/60 animate-fadeIn">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-white">POMIS Interest Formula</h4>
+              <div className="bg-navy-bg/50 p-3 rounded-xl space-y-2 font-mono">
+                <p>
+                  <strong>Monthly Payout = (Deposit Amount × 7.40%) / 12</strong>
+                </p>
+                <p className="text-[10px] text-muted-grey">
+                  Note: Statutory limits are ₹9 Lakhs for single accounts and ₹15 Lakhs for joint accounts. Lock-in tenure is 5 years.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-semibold text-white">Excel / Google Sheets Replication Formula</h4>
+              <table className="w-full text-[10px] border-collapse border border-border-navy/80 mt-2">
+                <thead>
+                  <tr className="bg-navy-bg/60">
+                    <th className="border border-border-navy/80 p-2 text-left">Calculation</th>
+                    <th className="border border-border-navy/80 p-2 text-left">Excel / Sheets Formula</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-border-navy/80 p-2 font-medium text-white">Monthly Income Payout</td>
+                    <td className="border border-border-navy/80 p-2 font-mono text-emerald">=(Deposit * 7.40%) / 12</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-border-navy/80 p-2 font-medium text-white">Real Principal Value at Year 5</td>
+                    <td className="border border-border-navy/80 p-2 font-mono text-emerald">=Deposit / ((1 + {inflation}%))^5</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

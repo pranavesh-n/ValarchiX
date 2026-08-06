@@ -88,32 +88,146 @@ export default function HLVCalculator() {
         <div className="lg:col-span-1 space-y-5">
           <div className="p-5 glass-card space-y-4">
             <h2 className="text-base font-bold text-white">Your Profile</h2>
-            {[
-              { label: "Annual Income (Take-Home)", value: annualIncome, set: setAnnualIncome, min: 100000, max: 50000000, step: 50000, type: "currency" as const },
-              { label: "Current Age", value: currentAge, set: setCurrentAge, min: 18, max: 65, step: 1, type: "number" as const },
-              { label: "Planned Retirement Age", value: retirementAge, set: setRetirementAge, min: 40, max: 75, step: 1, type: "number" as const },
-              { label: "Annual Family Expenses", value: annualExpenses, set: setAnnualExpenses, min: 100000, max: 10000000, step: 50000, type: "currency" as const },
-              { label: "Inflation Rate (%)", value: inflation, set: setInflation, min: 3, max: 12, step: 0.5, type: "number" as const },
-            ].map((f) => (
-              <div key={f.label} className="flex justify-between items-center text-xs font-semibold">
-                <span className="text-muted-grey">{f.label}</span>
-                <NumericInput value={f.value} onChange={f.set} min={f.min} max={f.max} step={f.step} type={f.type} />
+            
+            {/* Annual Income */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-muted-grey">Annual Income (Take-Home)</span>
+                <NumericInput value={annualIncome} onChange={setAnnualIncome} min={100000} max={50000000} step={50000} type="currency" />
               </div>
-            ))}
+              <input
+                type="range"
+                min={300000}
+                max={10000000}
+                step={100000}
+                value={annualIncome}
+                onChange={(e) => setAnnualIncome(Number(e.target.value))}
+                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+              />
+            </div>
+
+            {/* Current Age */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-muted-grey">Current Age</span>
+                <NumericInput value={currentAge} onChange={setCurrentAge} min={18} max={65} step={1} type="number" />
+              </div>
+              <input
+                type="range"
+                min={18}
+                max={60}
+                step={1}
+                value={currentAge}
+                onChange={(e) => setCurrentAge(Number(e.target.value))}
+                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+              />
+            </div>
+
+            {/* Retirement Age */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-muted-grey">Planned Retirement Age</span>
+                <NumericInput value={retirementAge} onChange={setRetirementAge} min={40} max={75} step={1} type="number" />
+              </div>
+              <input
+                type="range"
+                min={45}
+                max={75}
+                step={1}
+                value={retirementAge}
+                onChange={(e) => setRetirementAge(Number(e.target.value))}
+                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+              />
+            </div>
+
+            {/* Annual Family Expenses */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-muted-grey">Annual Family Expenses</span>
+                <NumericInput value={annualExpenses} onChange={setAnnualExpenses} min={100000} max={10000000} step={50000} type="currency" />
+              </div>
+              <input
+                type="range"
+                min={100000}
+                max={5000000}
+                step={50000}
+                value={annualExpenses}
+                onChange={(e) => setAnnualExpenses(Number(e.target.value))}
+                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+              />
+            </div>
+
+            {/* Inflation Rate */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-muted-grey">Inflation Rate (%)</span>
+                <NumericInput value={inflation} onChange={setInflation} min={3} max={12} step={0.5} type="number" />
+              </div>
+              <input
+                type="range"
+                min={3}
+                max={12}
+                step={0.5}
+                value={inflation}
+                onChange={(e) => setInflation(Number(e.target.value))}
+                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+              />
+            </div>
           </div>
 
           <div className="p-5 glass-card space-y-4">
             <h2 className="text-base font-bold text-white">Existing Coverage</h2>
-            {[
-              { label: "Existing Life Insurance", value: existingInsurance, set: setExistingInsurance, min: 0, max: 100000000, step: 500000, type: "currency" as const },
-              { label: "Outstanding Liabilities", value: existingLiabilities, set: setExistingLiabilities, min: 0, max: 50000000, step: 100000, type: "currency" as const },
-              { label: "Savings & Investments", value: existingAssets, set: setExistingAssets, min: 0, max: 50000000, step: 100000, type: "currency" as const },
-            ].map((f) => (
-              <div key={f.label} className="flex justify-between items-center text-xs font-semibold">
-                <span className="text-muted-grey">{f.label}</span>
-                <NumericInput value={f.value} onChange={f.set} min={f.min} max={f.max} step={f.step} type={f.type} />
+
+            {/* Existing Life Insurance */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-muted-grey">Existing Life Insurance</span>
+                <NumericInput value={existingInsurance} onChange={setExistingInsurance} min={0} max={100000000} step={500000} type="currency" />
               </div>
-            ))}
+              <input
+                type="range"
+                min={0}
+                max={30000000}
+                step={500000}
+                value={existingInsurance}
+                onChange={(e) => setExistingInsurance(Number(e.target.value))}
+                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+              />
+            </div>
+
+            {/* Outstanding Liabilities */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-muted-grey">Outstanding Liabilities</span>
+                <NumericInput value={existingLiabilities} onChange={setExistingLiabilities} min={0} max={50000000} step={100000} type="currency" />
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={20000000}
+                step={500000}
+                value={existingLiabilities}
+                onChange={(e) => setExistingLiabilities(Number(e.target.value))}
+                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+              />
+            </div>
+
+            {/* Savings & Investments */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-muted-grey">Savings & Investments</span>
+                <NumericInput value={existingAssets} onChange={setExistingAssets} min={0} max={50000000} step={100000} type="currency" />
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={20000000}
+                step={500000}
+                value={existingAssets}
+                onChange={(e) => setExistingAssets(Number(e.target.value))}
+                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+              />
+            </div>
           </div>
         </div>
 

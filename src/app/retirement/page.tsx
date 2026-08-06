@@ -23,7 +23,7 @@ export default function RetirementPlanner() {
   const [adjustInflation, setAdjustInflation] = useState(true);
   const [preReturn, setPreReturn] = useState(12);
   const [postReturn, setPostReturn] = useState(6.95);
-  const [swr, setSwr] = useState(4); // Safe Withdrawal Rate (%)
+  const [swr, setSwr] = useState(3.0); // Safe Withdrawal Rate (3.0% India benchmark)
   const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
 
   useEffect(() => {
@@ -350,16 +350,37 @@ export default function RetirementPlanner() {
                 </div>
                 <input
                   type="range"
-                  min={3}
+                  min={2}
                   max={6}
                   step={0.25}
                   value={swr}
                   onChange={(e) => setSwr(Number(e.target.value))}
-                  className="w-full accent-emerald bg-navy-bg h-1 rounded-lg"
+                  className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
                 />
                 <div className="flex justify-between text-[9px] text-muted-grey">
-                  <span>3% (Conservative)</span>
-                  <span>6% (Aggressive)</span>
+                  <span>2% (Conservative)</span>
+                  <span>3% (India Benchmark)</span>
+                  <span>4% (US Trinity)</span>
+                </div>
+                <div className="flex gap-1.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setSwr(3.0)}
+                    className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      swr === 3.0 ? "bg-emerald text-navy-bg" : "text-emerald border border-emerald/20 bg-emerald/5 hover:bg-emerald/10"
+                    }`}
+                  >
+                    🇮🇳 India 3.0% (33.3x)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSwr(4.0)}
+                    className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      swr === 4.0 ? "bg-emerald text-navy-bg" : "text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light"
+                    }`}
+                  >
+                    4.0% Trinity (25x)
+                  </button>
                 </div>
               </div>
             </div>

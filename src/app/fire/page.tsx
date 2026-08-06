@@ -23,6 +23,7 @@ export default function FireCalculator() {
   const [preRate, setPreRate] = useState(12); // expected index returns
   const [postRate, setPostRate] = useState(7); // safe retirement yields (nominal)
   const [inflation, setInflation] = useState(5.09); // baseline inflation
+  const [swr, setSwr] = useState(3.0); // Safe Withdrawal Rate (3.0% India benchmark)
   const [fireMultiplier, setFireMultiplier] = useState(1.0); // lifestyle toggle
   const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
 
@@ -50,8 +51,8 @@ export default function FireCalculator() {
     // Monthly pre-retirement return rate
     const monthlyPreRate = rPre / 12;
 
-    // Safe withdrawal rate (SWR) post-retirement: safe return rate minus inflation. Clamp between 2% and 10%.
-    const safeWithdrawalRate = Math.max(0.02, Math.min(0.10, rPost - inf));
+    // Safe withdrawal rate (SWR) post-retirement (user-configured, default 3% India benchmark)
+    const safeWithdrawalRate = Math.max(0.01, Math.min(0.10, swr / 100));
 
     // Inflated annual expenses at retirement
     const annualExpensesToday = expenses * 12 * fireMultiplier;
@@ -109,7 +110,7 @@ export default function FireCalculator() {
       safeWithdrawalRate,
       chartData
     };
-  }, [currentAge, targetAge, expenses, savings, preRate, postRate, inflation, fireMultiplier]);
+  }, [currentAge, targetAge, expenses, savings, preRate, postRate, inflation, swr, fireMultiplier]);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -345,7 +346,56 @@ export default function FireCalculator() {
                 />
               </div>
 
-              {/* Inflation */}
+              {/* Safe Withdrawal Rate (SWR) */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-semibold">
+                  <span className="text-muted-grey">Safe Withdrawal Rate (SWR)</span>
+                  <NumericInput
+                    value={swr}
+                    onChange={setSwr}
+                    min={1}
+                    max={10}
+                    step={0.1}
+                    type="percent"
+                  />
+                </div>
+                <input
+                  type="range"
+                  min={2}
+                  max={6}
+                  step={0.25}
+                  value={swr}
+                  onChange={(e) => setSwr(Number(e.target.value))}
+                  className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-muted-grey">
+                  <span>2% (Ultra-Safe)</span>
+                  <span>3% (India Benchmark)</span>
+                  <span>4% (US Trinity)</span>
+                </div>
+                <div className="flex gap-1.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setSwr(3.0)}
+                    className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      swr === 3.0 ? "bg-emerald text-navy-bg" : "text-emerald border border-emerald/20 bg-emerald/5 hover:bg-emerald/10"
+                    }`}
+                  >
+                    🇮🇳 India 3.0% (33.3x)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSwr(4.0)}
+                    className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      swr === 4.0 ? "bg-emerald text-navy-bg" : "text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light"
+                    }`}
+                  >
+                    4.0% Trinity (25x)
+                  </button>
+                </div>
+              </div>
+
+              {/* Economic Inflation Rate */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs font-semibold">
                   <span className="text-muted-grey">Economic Inflation Rate</span>
@@ -361,7 +411,7 @@ export default function FireCalculator() {
                 <input
                   type="range"
                   min={3}
-                  max={12}
+                  max={15}
                   step={0.5}
                   value={inflation}
                   onChange={(e) => setInflation(Number(e.target.value))}

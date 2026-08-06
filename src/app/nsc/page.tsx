@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Coins, Info, HelpCircle } from "lucide-react";
+import { Coins, Info, HelpCircle, ChevronDown } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import NumericInput from "@/components/NumericInput";
 
 export default function NscCalculator() {
+  const [showAudit, setShowAudit] = useState(false);
   const [investment, setInvestment] = useState(100000);
   const [adjustInflation, setAdjustInflation] = useState(true);
   const [inflation, setInflation] = useState(5.09);
@@ -327,6 +328,58 @@ export default function NscCalculator() {
           </div>
         </div>
       </section>
+
+      {/* Collapsible Math Audit Section */}
+      <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
+        <button 
+          onClick={() => setShowAudit(!showAudit)} 
+          className="w-full flex justify-between items-center text-sm font-bold text-white hover:text-emerald transition-colors cursor-pointer"
+        >
+          <span className="flex items-center gap-1.5">
+            <HelpCircle className="text-emerald" size={18} />
+            NSC Annual Compounding & Excel Replication
+          </span>
+          <ChevronDown className={`w-4 h-4 transform transition-transform ${showAudit ? 'rotate-180' : ''}`} />
+        </button>
+        
+        {showAudit && (
+          <div className="text-xs text-muted-grey leading-relaxed space-y-4 pt-4 border-t border-border-navy/60 animate-fadeIn">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-white">NSC Compounding Formula</h4>
+              <div className="bg-navy-bg/50 p-3 rounded-xl space-y-2 font-mono">
+                <p>
+                  <strong>Maturity Value = Investment Principal × (1 + 7.70%)^5</strong>
+                </p>
+                <p className="text-[10px] text-muted-grey">
+                  Note: Interest is compounded annually for 5 years and paid out at maturity. Interest earned in Years 1–4 is deemed reinvested under Section 80C.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-semibold text-white">Excel / Google Sheets Replication Formula</h4>
+              <table className="w-full text-[10px] border-collapse border border-border-navy/80 mt-2">
+                <thead>
+                  <tr className="bg-navy-bg/60">
+                    <th className="border border-border-navy/80 p-2 text-left">Calculation</th>
+                    <th className="border border-border-navy/80 p-2 text-left">Excel / Sheets Formula</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-border-navy/80 p-2 font-medium text-white">Maturity Amount (Year 5)</td>
+                    <td className="border border-border-navy/80 p-2 font-mono text-emerald">=Investment * (1 + 7.70%)^5</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-border-navy/80 p-2 font-medium text-white">Inflation Real Value</td>
+                    <td className="border border-border-navy/80 p-2 font-mono text-emerald">=Maturity_Amount / ((1 + {inflation}%))^5</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

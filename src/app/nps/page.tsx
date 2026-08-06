@@ -43,9 +43,8 @@ export default function NpsCalculator() {
       const fv = monthlyContribution * (((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate));
       const invested = monthlyContribution * months;
       
-      // Inflation adjusted value
-      const realMonthlyRate = (1 + monthlyRate) / (1 + (infRate / 12)) - 1;
-      const realFv = monthlyContribution * (((Math.pow(1 + realMonthlyRate, months) - 1) / realMonthlyRate) * (1 + realMonthlyRate));
+      // Inflation adjusted value (purchasing power in today's rupees)
+      const realFv = fv / Math.pow(1 + infRate, y);
 
       accumulatedCorpus = fv;
       totalInvested = invested;

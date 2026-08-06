@@ -358,7 +358,7 @@ export default function PpfCalculator() {
                       </tr>
                       <tr>
                         <td className="border border-border-navy/80 p-2 font-medium text-white">Inflation Real Value</td>
-                        <td className="border border-border-navy/80 p-2 font-mono text-emerald">=-FV(((1 + {PPF_INTEREST_RATE}%)/(1 + {inflation}%) - 1), {years}, {yearlyDeposit}, 0, 1)</td>
+                        <td className="border border-border-navy/80 p-2 font-mono text-emerald">=Maturity_Balance / ((1 + {inflation}%)^{years})</td>
                       </tr>
                     </tbody>
                   </table>

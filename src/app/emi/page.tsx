@@ -86,9 +86,9 @@ export default function LoanEmiCalculator() {
     for (let m = 1; m <= totalMonths; m++) {
       if (standardBalance > 0) {
         const interest = standardBalance * monthlyRate;
-        const principal = Math.min(standardEmi - interest, standardBalance);
+        const principal = (m === totalMonths) ? standardBalance : Math.min(standardEmi - interest, standardBalance);
         const paidThisMonth = principal + interest;
-        standardBalance -= principal;
+        standardBalance = Math.max(0, standardBalance - principal);
         standardTotalInterest += interest;
         nominalStandardPaidTotal += paidThisMonth;
         realStandardPaidTotal += paidThisMonth / Math.pow(1 + monthlyInfRate, m);
@@ -104,8 +104,8 @@ export default function LoanEmiCalculator() {
       let currentStandardBal = 0;
       if (standardBalance > 0) {
         const interest = standardBalance * monthlyRate;
-        const principal = Math.min(standardEmi - interest, standardBalance);
-        standardBalance -= principal;
+        const principal = (m === totalMonths) ? standardBalance : Math.min(standardEmi - interest, standardBalance);
+        standardBalance = Math.max(0, standardBalance - principal);
         currentStandardBal = standardBalance;
       }
 
@@ -116,7 +116,7 @@ export default function LoanEmiCalculator() {
         const principal = Math.min(standardEmi - interest, prepaidBalance);
         let actualExtra = 0;
         
-        prepaidBalance -= principal;
+        prepaidBalance = Math.max(0, prepaidBalance - principal);
         prepaidTotalInterest += interest;
 
         // Apply extra prepayment if scheduled
@@ -129,7 +129,7 @@ export default function LoanEmiCalculator() {
 
         if (extraAmount > 0 && prepaidBalance > 0) {
           actualExtra = Math.min(extraAmount, prepaidBalance);
-          prepaidBalance -= actualExtra;
+          prepaidBalance = Math.max(0, prepaidBalance - actualExtra);
         }
 
         const paidThisMonth = principal + interest + actualExtra;

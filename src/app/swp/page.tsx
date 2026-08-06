@@ -55,6 +55,10 @@ export default function SwpCalculator() {
           
           yearlyWithdrawn += withdrawAmt;
           totalWithdrawn += withdrawAmt;
+
+          if (currentCorpus <= 0 && depletionYear === null) {
+            depletionYear = y;
+          }
         } else {
           if (depletionYear === null) {
             depletionYear = y;
@@ -69,15 +73,18 @@ export default function SwpCalculator() {
 
       data.push({
         year: `Yr ${y}`,
-        "Remaining Corpus": Math.round(currentCorpus),
+        "Remaining Corpus": Math.max(0, Math.round(currentCorpus)),
         "Cumulative Withdrawn": Math.round(totalWithdrawn)
       });
     }
 
+    const withdrawalRate = initialCorpus > 0 ? ((monthlyWithdrawal * 12) / initialCorpus) * 100 : 0;
+
     return {
       totalWithdrawn: Math.round(totalWithdrawn),
-      remainingCorpus: Math.round(currentCorpus),
+      remainingCorpus: Math.max(0, Math.round(currentCorpus)),
       depletionYear,
+      withdrawalRate,
       chartData: data
     };
   }, [initialCorpus, monthlyWithdrawal, expectedReturn, years, adjustWithdrawal, inflation]);
@@ -130,15 +137,15 @@ export default function SwpCalculator() {
               <input
                 type="range"
                 min={100000}
-                max={50000000}
-                step={100000}
+                max={500000000}
+                step={500000}
                 value={initialCorpus}
                 onChange={(e) => setInitialCorpus(Number(e.target.value))}
                 className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-muted-grey">
                 <span>₹1L</span>
-                <span>₹5 Crore</span>
+                <span>₹50 Crore</span>
               </div>
             </div>
 
@@ -158,7 +165,7 @@ export default function SwpCalculator() {
               <input
                 type="range"
                 min={5000}
-                max={500000}
+                max={5000000}
                 step={5000}
                 value={monthlyWithdrawal}
                 onChange={(e) => setMonthlyWithdrawal(Number(e.target.value))}
@@ -166,7 +173,7 @@ export default function SwpCalculator() {
               />
               <div className="flex justify-between text-[10px] text-muted-grey">
                 <span>₹5K</span>
-                <span>₹5L / Mo</span>
+                <span>₹50L / Mo</span>
               </div>
             </div>
 
@@ -186,7 +193,7 @@ export default function SwpCalculator() {
               <input
                 type="range"
                 min={4}
-                max={18}
+                max={30}
                 step={0.5}
                 value={expectedReturn}
                 onChange={(e) => setExpectedReturn(Number(e.target.value))}
@@ -194,7 +201,7 @@ export default function SwpCalculator() {
               />
               <div className="flex justify-between text-[10px] text-muted-grey">
                 <span>4%</span>
-                <span>18%</span>
+                <span>30%</span>
               </div>
               <div className="flex flex-wrap gap-1.5 pt-1">
                 <button
@@ -223,7 +230,7 @@ export default function SwpCalculator() {
               <input
                 type="range"
                 min={5}
-                max={40}
+                max={50}
                 step={1}
                 value={years}
                 onChange={(e) => setYears(Number(e.target.value))}
@@ -231,7 +238,7 @@ export default function SwpCalculator() {
               />
               <div className="flex justify-between text-[10px] text-muted-grey">
                 <span>5 Yrs</span>
-                <span>40 Yrs</span>
+                <span>50 Yrs</span>
               </div>
             </div>
 
@@ -267,7 +274,7 @@ export default function SwpCalculator() {
                   <input
                     type="range"
                     min={3}
-                    max={12}
+                    max={20}
                     step={0.5}
                     value={inflation}
                     onChange={(e) => setInflation(Number(e.target.value))}
@@ -275,7 +282,7 @@ export default function SwpCalculator() {
                   />
                   <div className="flex justify-between text-[10px] text-muted-grey">
                     <span>3%</span>
-                    <span>12%</span>
+                    <span>20%</span>
                   </div>
                 </div>
               )}
@@ -286,41 +293,61 @@ export default function SwpCalculator() {
         {/* Results Panel */}
         <div className="lg:col-span-2 space-y-6">
           {/* Status Banners */}
-          {calculations.depletionYear !== null ? (
-            <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 flex items-start gap-3 text-red-400 text-xs leading-relaxed animate-pulse">
+          {calculations.depletionYear !== null || calculations.remainingCorpus <= 0 ? (
+            <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start gap-3 text-red-400 text-xs leading-relaxed animate-pulse">
               <AlertTriangle className="shrink-0 mt-0.5" size={18} />
               <div>
-                <strong className="text-sm font-bold block">⚠️ Alert: Corpus Depleted Prematurely</strong>
-                Your withdrawal rate is unsustainably high for this return yield. Your retirement nest egg ran completely dry in **Year {calculations.depletionYear}**. Reduce your withdrawal amount or increase your equity yield allocation.
+                <strong className="text-sm font-bold block text-red-400">⚠️ Alert: Corpus Depleted Prematurely</strong>
+                Your annual withdrawal rate of <strong>{calculations.withdrawalRate.toFixed(2)}%</strong> is unsustainably high for your return yield. Your retirement nest egg ran completely dry in <strong>Year {calculations.depletionYear || years}</strong>. Reduce monthly withdrawals or increase equity allocation to protect your capital.
+              </div>
+            </div>
+          ) : calculations.remainingCorpus < initialCorpus ? (
+            <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-3 text-amber-400 text-xs leading-relaxed">
+              <AlertTriangle className="shrink-0 mt-0.5" size={18} />
+              <div>
+                <strong className="text-sm font-bold block text-amber-400">⚠️ Capital Erosion SWP Strategy</strong>
+                Your annual withdrawal rate of <strong>{calculations.withdrawalRate.toFixed(2)}%</strong> exceeds your net real yield, resulting in gradual principal draw-down. Your nest egg drops from <strong>{formatCurrency(initialCorpus)}</strong> to <strong>{formatCurrency(calculations.remainingCorpus)}</strong> over {years} years. Consider trimming withdrawals to preserve principal long-term.
               </div>
             </div>
           ) : (
             <div className="p-4 rounded-xl border border-emerald/20 bg-emerald/10 flex items-start gap-3 text-emerald text-xs leading-relaxed">
               <ShieldCheck className="shrink-0 mt-0.5" size={18} />
               <div>
-                <strong className="text-sm font-bold block">🛡️ Safe SWP Strategy</strong>
-                Your retirement corpus compounds faster than withdrawals are eating it. The nest egg remains healthy and self-sustaining across the entire {years}-year term.
+                <strong className="text-sm font-bold block">🛡️ Safe & Self-Sustaining SWP Strategy</strong>
+                Your annual withdrawal rate of <strong>{calculations.withdrawalRate.toFixed(2)}%</strong> is well within safe limits. Your retirement corpus compounds faster than withdrawals, allowing the nest egg to grow to <strong>{formatCurrency(calculations.remainingCorpus)}</strong> across the {years}-year term.
               </div>
             </div>
           )}
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
               <span className="text-[10px] uppercase font-bold text-muted-grey block">Initial Principal</span>
-              <p className="text-xl font-bold text-white mt-1">
+              <p className="text-lg font-bold text-white mt-1">
                 {formatCurrency(initialCorpus)}
               </p>
+              <span className="text-[9px] text-muted-grey block mt-0.5">
+                Withdrawal Rate: {calculations.withdrawalRate.toFixed(2)}% / yr
+              </span>
             </div>
             <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
               <span className="text-[10px] uppercase font-bold text-muted-grey block">Total Pension Paid Out</span>
-              <p className="text-xl font-bold text-emerald mt-1">
+              <p className="text-lg font-bold text-emerald mt-1">
                 {formatCurrency(calculations.totalWithdrawn)}
               </p>
             </div>
-            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45 col-span-2 md:col-span-1">
+            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
+              <span className="text-[10px] uppercase font-bold text-muted-grey block">Annual Withdrawal Rate</span>
+              <p className={`text-lg font-bold mt-1 ${calculations.withdrawalRate <= 4 ? "text-emerald" : calculations.withdrawalRate <= 6 ? "text-amber-400" : "text-red-400"}`}>
+                {calculations.withdrawalRate.toFixed(2)}%
+              </p>
+              <span className="text-[9px] text-muted-grey block mt-0.5">
+                {calculations.withdrawalRate <= 4 ? "Safe (< 4.0%)" : calculations.withdrawalRate <= 6 ? "Moderate (4-6%)" : "Aggressive (> 6.0%)"}
+              </span>
+            </div>
+            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
               <span className="text-[10px] uppercase font-bold text-muted-grey block">Remaining Balance</span>
-              <p className={`text-xl font-bold mt-1 ${calculations.remainingCorpus > 0 ? "text-emerald" : "text-red-400"}`}>
+              <p className={`text-lg font-bold mt-1 ${calculations.remainingCorpus >= initialCorpus ? "text-emerald" : calculations.remainingCorpus > 0 ? "text-amber-400" : "text-red-400"}`}>
                 {formatCurrency(calculations.remainingCorpus)}
               </p>
             </div>

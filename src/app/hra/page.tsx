@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Calculator, Info, HelpCircle } from "lucide-react";
+import { Calculator, Info, HelpCircle, ChevronDown } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import NumericInput from "@/components/NumericInput";
 
 export default function HraCalculator() {
+  const [showAudit, setShowAudit] = useState(false);
   const [monthlyBasic, setMonthlyBasic] = useState(60000);
   const [monthlyDa, setMonthlyDa] = useState(0);
   const [monthlyHraReceived, setMonthlyHraReceived] = useState(25000);
@@ -371,6 +372,62 @@ export default function HraCalculator() {
           </div>
         </div>
       </section>
+
+      {/* Collapsible Math Audit Section */}
+      <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
+        <button 
+          onClick={() => setShowAudit(!showAudit)} 
+          className="w-full flex justify-between items-center text-sm font-bold text-white hover:text-emerald transition-colors cursor-pointer"
+        >
+          <span className="flex items-center gap-1.5">
+            <HelpCircle className="text-emerald" size={18} />
+            HRA Exemption Formula & Excel Replication
+          </span>
+          <ChevronDown className={`w-4 h-4 transform transition-transform ${showAudit ? 'rotate-180' : ''}`} />
+        </button>
+        
+        {showAudit && (
+          <div className="text-xs text-muted-grey leading-relaxed space-y-4 pt-4 border-t border-border-navy/60 animate-fadeIn">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-white">Section 10(13A) Exemption Rule</h4>
+              <div className="bg-navy-bg/50 p-3 rounded-xl space-y-2 font-mono">
+                <p>
+                  <strong>Monthly Exempt HRA = MIN(Rule 1, Rule 2, Rule 3)</strong>
+                </p>
+                <p className="text-[10px] text-muted-grey">
+                  Rule 1: Actual HRA Received
+                  <br />
+                  Rule 2: Rent Paid - 10% of (Basic + DA)
+                  <br />
+                  Rule 3: 50% of (Basic + DA) for Metros / 40% for Non-Metros
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-semibold text-white">Excel / Google Sheets Replication Formula</h4>
+              <table className="w-full text-[10px] border-collapse border border-border-navy/80 mt-2">
+                <thead>
+                  <tr className="bg-navy-bg/60">
+                    <th className="border border-border-navy/80 p-2 text-left">Calculation</th>
+                    <th className="border border-border-navy/80 p-2 text-left">Excel / Sheets Formula</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-border-navy/80 p-2 font-medium text-white">Monthly Exempt HRA</td>
+                    <td className="border border-border-navy/80 p-2 font-mono text-emerald">=MIN(HRA_Received, MAX(0, Rent_Paid - 0.1*(Basic+DA)), (Basic+DA)*IF(IsMetro, 0.5, 0.4))</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-border-navy/80 p-2 font-medium text-white">Annual Taxable HRA</td>
+                    <td className="border border-border-navy/80 p-2 font-mono text-emerald">=(HRA_Received - Monthly_Exempt_HRA) * 12</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

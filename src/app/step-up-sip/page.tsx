@@ -53,12 +53,9 @@ export default function StepUpSipCalculator() {
     const r = rate / 100;
     const infRate = inflation / 100;
     const monthlyRate = r / 12;
-    const monthlyInfRate = infRate / 12;
-    const realMonthlyRate = (1 + monthlyRate) / (1 + monthlyInfRate) - 1;
 
     let stepUpInvested = 0;
     let stepUpFutureValue = 0;
-    let stepUpRealFutureValue = 0;
 
     for (let y = 1; y <= years; y++) {
       // Calculate monthly SIP contribution for this specific year
@@ -77,15 +74,13 @@ export default function StepUpSipCalculator() {
       const stepUpFVNewCompounded = currentMonthlySip * (((Math.pow(1 + monthlyRate, 12) - 1) / monthlyRate) * (1 + monthlyRate));
       stepUpFutureValue = stepUpFVPrevCompounded + stepUpFVNewCompounded;
 
-      // Compound step-up real FV (inflation adjusted)
-      const stepUpRealFVPrevCompounded = stepUpRealFutureValue * Math.pow(1 + realMonthlyRate, 12);
-      const stepUpRealFVNewCompounded = currentMonthlySip * (((Math.pow(1 + realMonthlyRate, 12) - 1) / realMonthlyRate) * (1 + realMonthlyRate));
-      stepUpRealFutureValue = stepUpRealFVPrevCompounded + stepUpRealFVNewCompounded;
+      // Compound step-up real FV (discounted by inflation to today's purchasing power)
+      const stepUpRealFutureValue = stepUpFutureValue / Math.pow(1 + infRate, y);
 
       // Normal SIP calculations (stays flat at the initial 'amount')
       const normalInvested = amount * y * 12;
       const normalFutureValue = amount * (((Math.pow(1 + monthlyRate, y * 12) - 1) / monthlyRate) * (1 + monthlyRate));
-      const normalRealFutureValue = amount * (((Math.pow(1 + realMonthlyRate, y * 12) - 1) / realMonthlyRate) * (1 + realMonthlyRate));
+      const normalRealFutureValue = normalFutureValue / Math.pow(1 + infRate, y);
 
       data.push({
         year: `Yr ${y}`,
@@ -97,11 +92,12 @@ export default function StepUpSipCalculator() {
     }
 
     const finalStepUpFV = Math.round(stepUpFutureValue);
-    const finalStepUpRealFV = Math.round(stepUpRealFutureValue);
+    const finalStepUpRealFV = Math.round(stepUpFutureValue / Math.pow(1 + infRate, years));
     const finalStepUpInvested = Math.round(stepUpInvested);
 
-    const finalNormalFV = Math.round(amount * (((Math.pow(1 + monthlyRate, years * 12) - 1) / monthlyRate) * (1 + monthlyRate)));
-    const finalNormalRealFV = Math.round(amount * (((Math.pow(1 + realMonthlyRate, years * 12) - 1) / realMonthlyRate) * (1 + realMonthlyRate)));
+    const finalNormalNominalFV = amount * (((Math.pow(1 + monthlyRate, years * 12) - 1) / monthlyRate) * (1 + monthlyRate));
+    const finalNormalFV = Math.round(finalNormalNominalFV);
+    const finalNormalRealFV = Math.round(finalNormalNominalFV / Math.pow(1 + infRate, years));
     const finalNormalInvested = Math.round(amount * years * 12);
 
     return {
