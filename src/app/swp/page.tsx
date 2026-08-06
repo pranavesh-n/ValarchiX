@@ -504,7 +504,7 @@ export default function SwpCalculator() {
                 <strong>Why do the lines intersect?</strong> The <span className="text-blue-400 font-semibold">Blue Line (Cumulative Withdrawn)</span> tracks the total lifetime sum of all monthly pension payouts collected so far. The <span className="text-emerald font-semibold">Green Line (Remaining Corpus)</span> tracks your live investment balance.
               </p>
               <p>
-                When the two lines cross (e.g. around Year 37), it simply means <strong>you have taken out more money in total pension than what currently remains in your fund</strong>. It does <em>NOT</em> mean your corpus is exhausted!
+                When the two lines cross , it simply means <strong>you have taken out more money in total pension than what currently remains in your fund</strong>. It does <em>NOT</em> mean your corpus is exhausted!
               </p>
               <p>
                 <strong>When is the corpus actually exhausted?</strong> Your money is ONLY depleted if the <span className="text-emerald font-semibold">Green Line drops to ₹0</span>. Because your corpus compounds at a certain interest rate-annually compounded, it generates enough growth to pay out, your monthly withdrawal amount in total pension while still retaining principal amount in corpus!
