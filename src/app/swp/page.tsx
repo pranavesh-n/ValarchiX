@@ -472,7 +472,7 @@ export default function SwpCalculator() {
                       borderRadius: "8px",
                       color: "#f1f5f9"
                     }}
-                    formatter={(v: any) => [formatCurrency(v), ""]}
+                    formatter={(v: any, name: any) => [formatCurrency(v), name]}
                   />
                   <Legend iconType="circle" />
                   <Area
@@ -500,11 +500,19 @@ export default function SwpCalculator() {
           <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
             <h3 className="text-base font-bold text-white flex items-center gap-1.5">
               <Info className="text-emerald" size={18} />
-              Educational Concept: Safe Withdrawal Limits
+              Educational Concept: Safe Withdrawal Limits & Line Intersections
             </h3>
-            <p className="text-xs text-muted-grey leading-relaxed">
-              Generating post-retirement income requires setting a safe withdrawal rate. If you withdraw **more than 4% to 5%** of your initial capital annually (while adjusting for inflation), your corpus faces a high risk of depletion (sequence of returns risk) during market downturns. SWP simulators teach you how to set sustainable withdrawal levels to prevent running out of money in old age.
-            </p>
+            <div className="text-xs text-muted-grey leading-relaxed space-y-2">
+              <p>
+                <strong>Why do the lines intersect?</strong> The <span className="text-blue-400 font-semibold">Blue Line (Cumulative Withdrawn)</span> tracks the total lifetime sum of all monthly pension payouts collected so far. The <span className="text-emerald font-semibold">Green Line (Remaining Corpus)</span> tracks your live investment balance.
+              </p>
+              <p>
+                When the two lines cross (e.g. around Year 37), it simply means <strong>you have taken out more money in total pension than what currently remains in your fund</strong>. It does <em>NOT</em> mean your corpus is exhausted!
+              </p>
+              <p>
+                <strong>When is the corpus actually exhausted?</strong> Your money is ONLY depleted if the <span className="text-emerald font-semibold">Green Line drops to ₹0</span>. Because your 9.6 Crore corpus compounds at 8% p.a., it generates enough growth to pay out over ₹50 Crores in total pension while still retaining ₹36+ Crores in principal!
+              </p>
+            </div>
           </div>
 
           {/* Collapsible Math Audit Section */}
