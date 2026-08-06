@@ -9,6 +9,7 @@ export default function SwpCalculator() {
   const [showAudit, setShowAudit] = useState(false);
   const [initialCorpus, setInitialCorpus] = useState(5000000); // 50 Lakhs
   const [monthlyWithdrawal, setMonthlyWithdrawal] = useState(30000);
+  const [withdrawalRate, setWithdrawalRate] = useState(7.2); // 7.2% annual rate (30K*12 / 50L)
   const [expectedReturn, setExpectedReturn] = useState(8.5); // Moderate return on conservative allocation
   const [years, setYears] = useState(20);
   const [adjustWithdrawal, setAdjustWithdrawal] = useState(true); // Inflating withdrawals yearly
@@ -24,6 +25,29 @@ export default function SwpCalculator() {
       })
       .catch((err) => console.error("Error loading rates", err));
   }, []);
+
+  // Synchronize corpus changes
+  const handleCorpusChange = (newCorpus: number) => {
+    setInitialCorpus(newCorpus);
+    const calculatedMonthly = Math.round((newCorpus * (withdrawalRate / 100)) / 12);
+    setMonthlyWithdrawal(calculatedMonthly);
+  };
+
+  // Synchronize withdrawal rate slider/input
+  const handleWithdrawalRateChange = (newRate: number) => {
+    setWithdrawalRate(newRate);
+    const calculatedMonthly = Math.round((initialCorpus * (newRate / 100)) / 12);
+    setMonthlyWithdrawal(calculatedMonthly);
+  };
+
+  // Synchronize monthly pension input/slider
+  const handleMonthlyWithdrawalChange = (newMonthly: number) => {
+    setMonthlyWithdrawal(newMonthly);
+    if (initialCorpus > 0) {
+      const calculatedRate = Number(((newMonthly * 12 / initialCorpus) * 100).toFixed(2));
+      setWithdrawalRate(calculatedRate);
+    }
+  };
 
   const calculations = useMemo(() => {
     const data = [];
@@ -78,13 +102,13 @@ export default function SwpCalculator() {
       });
     }
 
-    const withdrawalRate = initialCorpus > 0 ? ((monthlyWithdrawal * 12) / initialCorpus) * 100 : 0;
+    const calculatedWithdrawalRate = initialCorpus > 0 ? ((monthlyWithdrawal * 12) / initialCorpus) * 100 : 0;
 
     return {
       totalWithdrawn: Math.round(totalWithdrawn),
       remainingCorpus: Math.max(0, Math.round(currentCorpus)),
       depletionYear,
-      withdrawalRate,
+      withdrawalRate: calculatedWithdrawalRate,
       chartData: data
     };
   }, [initialCorpus, monthlyWithdrawal, expectedReturn, years, adjustWithdrawal, inflation]);
@@ -127,7 +151,7 @@ export default function SwpCalculator() {
                 <span className="text-muted-grey">Initial Corpus</span>
                 <NumericInput
                   value={initialCorpus}
-                  onChange={setInitialCorpus}
+                  onChange={handleCorpusChange}
                   min={100000}
                   max={1000000000}
                   step={100000}
@@ -140,12 +164,70 @@ export default function SwpCalculator() {
                 max={500000000}
                 step={500000}
                 value={initialCorpus}
-                onChange={(e) => setInitialCorpus(Number(e.target.value))}
+                onChange={(e) => handleCorpusChange(Number(e.target.value))}
                 className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-muted-grey">
                 <span>₹1L</span>
                 <span>₹50 Crore</span>
+              </div>
+            </div>
+
+            {/* Annual Withdrawal Rate (%) Slider */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-muted-grey">Annual Withdrawal Rate</span>
+                <NumericInput
+                  value={withdrawalRate}
+                  onChange={handleWithdrawalRateChange}
+                  min={0.5}
+                  max={25}
+                  step={0.1}
+                  type="percent"
+                />
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={15}
+                step={0.1}
+                value={withdrawalRate}
+                onChange={(e) => handleWithdrawalRateChange(Number(e.target.value))}
+                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-muted-grey">
+                <span>1% (Conservative)</span>
+                <span>3% (India Benchmark)</span>
+                <span>15% (Aggressive)</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleWithdrawalRateChange(3.0)}
+                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
+                    withdrawalRate === 3.0 ? "bg-emerald text-navy-bg" : "text-emerald border border-emerald/20 bg-emerald/5 hover:bg-emerald/10"
+                  }`}
+                >
+                  🇮🇳 3.0% (India Safe)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleWithdrawalRateChange(4.0)}
+                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
+                    withdrawalRate === 4.0 ? "bg-emerald text-navy-bg" : "text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light"
+                  }`}
+                >
+                  4.0% (Trinity)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleWithdrawalRateChange(6.0)}
+                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
+                    withdrawalRate === 6.0 ? "bg-amber-400 text-navy-bg" : "text-amber-400 border border-amber-400/20 bg-amber-400/5 hover:bg-amber-400/10"
+                  }`}
+                >
+                  6.0% (Moderate)
+                </button>
               </div>
             </div>
 
@@ -155,7 +237,7 @@ export default function SwpCalculator() {
                 <span className="text-muted-grey">Desired Monthly Pension</span>
                 <NumericInput
                   value={monthlyWithdrawal}
-                  onChange={setMonthlyWithdrawal}
+                  onChange={handleMonthlyWithdrawalChange}
                   min={1000}
                   max={10000000}
                   step={1000}
@@ -168,7 +250,7 @@ export default function SwpCalculator() {
                 max={5000000}
                 step={5000}
                 value={monthlyWithdrawal}
-                onChange={(e) => setMonthlyWithdrawal(Number(e.target.value))}
+                onChange={(e) => handleMonthlyWithdrawalChange(Number(e.target.value))}
                 className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-muted-grey">
@@ -222,7 +304,7 @@ export default function SwpCalculator() {
                   value={years}
                   onChange={setYears}
                   min={1}
-                  max={50}
+                  max={100}
                   step={1}
                   type="years"
                 />
@@ -230,7 +312,7 @@ export default function SwpCalculator() {
               <input
                 type="range"
                 min={5}
-                max={50}
+                max={100}
                 step={1}
                 value={years}
                 onChange={(e) => setYears(Number(e.target.value))}
@@ -238,7 +320,7 @@ export default function SwpCalculator() {
               />
               <div className="flex justify-between text-[10px] text-muted-grey">
                 <span>5 Yrs</span>
-                <span>50 Yrs</span>
+                <span>100 Yrs</span>
               </div>
             </div>
 
@@ -362,7 +444,7 @@ export default function SwpCalculator() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={calculations.chartData}
-                  margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+                  margin={{ top: 10, right: 15, left: 5, bottom: 0 }}
                 >
                   <defs>
                     <linearGradient id="colorCorpus" x1="0" y1="0" x2="0" y2="1">
@@ -380,7 +462,8 @@ export default function SwpCalculator() {
                     stroke="#64748b"
                     fontSize={11}
                     tickLine={false}
-                    tickFormatter={(val) => `₹${val/100000}L`}
+                    width={75}
+                    tickFormatter={(val) => val >= 10000000 ? `₹${(val / 10000000).toFixed(1)}Cr` : val >= 100000 ? `₹${(val / 100000).toFixed(0)}L` : val >= 1000 ? `₹${(val / 1000).toFixed(0)}K` : `₹${val}`}
                   />
                   <Tooltip
                     contentStyle={{

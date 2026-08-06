@@ -134,6 +134,17 @@ export default function InstallPwaModal() {
           console.error("PWA install trigger error:", err);
         }
       }
+
+      // If no native prompt is pending, check if already installed or instruct user
+      if (isInstalled || localStorage.getItem("valarchix_is_installed") === "true") {
+        alert("✅ ValarchiX is already installed on your device!\n\nYou can launch it directly from your Desktop App shortcut, Chrome App Launcher, or Mobile Home Screen.");
+        setIsInstalled(true);
+        localStorage.setItem("valarchix_is_installed", "true");
+        window.dispatchEvent(new Event("valarchix_pwa_status_change"));
+        setIsOpen(false);
+        return;
+      }
+
       setIsOpen(true);
     };
 
@@ -142,7 +153,7 @@ export default function InstallPwaModal() {
       window.removeEventListener("appinstalled", handleAppInstalled);
       if (autoOpenTimer) clearTimeout(autoOpenTimer);
     };
-  }, []);
+  }, [isInstalled]);
 
   const handleInstallClick = async () => {
     const promptEvent = deferredPrompt || globalDeferredPrompt;
@@ -162,12 +173,25 @@ export default function InstallPwaModal() {
         console.error("PWA install error:", err);
       }
     } else {
-      alert(
-        "To install ValarchiX:\n\n" +
-        "• Desktop Chrome/Edge: Click the 'Install' icon [⬇] in your browser address bar.\n" +
-        "• Mobile Chrome/Brave: Tap the ⋮ menu -> 'Add to Home Screen'.\n" +
-        "• iOS Safari: Tap Share -> 'Add to Home Screen'."
-      );
+      if (isInstalled || localStorage.getItem("valarchix_is_installed") === "true") {
+        alert("✅ ValarchiX is already installed on your device!\n\nLaunch it from your Desktop shortcuts or App menu.");
+        setIsInstalled(true);
+        localStorage.setItem("valarchix_is_installed", "true");
+        window.dispatchEvent(new Event("valarchix_pwa_status_change"));
+        setIsOpen(false);
+      } else {
+        alert(
+          "To install ValarchiX:\n\n" +
+          "• Desktop Chrome/Edge: Click the 'Install' icon [⬇] in your browser address bar.\n" +
+          "• Mobile Chrome/Brave: Tap the ⋮ menu -> 'Add to Home Screen'.\n" +
+          "• iOS Safari: Tap Share -> 'Add to Home Screen'."
+        );
+        // Save installation hint
+        localStorage.setItem("valarchix_is_installed", "true");
+        setIsInstalled(true);
+        window.dispatchEvent(new Event("valarchix_pwa_status_change"));
+        setIsOpen(false);
+      }
     }
   };
 

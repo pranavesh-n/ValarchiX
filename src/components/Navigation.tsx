@@ -151,18 +151,34 @@ export default function Navigation() {
 
     setIsInstalled(checkIsInstalled());
 
+    if (typeof window !== "undefined" && "navigator" in window && "getInstalledRelatedApps" in navigator) {
+      (navigator as any).getInstalledRelatedApps().then((relatedApps: any[]) => {
+        if (relatedApps && relatedApps.length > 0) {
+          setIsInstalled(true);
+          localStorage.setItem("valarchix_is_installed", "true");
+        }
+      }).catch(() => {});
+    }
+
     const handlePwaStatusChange = () => {
       setIsInstalled(checkIsInstalled());
     };
 
     window.addEventListener("valarchix_pwa_status_change", handlePwaStatusChange);
-    window.addEventListener("appinstalled", handlePwaStatusChange);
-    window.addEventListener("beforeinstallprompt", handlePwaStatusChange);
+    window.addEventListener("appinstalled", () => {
+      localStorage.setItem("valarchix_is_installed", "true");
+      setIsInstalled(true);
+    });
+    window.addEventListener("beforeinstallprompt", () => {
+      // beforeinstallprompt firing proves app is NOT installed currently
+      if (!window.matchMedia("(display-mode: standalone)").matches) {
+        localStorage.removeItem("valarchix_is_installed");
+        setIsInstalled(false);
+      }
+    });
 
     return () => {
       window.removeEventListener("valarchix_pwa_status_change", handlePwaStatusChange);
-      window.removeEventListener("appinstalled", handlePwaStatusChange);
-      window.removeEventListener("beforeinstallprompt", handlePwaStatusChange);
     };
   }, []);
 

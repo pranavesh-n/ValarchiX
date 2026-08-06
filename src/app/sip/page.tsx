@@ -600,7 +600,7 @@ export default function SipCalculator() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={calculations.chartData}
-                  margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+                  margin={{ top: 10, right: 15, left: 5, bottom: 0 }}
                 >
                   <defs>
                     <linearGradient id="colorFv" x1="0" y1="0" x2="0" y2="1">
@@ -622,7 +622,8 @@ export default function SipCalculator() {
                     stroke="#64748b"
                     fontSize={11}
                     tickLine={false}
-                    tickFormatter={(val) => `₹${val/1000}K`}
+                    width={75}
+                    tickFormatter={(val) => `₹${val >= 10000000 ? `${(val/10000000).toFixed(1)}Cr` : val >= 100000 ? `${(val/100000).toFixed(0)}L` : `${(val/1000).toFixed(0)}K`}`}
                   />
                   <Tooltip
                     contentStyle={{
