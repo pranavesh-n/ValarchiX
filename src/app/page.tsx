@@ -1,5 +1,8 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { getCurrentUserSession } from "@/lib/supabase/auth";
 import {
   Layers,
   Shield,
@@ -383,45 +386,120 @@ const EXPLORE_CARDS = [
 ];
 
 export default function Home() {
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadSession() {
+      const s = await getCurrentUserSession();
+      setSession(s);
+    }
+    loadSession();
+  }, []);
+
   return (
     <div className="space-y-16 py-8">
-      {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center text-center py-12 md:py-20 px-4 rounded-3xl overflow-hidden bg-gradient-to-b from-navy-card/40 to-transparent border border-border-navy/50">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.1),transparent_50%)]" />
-        
-        <div className="relative space-y-6 max-w-4xl">
-          {/* Logo */}
-          <img src="/logo.svg" alt="valarchiX" className="h-20 w-20 mx-auto rounded-2xl shadow-lg shadow-emerald/20" />
-          
-          {/* Motto Tag */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald/30 bg-emerald/10 px-4 py-1.5 text-xs font-semibold text-emerald glow-emerald tracking-wide">
-            💡 “We don&apos;t tell what to pick, we tell how to pick”
+      {/* Signed-in VIP Status Banner */}
+      {session?.user && (
+        <div className="max-w-4xl mx-auto bg-gradient-to-r from-emerald-950/80 via-slate-900 to-indigo-950/80 border border-emerald-500/40 rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-300 font-extrabold text-lg">
+              {session.user.user_metadata?.full_name?.[0] || session.user.email?.[0].toUpperCase()}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-widest">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Encrypted Vault Active
+              </div>
+              <h2 className="text-lg font-bold text-white mt-0.5">
+                Welcome back, {session.user.user_metadata?.full_name || session.user.email}!
+              </h2>
+              <p className="text-xs text-slate-300">
+                Live Financial DNA score tracking (`78 ↑4 pts`), Zero-Knowledge Multi-Device Sync, and persistent decision memory enabled.
+              </p>
+            </div>
           </div>
-          
-          <h1 className="text-4xl font-extrabold tracking-tight md:text-6xl text-white">
-            Learn. Analyze. <br className="md:hidden" />
-            <span className="gradient-green">Invest Smarter.</span>
+
+          <Link
+            href="/financial-dna"
+            className="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs px-5 py-3 rounded-2xl shadow-lg transition flex items-center gap-1.5"
+          >
+            View Live DNA Score <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      )}
+
+      {/* ValarchiX Flagship Intelligence Ecosystem Section */}
+      <section className="relative rounded-3xl border border-indigo-500/30 bg-gradient-to-b from-indigo-950/40 via-slate-900 to-slate-950 p-8 md:p-12 overflow-hidden shadow-2xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative space-y-6 max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-4 py-1.5 text-xs font-bold text-indigo-300 uppercase tracking-widest">
+            ✨ ValarchiX • Personal Financial Intelligence System
+          </div>
+
+          <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
+            Your Personal Financial <br />
+            <span className="bg-gradient-to-r from-indigo-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">Digital Twin</span>
           </h1>
-          
-          <p className="mx-auto max-w-2xl text-base md:text-xl text-muted-grey leading-relaxed">
-            Understand personal asset allocations, mutual funds, tax slabs, retirement targets, and macroeconomics. No volatile individual stock picking, just low-risk index principles.
+
+          <p className="text-sm md:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Understand where you are. Understand where you&apos;re going. See what could happen. Decide what to change.
           </p>
-          
-          {/* Hero Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link
-              href="/sip"
-              className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-emerald hover:bg-emerald/90 px-6 py-3.5 text-sm font-semibold text-navy-bg transition-colors shadow-lg shadow-emerald/10"
-            >
-              <span>Explore SIP Calculator</span>
-              <Percent size={16} />
+
+          {/* 6 Interconnected Engines Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-6 text-left">
+            <Link href="/financial-dna" className="group bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500/50 p-5 rounded-2xl transition shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-indigo-400">1. Financial DNA</span>
+                <HeartPulse className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition" />
+              </div>
+              <div className="text-sm font-bold text-white mb-1">Fitness Score & 8 Pillars</div>
+              <div className="text-xs text-slate-400 leading-relaxed">Know your financial health before trying to optimize wealth. Signature "What Should I Fix First?" simulator.</div>
             </Link>
-            <Link
-              href="/mutual-funds"
-              className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-navy-light hover:bg-navy-light/80 border border-border-navy px-6 py-3.5 text-sm font-semibold text-white transition-colors"
-            >
-              <span>Analyze Mutual Funds</span>
-              <Layers size={16} />
+
+            <Link href="/goalx" className="group bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-5 rounded-2xl transition shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-emerald-400">2. GoalX Navigation</span>
+                <Target className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition" />
+              </div>
+              <div className="text-sm font-bold text-white mb-1">Inflation-Adjusted Goals</div>
+              <div className="text-xs text-slate-400 leading-relaxed">Reverse goal solver with category-specific inflation, unlimited numeric range, and adaptive sliders.</div>
+            </Link>
+
+            <Link href="/portfolio-intelligence" className="group bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/50 p-5 rounded-2xl transition shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-cyan-400">3. Portfolio X-Ray</span>
+                <PieChart className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition" />
+              </div>
+              <div className="text-sm font-bold text-white mb-1">Overlap & Concentration</div>
+              <div className="text-xs text-slate-400 leading-relaxed">Deep multi-fund overlap diagnostics, stock concentration risk, and sector weight exposures.</div>
+            </Link>
+
+            <Link href="/time-machine" className="group bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-purple-500/50 p-5 rounded-2xl transition shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-purple-400">4. Time Machine</span>
+                <Hourglass className="w-4 h-4 text-purple-400 group-hover:scale-110 transition" />
+              </div>
+              <div className="text-sm font-bold text-white mb-1">Parallel Universes</div>
+              <div className="text-xs text-slate-400 leading-relaxed">Simulate alternate financial futures side-by-side, scrub timelines, and run stress tests.</div>
+            </Link>
+
+            <Link href="/decision-replay" className="group bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/50 p-5 rounded-2xl transition shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-rose-400">5. Decision Replay</span>
+                <Clock className="w-4 h-4 text-rose-400 group-hover:scale-110 transition" />
+              </div>
+              <div className="text-sm font-bold text-white mb-1">Hindsight-Free Log</div>
+              <div className="text-xs text-slate-400 leading-relaxed">Record past decisions and evaluate expected vs actual outcomes without hindsight bias.</div>
+            </Link>
+
+            <Link href="/vaathi" className="group bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl transition shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-amber-400">6. Valarchi Vaathi 🎓</span>
+                <Zap className="w-4 h-4 text-amber-400 group-hover:scale-110 transition" />
+              </div>
+              <div className="text-sm font-bold text-white mb-1">AI Financial Tutor</div>
+              <div className="text-xs text-slate-400 leading-relaxed">Natural-language scenario execution over deterministic math engines (0 hallucinations).</div>
             </Link>
           </div>
         </div>

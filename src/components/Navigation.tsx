@@ -39,10 +39,23 @@ import {
   LayoutGrid,
   BarChart,
   MoreHorizontal,
-  ChevronRight
+  ChevronRight,
+  RotateCcw,
+  Lock,
+  Baby
 } from "lucide-react";
 
 const NAV_ITEMS = [
+  {
+    category: "Intelligence Engines",
+    items: [
+      { name: "Financial DNA", href: "/financial-dna", icon: HeartPulse },
+      { name: "GoalX Navigation", href: "/goalx", icon: Target },
+      { name: "Portfolio Intelligence", href: "/portfolio-intelligence", icon: PieChart },
+      { name: "Financial Time Machine", href: "/time-machine", icon: Hourglass },
+      { name: "Decision Replay", href: "/decision-replay", icon: RotateCcw },
+    ]
+  },
   {
     category: "Core",
     items: [
@@ -70,6 +83,7 @@ const NAV_ITEMS = [
   {
     category: "Wealth Building",
     items: [
+      { name: "Child Legacy Engine", href: "/child-legacy", icon: Baby },
       { name: "SIP & FD Simulator", href: "/sip", icon: Percent },
       { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight },
       { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp },
@@ -123,11 +137,13 @@ const NAV_ITEMS = [
 // Bottom nav tabs for mobile
 const BOTTOM_TABS = [
   { name: "Home", href: "/", icon: Home, type: "link" as const },
-  { name: "Tools", href: "#", icon: LayoutGrid, type: "drawer" as const },
+  { name: "Calculators", href: "#", icon: Calculator, type: "drawer" as const },
+  { name: "Engines", href: "#", icon: LayoutGrid, type: "drawer" as const },
   { name: "Vaathi", href: "/vaathi", icon: GraduationCap, type: "link" as const },
-  { name: "Analyze", href: "#", icon: BarChart, type: "drawer" as const },
-  { name: "More", href: "#", icon: MoreHorizontal, type: "drawer" as const },
+  { name: "Vault", href: "/auth", icon: Lock, type: "link" as const },
 ];
+
+import { getCurrentUserSession } from "@/lib/supabase/auth";
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -135,6 +151,15 @@ export default function Navigation() {
   const [mobileDrawer, setMobileDrawer] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [isInstalled, setIsInstalled] = useState(false);
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchSession() {
+      const s = await getCurrentUserSession();
+      setSession(s);
+    }
+    fetchSession();
+  }, [pathname]);
 
   // Check PWA installation state
   useEffect(() => {
@@ -210,6 +235,9 @@ export default function Navigation() {
 
   // Get items for mobile drawers
   const getDrawerItems = (drawerName: string) => {
+    if (drawerName === "Engines") {
+      return NAV_ITEMS.filter(g => ["Intelligence Engines", "Core", "Budgeting & Cash Flow", "Wealth Building"].includes(g.category));
+    }
     if (drawerName === "Tools") {
       return NAV_ITEMS.filter(g => ["Budgeting & Cash Flow", "Wealth Building", "Debt Tools", "Retirement & Planning"].includes(g.category));
     }
@@ -218,13 +246,14 @@ export default function Navigation() {
     }
     if (drawerName === "More") {
       return [
-        { category: "Pages", items: [
+        ...NAV_ITEMS.filter(g => ["Debt Tools", "Retirement & Planning", "Portfolio & Tax"].includes(g.category)),
+        { category: "System & Learning", items: [
           { name: "Beyond FDs & Learning", href: "/beyond-fds", icon: Info },
           { name: "Disclaimer", href: "/disclaimer", icon: Info }
         ]},
       ];
     }
-    return [];
+    return NAV_ITEMS;
   };
 
   const closeDrawer = () => setMobileDrawer(null);
@@ -232,7 +261,7 @@ export default function Navigation() {
   return (
     <>
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 w-full border-b border-border-navy bg-navy-bg/85 backdrop-blur-md">
+      <header className="sticky top-0 z-40 w-full border-b border-border-navy bg-navy-bg/90 backdrop-blur-md">
         <div className="flex h-14 md:h-16 items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-3">
             {/* Desktop hamburger only — mobile uses bottom nav */}
@@ -245,7 +274,7 @@ export default function Navigation() {
             </button>
             <Link href="/" className="flex items-center gap-2">
               <img src="/logo.svg" alt="ValarchiX" className="h-7 w-7 md:h-8 md:w-8 rounded-lg" />
-              <span className="text-lg md:text-xl font-bold tracking-wider text-white">
+              <span className="text-lg md:text-xl font-bold tracking-wider text-light-grey">
                 Valarchi<span className="text-emerald font-extrabold">X</span>
               </span>
             </Link>
@@ -258,20 +287,6 @@ export default function Navigation() {
 
           {/* Theme Switch & Actions */}
           <div className="flex items-center gap-2 md:gap-3">
-            {!isInstalled && (
-              <button
-                onClick={() => {
-                  if (typeof window !== "undefined" && (window as any).triggerPwaInstall) {
-                    (window as any).triggerPwaInstall();
-                  }
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-xl border border-emerald/40 bg-emerald/10 text-emerald hover:bg-emerald hover:text-navy-bg transition-all text-xs font-bold cursor-pointer"
-                title="Install ValarchiX App"
-              >
-                <Download size={14} />
-                <span className="hidden sm:inline">Install App</span>
-              </button>
-            )}
 
             {pathname !== "/" && (
               <button
@@ -291,6 +306,27 @@ export default function Navigation() {
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+
+            <Link
+              href="/auth"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                session?.user
+                  ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/80"
+                  : "bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-600/20"
+              }`}
+            >
+              <Lock size={14} />
+              {session?.user ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="truncate max-w-[70px] sm:max-w-[110px]">
+                    {session.user.user_metadata?.full_name?.split(" ")[0] || "Live Vault"}
+                  </span>
+                </span>
+              ) : (
+                <span>Sign In</span>
+              )}
+            </Link>
           </div>
         </div>
       </header>
@@ -314,8 +350,8 @@ export default function Navigation() {
                           href={item.href}
                           className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                             isActive
-                              ? "bg-navy-light text-emerald border-l-2 border-emerald"
-                              : "text-muted-grey hover:bg-navy-light hover:text-white"
+                              ? "bg-navy-light text-emerald border-l-2 border-emerald font-bold"
+                              : "text-muted-grey hover:bg-navy-light hover:text-light-grey"
                           }`}
                         >
                           <Icon size={18} className={isActive ? "text-emerald" : ""} />
@@ -362,8 +398,8 @@ export default function Navigation() {
                 }}
                 className={`flex flex-col items-center justify-center gap-0.5 w-16 py-1.5 rounded-xl transition-all ${
                   isActive || isDrawerOpen
-                    ? "text-emerald"
-                    : "text-muted-grey"
+                    ? "text-emerald-400 font-extrabold"
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
               >
                 <Icon size={20} strokeWidth={isActive || isDrawerOpen ? 2.5 : 1.8} />
@@ -380,60 +416,61 @@ export default function Navigation() {
           {/* Backdrop */}
           <div
             onClick={closeDrawer}
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md md:hidden"
           />
           {/* Drawer */}
-          <div className="fixed bottom-16 left-0 right-0 z-45 md:hidden bg-navy-bg border-t border-border-navy rounded-t-2xl max-h-[70vh] overflow-y-auto animate-slideUp safe-area-bottom">
-            <div className="p-4 space-y-4">
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white">{mobileDrawer}</h3>
-                <button onClick={closeDrawer} className="p-1 text-muted-grey hover:text-white">
-                  <X size={18} />
-                </button>
+          <div className="fixed bottom-16 left-0 right-0 z-50 md:hidden bg-navy-bg border-t border-border-navy rounded-t-3xl max-h-[75vh] overflow-y-auto shadow-2xl safe-area-bottom p-5 space-y-5">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                <h3 className="text-base font-extrabold text-white">{mobileDrawer} Navigation</h3>
               </div>
-
-              {/* Theme toggle in More drawer */}
-              {mobileDrawer === "More" && (
-                <button
-                  onClick={toggleTheme}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-border-navy bg-navy-card/50 text-sm font-medium text-light-grey"
-                >
-                  {theme === "dark" ? <Sun size={18} className="text-emerald" /> : <Moon size={18} className="text-emerald" />}
-                  <span>{theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
-                </button>
-              )}
-
-              {/* Nav items */}
-              {getDrawerItems(mobileDrawer).map((group) => (
-                <div key={group.category} className="space-y-1.5">
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-grey px-1">
-                    {group.category}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {group.items.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = pathname === item.href;
-                      return (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          onClick={closeDrawer}
-                          className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium transition-all ${
-                            isActive
-                              ? "bg-emerald/10 text-emerald border border-emerald/20"
-                              : "bg-navy-card/50 text-light-grey border border-border-navy/50 hover:border-emerald/30"
-                          }`}
-                        >
-                          <Icon size={14} className={isActive ? "text-emerald" : "text-muted-grey"} />
-                          <span className="truncate">{item.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+              <button onClick={closeDrawer} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-400 hover:text-white transition">
+                <X size={18} />
+              </button>
             </div>
+
+            {/* Theme toggle in More drawer */}
+            {mobileDrawer === "More" && (
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl border border-slate-800 bg-slate-950 text-sm font-semibold text-slate-200"
+              >
+                {theme === "dark" ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-indigo-400" />}
+                <span>{theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
+              </button>
+            )}
+
+            {/* Nav items grid */}
+            {getDrawerItems(mobileDrawer).map((group) => (
+              <div key={group.category} className="space-y-2">
+                <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-400 px-1">
+                  {group.category}
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={closeDrawer}
+                        className={`flex items-center gap-2.5 p-3 rounded-2xl text-xs font-bold transition-all border ${
+                          isActive
+                            ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20"
+                            : "bg-slate-950 text-slate-200 border-slate-800 hover:border-slate-700"
+                        }`}
+                      >
+                        <Icon size={16} className={isActive ? "text-white" : "text-slate-400"} />
+                        <span className="truncate">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </>
       )}

@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { ArrowDownLeft, Info, HelpCircle, AlertTriangle, ShieldCheck, ChevronDown } from "lucide-react";
+import { ArrowDownLeft, Info, HelpCircle, AlertTriangle, ShieldCheck, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import NumericInput from "@/components/NumericInput";
 
 export default function SwpCalculator() {
   const [showAudit, setShowAudit] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [initialCorpus, setInitialCorpus] = useState(5000000); // 50 Lakhs
   const [monthlyWithdrawal, setMonthlyWithdrawal] = useState(30000);
   const [withdrawalRate, setWithdrawalRate] = useState(7.2); // 7.2% annual rate (30K*12 / 50L)
@@ -102,6 +103,32 @@ export default function SwpCalculator() {
       });
     }
 
+    // Month-by-month breakdown table data
+    const monthTable = [];
+    let tableCorpus = initialCorpus;
+    let currentMonthlyWithdrawal = monthlyWithdrawal;
+
+    for (let m = 1; m <= Math.min(240, years * 12); m++) {
+      if (tableCorpus <= 0) break;
+      const opening = tableCorpus;
+      const returns = opening * monthlyRate;
+      const withdrawal = Math.min(opening + returns, currentMonthlyWithdrawal);
+      const closing = Math.max(0, opening + returns - withdrawal);
+
+      monthTable.push({
+        month: m,
+        opening: Math.round(opening),
+        withdrawal: Math.round(withdrawal),
+        returns: Math.round(returns),
+        closing: Math.round(closing),
+      });
+
+      tableCorpus = closing;
+      if (adjustWithdrawal && m % 12 === 0) {
+        currentMonthlyWithdrawal = currentMonthlyWithdrawal * (1 + infRate);
+      }
+    }
+
     const calculatedWithdrawalRate = initialCorpus > 0 ? ((monthlyWithdrawal * 12) / initialCorpus) * 100 : 0;
 
     return {
@@ -109,7 +136,8 @@ export default function SwpCalculator() {
       remainingCorpus: Math.max(0, Math.round(currentCorpus)),
       depletionYear,
       withdrawalRate: calculatedWithdrawalRate,
-      chartData: data
+      chartData: data,
+      monthTable,
     };
   }, [initialCorpus, monthlyWithdrawal, expectedReturn, years, adjustWithdrawal, inflation]);
 
@@ -492,6 +520,72 @@ export default function SwpCalculator() {
               </ResponsiveContainer>
             </div>
           </div>
+
+          {/* Month-by-Month Breakdown Table (Stonkzz 12-month paginated ledger style) */}
+          {(() => {
+            const itemsPerPage = 12;
+            const totalPages = Math.max(1, Math.ceil(calculations.monthTable.length / itemsPerPage));
+            const currentPageBounded = Math.min(currentPage, totalPages);
+            const paginatedRows = calculations.monthTable.slice(
+              (currentPageBounded - 1) * itemsPerPage,
+              currentPageBounded * itemsPerPage
+            );
+
+            return (
+              <div className="p-6 rounded-2xl border border-border-navy bg-navy-card space-y-4 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-extrabold text-heading">Month-by-Month Breakdown</h3>
+                  <span className="text-xs text-muted-grey">Year {currentPageBounded} of {totalPages} (12 Months/Yr)</span>
+                </div>
+
+                <div className="overflow-x-auto border border-border-navy/60 rounded-xl">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-navy-bg border-b border-border-navy text-muted-grey uppercase font-bold text-[11px]">
+                      <tr>
+                        <th className="py-3 px-4">Month</th>
+                        <th className="py-3 px-4">Opening</th>
+                        <th className="py-3 px-4">Withdrawal</th>
+                        <th className="py-3 px-4">Returns</th>
+                        <th className="py-3 px-4">Closing</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-navy/40 font-mono text-light-grey">
+                      {paginatedRows.map((row) => (
+                        <tr key={row.month} className="hover:bg-navy-light/40 transition">
+                          <td className="py-2.5 px-4 font-sans font-bold text-heading">{row.month}</td>
+                          <td className="py-2.5 px-4">{formatCurrency(row.opening)}</td>
+                          <td className="py-2.5 px-4 text-rose-400 font-medium">-{formatCurrency(row.withdrawal)}</td>
+                          <td className="py-2.5 px-4 text-emerald font-medium">+{formatCurrency(row.returns)}</td>
+                          <td className="py-2.5 px-4 font-bold text-heading">{formatCurrency(row.closing)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* 12-Month Year Pagination Bar */}
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <button
+                    disabled={currentPageBounded === 1}
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    className="flex items-center gap-1 text-xs font-bold text-muted-grey hover:text-heading disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer px-3 py-1.5 rounded-lg border border-border-navy hover:bg-navy-light/50"
+                  >
+                    <ChevronLeft size={15} /> Previous
+                  </button>
+                  <span className="bg-amber-500 text-slate-950 font-extrabold text-xs px-3.5 py-1.5 rounded-xl shadow-md">
+                    {currentPageBounded} / {totalPages}
+                  </span>
+                  <button
+                    disabled={currentPageBounded >= totalPages}
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    className="flex items-center gap-1 text-xs font-bold text-muted-grey hover:text-heading disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer px-3 py-1.5 rounded-lg border border-border-navy hover:bg-navy-light/50"
+                  >
+                    Next <ChevronRight size={15} />
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Education card */}
           <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">

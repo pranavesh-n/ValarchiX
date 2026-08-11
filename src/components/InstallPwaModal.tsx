@@ -76,15 +76,8 @@ export default function InstallPwaModal() {
 
     const installed = checkInstalled();
 
-    let autoOpenTimer: NodeJS.Timeout | null = null;
-
-    const isDismissedInSession = typeof window !== "undefined" && sessionStorage.getItem("valarchix_pwa_dismissed_session") === "true";
-
-    if (!installed && !isDismissedInSession) {
-      autoOpenTimer = setTimeout(() => {
-        setIsOpen(true);
-      }, 1500);
-    }
+    // Auto-open modal popup is COMPLETELY DISABLED as requested.
+    // PWA install is now exclusively accessible via the Profile/Vault section.
 
     // 3. Listen for beforeinstallprompt & appinstalled events for real-time monitoring
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -151,7 +144,6 @@ export default function InstallPwaModal() {
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
-      if (autoOpenTimer) clearTimeout(autoOpenTimer);
     };
   }, [isInstalled]);
 

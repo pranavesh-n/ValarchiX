@@ -8,43 +8,59 @@
   --color-light-grey: var(--text-main-color);
   --color-muted-grey: var(--text-muted-color);
   --color-border-navy: var(--border-color);
-  --color-white: var(--text-main-color);
+  --color-heading: var(--heading-color);
   --color-footer-bg: var(--footer-bg-color);
   --font-sans: var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
 }
 
-:root {
+:root, .dark {
   color-scheme: dark;
   --bg-color: #030a16;
-  --card-bg-color: rgba(8, 28, 58, 0.45);
-  --card-hover-bg-color: rgba(14, 39, 78, 0.6);
-  --border-color: rgba(17, 45, 85, 0.7);
-  --text-main-color: #f8fafc; /* Brighter white/slate for high readability */
-  --text-muted-color: #cbd5e1; /* Brighter secondary grey/slate */
+  --card-bg-color: #081c3a;
+  --card-hover-bg-color: #0e274e;
+  --border-color: #112d55;
+  --text-main-color: #f8fafc;
+  --text-muted-color: #94a3b8;
+  --heading-color: #ffffff;
   --footer-bg-color: #040d1c;
-  --tooltip-bg: #091a34;
-  --tooltip-border: rgba(30, 58, 95, 0.8);
-  --tooltip-text: #f8fafc;
-  --tooltip-muted: #cbd5e1;
-  --tooltip-cursor: rgba(255, 255, 255, 0.08);
 }
 
 /* Light mode overrides */
 .light {
   color-scheme: light;
-  --bg-color: #f1f5f9; /* Slate 100 (Clean neutral backdrop) */
-  --card-bg-color: #ffffff; /* Solid white card */
-  --card-hover-bg-color: #f8fafc; /* Slate 50 */
-  --border-color: #e2e8f0; /* Slate 200 */
-  --text-main-color: #0f172a; /* Slate 900 */
-  --text-muted-color: #475569; /* Slate 600 */
-  --footer-bg-color: #e2e8f0; /* Slate 200 */
-  --tooltip-bg: #ffffff;
-  --tooltip-border: #cbd5e1;
-  --tooltip-text: #0f172a;
-  --tooltip-muted: #64748b;
-  --tooltip-cursor: rgba(15, 23, 42, 0.06);
+  --bg-color: #f1f5f9;
+  --card-bg-color: #ffffff;
+  --card-hover-bg-color: #f8fafc;
+  --border-color: #cbd5e1;
+  --text-main-color: #0f172a;
+  --text-muted-color: #475569;
+  --heading-color: #0f172a;
+  --footer-bg-color: #e2e8f0;
+}
+
+/* Light mode global typography contrast enforcement */
+.light .text-white,
+.light .text-slate-100 {
+  color: #0f172a !important;
+}
+
+.light .text-slate-200,
+.light .text-slate-300 {
+  color: #1e293b !important;
+}
+
+.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.light .bg-slate-950,
+.light .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+.light .border-slate-800 {
+  border-color: #cbd5e1 !important;
 }
 
 /* Custom Scrollbar */

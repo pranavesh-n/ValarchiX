@@ -49,9 +49,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-navy-bg text-light-grey" suppressHydrationWarning>
         <Navigation />
-        <InstallPwaModal />
         <div className="flex-1 md:pl-64 flex flex-col">
-          <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8 max-w-7xl w-full mx-auto">
+          <main className="flex-1 p-3 sm:p-4 md:p-8 pb-28 md:pb-8 max-w-7xl w-full mx-auto overflow-x-hidden">
             {children}
           </main>
           

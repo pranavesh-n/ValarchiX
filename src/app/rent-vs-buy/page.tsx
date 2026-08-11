@@ -1,240 +1,598 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { Home, ChevronDown, HelpCircle, Landmark, TrendingUp, Percent, Calculator, Award } from "lucide-react";
-import NumericInput from "@/components/NumericInput";
+import React, { useState, useMemo } from "react";
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
+} from "recharts";
+import { 
+  Home, Building, DollarSign, TrendingUp, AlertTriangle, CheckCircle2, 
+  Award, ShieldAlert, Sparkles, Sliders, ChevronRight, Zap, RefreshCw
+} from "lucide-react";
+import { formatINR, formatINRWords } from "@/lib/engine/numeric";
 
-export default function RentVsBuyCalculator() {
-  const [showAudit, setShowAudit] = useState(false);
-  const [mounted, setMounted] = useState(false);
+type PropertyType = "ready" | "under_construction" | "affordable";
 
-  // Shared
-  const [years, setYears] = useState(20);
+export default function RentVsBuyPage() {
+  // Inputs
+  const [city, setCity] = useState("Bangalore");
+  const [salary, setSalary] = useState(100000);
+  const [propertySizeSqft, setPropertySizeSqft] = useState(1000);
+  const [pricePerSqft, setPricePerSqft] = useState(12000);
+  const [propertyType, setPropertyType] = useState<PropertyType>("ready");
+  const [monthlyRent, setMonthlyRent] = useState(35000);
 
-  // Renting
-  const [monthlyRent, setMonthlyRent] = useState(25000);
-  const [rentIncrease, setRentIncrease] = useState(7); // % per year
-  const [rentInvestmentReturn, setRentInvestmentReturn] = useState(12); // equity CAGR
-
-  // Buying
-  const [propertyPrice, setPropertyPrice] = useState(8000000);
-  const [downPayment, setDownPayment] = useState(1600000); // 20%
+  const [downPaymentPct, setDownPaymentPct] = useState(20);
   const [loanRate, setLoanRate] = useState(8.5);
   const [loanTenure, setLoanTenure] = useState(20);
-  const [propertyAppreciation, setPropertyAppreciation] = useState(6); // % per year
-  const [maintenancePercent, setMaintenancePercent] = useState(1); // % of property value per year
-  const [registrationCost, setRegistrationCost] = useState(400000); // stamp duty + registration
-  const [taxSlab, setTaxSlab] = useState(30); // 30% tax bracket for Section 24 deduction
 
-  useEffect(() => setMounted(true), []);
+  const [equityReturn, setEquityReturn] = useState(12.0);
+  const [propertyAppreciation, setPropertyAppreciation] = useState(6.0);
+  const [rentInflation, setRentInflation] = useState(7.0);
+  const [horizonYears, setHorizonYears] = useState(20);
 
-  const { chartData, breakEvenYear, rentSummary, buySummary, winner } = useMemo(() => {
-    const loanAmount = propertyPrice - downPayment;
-    const r = loanRate / 100 / 12;
-    const n = loanTenure * 12;
-    const emi = r > 0 ? (loanAmount * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : loanAmount / n;
-    const annualEMI = emi * 12;
+  // Derived Property Price
+  const propertyPrice = propertySizeSqft * pricePerSqft;
 
-    const dpReturn = rentInvestmentReturn / 100 / 12;
-    const totalInitialOutflow = downPayment + registrationCost;
+  // Upfront Costs Breakdown Calculations
+  const calc = useMemo(() => {
+    const stampDutyRateMap: Record<string, number> = {
+      "Bangalore": 0.05,
+      "Mumbai": 0.06,
+      "Delhi NCR": 0.06,
+      "Chennai": 0.07,
+      "Hyderabad": 0.06,
+      "Pune": 0.06,
+      "Other": 0.05,
+    };
+    const stampDutyRate = stampDutyRateMap[city] || 0.05;
+    const stampDuty = propertyPrice * stampDutyRate;
+    const registration = propertyPrice * 0.01; // 1%
+    const gstRate = propertyType === "under_construction" ? 0.05 : propertyType === "affordable" ? 0.01 : 0.0;
+    const gst = propertyPrice * gstRate;
+    const interiorsMisc = propertyPrice * 0.04; // 4%
 
-    let rentTotalPaid = 0;
-    let buyTotalPaid = registrationCost + downPayment;
-    let chartData = [];
-    let breakEvenYear: number | null = null;
+    const totalActualCost = propertyPrice + stampDuty + registration + gst + interiorsMisc;
+    const downPaymentAmount = propertyPrice * (downPaymentPct / 100);
+    const hiddenCashOutflow = stampDuty + registration + gst + interiorsMisc;
+    const cashYouNeedUpfront = downPaymentAmount + hiddenCashOutflow;
 
-    let currentRent = monthlyRent;
-    let renterWealthPort = totalInitialOutflow; // investing down payment + reg cost
-    let propertyValue = propertyPrice;
-    let remainingLoanBalance = loanAmount;
-    let totalTaxSaved = 0;
-
-    for (let y = 1; y <= years; y++) {
-      // 1. Renting Year Math
-      const rentThisYear = currentRent * 12;
-      rentTotalPaid += rentThisYear;
-
-      // Difference between EMI+Maintenance and Rent is saved/invested by renter
-      const maintenanceThisYear = propertyValue * (maintenancePercent / 100);
-      const buyOutflowThisYear = (y <= loanTenure ? annualEMI : 0) + maintenanceThisYear;
-      const extraSavedByRenter = Math.max(0, buyOutflowThisYear - rentThisYear);
-
-      // Renter portfolio grows with compounding + extra savings
-      renterWealthPort = (renterWealthPort + extraSavedByRenter) * Math.pow(1 + dpReturn, 12);
-      currentRent *= (1 + rentIncrease / 100);
-
-      // 2. Buying Year Math & Amortization
-      let interestPaidThisYear = 0;
-      let principalPaidThisYear = 0;
-
-      if (y <= loanTenure) {
-        for (let m = 1; m <= 12; m++) {
-          const interestMonth = remainingLoanBalance * r;
-          const principalMonth = emi - interestMonth;
-          interestPaidThisYear += interestMonth;
-          principalPaidThisYear += principalMonth;
-          remainingLoanBalance = Math.max(0, remainingLoanBalance - principalMonth);
-        }
-      }
-
-      // Section 24 Tax Savings (Up to ₹2L interest capped)
-      const sec24Eligible = Math.min(200000, interestPaidThisYear);
-      const taxSavedThisYear = sec24Eligible * (taxSlab / 100);
-      totalTaxSaved += taxSavedThisYear;
-
-      buyTotalPaid += buyOutflowThisYear;
-      propertyValue *= (1 + propertyAppreciation / 100);
-
-      // Buyer Net Equity Wealth = Property Value - Remaining Loan Balance
-      const buyerNetWealth = propertyValue - remainingLoanBalance;
-      // Renter Net Equity Wealth = Value of Invested Portfolio
-      const renterNetWealth = renterWealthPort;
-
-      if (!breakEvenYear && buyerNetWealth >= renterNetWealth) {
-        breakEvenYear = y;
-      }
-
-      chartData.push({
-        year: `Yr ${y}`,
-        "Renter Net Wealth": Math.round(renterNetWealth),
-        "Buyer Net Equity": Math.round(buyerNetWealth),
-        "Property Value": Math.round(propertyValue),
-      });
+    const loanAmount = Math.max(0, propertyPrice - downPaymentAmount);
+    const monthlyRate = loanRate / 100 / 12;
+    const totalMonths = loanTenure * 12;
+    
+    let monthlyEmi = 0;
+    if (monthlyRate > 0 && totalMonths > 0) {
+      monthlyEmi = Math.round((loanAmount * monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1));
     }
 
-    const finalRenterWealth = Math.round(renterWealthPort);
-    const finalBuyerWealth = Math.round(propertyValue - remainingLoanBalance);
+    const emiToSalaryPct = Math.round((monthlyEmi / Math.max(1, salary)) * 100);
+    const requiredSalaryFor30PctEmi = Math.round(monthlyEmi / 0.30);
+    const salaryShortfall = Math.max(0, requiredSalaryFor30PctEmi - salary);
 
-    const rentSummary = {
-      totalRentPaid: Math.round(rentTotalPaid),
-      renterFinalWealth: finalRenterWealth,
+    // 20-Year Simulation Curves
+    const monthlyEquityRate = equityReturn / 100 / 12;
+    const monthlyRentInflationRate = rentInflation / 100 / 12;
+    const monthlyPropApprecRate = propertyAppreciation / 100 / 12;
+
+    const chartData = [];
+    let currentPropVal = propertyPrice;
+    let remainingLoan = loanAmount;
+    
+    // Rent Path: starts with seed capital equal to total upfront cash
+    let rentInvestedCorpus = cashYouNeedUpfront;
+    let currentRentFee = monthlyRent;
+    let totalRentPaidCum = 0;
+    let totalEmiPaidCum = 0;
+
+    for (let y = 0; y <= horizonYears; y++) {
+      chartData.push({
+        year: y,
+        buyNetWorth: Math.round(currentPropVal - remainingLoan),
+        rentNetWorth: Math.round(rentInvestedCorpus),
+      });
+
+      if (y === horizonYears) break;
+
+      // Simulate 12 months for year
+      for (let m = 0; m < 12; m++) {
+        // Buy path updates
+        currentPropVal *= (1 + monthlyPropApprecRate);
+        
+        // Loan balance principal reduction
+        if (remainingLoan > 0) {
+          const interestPayment = remainingLoan * monthlyRate;
+          const principalPayment = Math.min(remainingLoan, monthlyEmi - interestPayment);
+          remainingLoan -= principalPayment;
+          totalEmiPaidCum += monthlyEmi;
+        }
+
+        // Rent & Invest path updates
+        const monthlyMaintenance = (currentPropVal * 0.005) / 12;
+        const buyMonthlyOutflow = monthlyEmi + monthlyMaintenance;
+        const monthlySurplusToInvest = Math.max(0, buyMonthlyOutflow - currentRentFee);
+
+        rentInvestedCorpus = (rentInvestedCorpus + monthlySurplusToInvest) * (1 + monthlyEquityRate);
+        totalRentPaidCum += currentRentFee;
+        currentRentFee *= (1 + monthlyRentInflationRate / 12);
+      }
+    }
+
+    const finalBuyNetWorth = chartData[chartData.length - 1].buyNetWorth;
+    const finalRentNetWorth = chartData[chartData.length - 1].rentNetWorth;
+    const netWorthDelta = Math.abs(finalRentNetWorth - finalBuyNetWorth);
+    const rentWins = finalRentNetWorth > finalBuyNetWorth;
+
+    return {
+      stampDuty,
+      stampDutyRate,
+      registration,
+      gst,
+      gstRate,
+      interiorsMisc,
+      totalActualCost,
+      downPaymentAmount,
+      hiddenCashOutflow,
+      cashYouNeedUpfront,
+      loanAmount,
+      monthlyEmi,
+      emiToSalaryPct,
+      requiredSalaryFor30PctEmi,
+      salaryShortfall,
+      chartData,
+      finalBuyNetWorth,
+      finalRentNetWorth,
+      netWorthDelta,
+      rentWins,
+      totalEmiPaidCum,
+      totalRentPaidCum,
     };
-    const buySummary = {
-      totalPaid: Math.round(buyTotalPaid),
-      propertyValue: Math.round(propertyValue),
-      totalTaxSaved: Math.round(totalTaxSaved),
-      buyerFinalWealth: finalBuyerWealth,
-    };
-
-    const winner = finalBuyerWealth > finalRenterWealth ? "Buying" : "Renting";
-
-    return { chartData, breakEvenYear, rentSummary, buySummary, winner };
-  }, [years, monthlyRent, rentIncrease, rentInvestmentReturn, propertyPrice, downPayment, loanRate, loanTenure, propertyAppreciation, maintenancePercent, registrationCost, taxSlab]);
-
-  const fmt = (v: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(v);
-  const fmtL = (v: number) => v >= 10000000 ? `₹${(v / 10000000).toFixed(2)}Cr` : `₹${(v / 100000).toFixed(2)}L`;
-
-  if (!mounted) return <div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald" /></div>;
+  }, [city, propertyPrice, propertyType, downPaymentPct, loanRate, loanTenure, salary, monthlyRent, equityReturn, propertyAppreciation, rentInflation, horizonYears]);
 
   return (
-    <div className="space-y-10 py-6 animate-fadeIn text-light-grey">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border-navy pb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <Home className="text-emerald" /> Home Rent vs. Buy Calculator
-          </h1>
-          <p className="text-sm text-muted-grey mt-1">
-            Compare long-term net wealth — accounting for Sec 24 tax savings, down payment equity opportunity cost, property appreciation, and maintenance.
-          </p>
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto mb-8 border-b border-slate-800 pb-6">
+        <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm mb-1 uppercase tracking-wider">
+          <Building className="w-4 h-4" /> Real Estate Intelligence • ValarchiX
         </div>
-        <div className="text-xs font-semibold text-emerald bg-emerald/5 border border-emerald/20 px-3 py-1.5 rounded-lg">
-          💡 Motto: We don&apos;t tell what to pick, we tell how to pick.
-        </div>
+        <h1 className="text-3xl md:text-4xl font-extrabold text-white">ValarchiX Buy vs Rent Engine</h1>
+        <p className="text-slate-400 text-sm mt-1">
+          Compare your 20-year net worth: pay EMI and own the home, or rent cheap and invest the difference with pure discipline.
+        </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Controls */}
-        <div className="lg:col-span-1 space-y-5">
-          <div className="p-5 glass-card space-y-5">
-            <h2 className="text-base font-bold text-white">Comparison Horizon</h2>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-semibold">
-                <span className="text-muted-grey font-bold">Years to Compare</span>
-                <NumericInput value={years} onChange={setYears} min={1} max={50} step={1} type="years" />
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Top Hero: Affordability Reality Check */}
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 font-bold text-slate-200 text-base">
+                <Building className="w-5 h-5 text-emerald-400" /> Affordability Reality Check
               </div>
-              <input type="range" min={5} max={35} step={1} value={years} onChange={(e) => setYears(Number(e.target.value))} className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer" />
+              <select
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1 text-emerald-400 font-semibold text-xs focus:border-emerald-500 focus:outline-none"
+              >
+                <option value="Bangalore">Bangalore (5% Stamp Duty)</option>
+                <option value="Mumbai">Mumbai (6% Stamp Duty)</option>
+                <option value="Delhi NCR">Delhi NCR (6% Stamp Duty)</option>
+                <option value="Chennai">Chennai (7% Stamp Duty)</option>
+                <option value="Hyderabad">Hyderabad (6% Stamp Duty)</option>
+                <option value="Pune">Pune (6% Stamp Duty)</option>
+                <option value="Other">Other City (5% Stamp Duty)</option>
+              </select>
+            </div>
+            <span className="text-xs text-slate-400">Bank caps EMI at ~50% of income. The 30% rule is the &quot;sleep peacefully&quot; zone.</span>
+          </div>
+
+          {/* Property Type Tabs */}
+          <div>
+            <div className="text-xs font-semibold text-slate-400 uppercase mb-2">PROPERTY TYPE</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                onClick={() => setPropertyType("ready")}
+                className={`p-3 rounded-2xl border text-left transition ${
+                  propertyType === "ready"
+                    ? "bg-emerald-950/80 border-emerald-500 text-white"
+                    : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                }`}
+              >
+                <div className="font-bold text-sm">Ready / Resale</div>
+                <div className="text-xs text-emerald-400 font-semibold mt-0.5">GST 0%</div>
+                <div className="text-[10px] text-slate-500 mt-1">GST exempt — completion certificate received</div>
+              </button>
+
+              <button
+                onClick={() => setPropertyType("under_construction")}
+                className={`p-3 rounded-2xl border text-left transition ${
+                  propertyType === "under_construction"
+                    ? "bg-emerald-950/80 border-emerald-500 text-white"
+                    : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                }`}
+              >
+                <div className="font-bold text-sm">Under-construction</div>
+                <div className="text-xs text-emerald-400 font-semibold mt-0.5">GST 5%</div>
+                <div className="text-[10px] text-slate-500 mt-1">GST applies to under-construction property</div>
+              </button>
+
+              <button
+                onClick={() => setPropertyType("affordable")}
+                className={`p-3 rounded-2xl border text-left transition ${
+                  propertyType === "affordable"
+                    ? "bg-emerald-950/80 border-emerald-500 text-white"
+                    : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                }`}
+              >
+                <div className="font-bold text-sm">Affordable</div>
+                <div className="text-xs text-emerald-400 font-semibold mt-0.5">GST 1%</div>
+                <div className="text-[10px] text-slate-500 mt-1">Under ₹45L value threshold</div>
+              </button>
             </div>
           </div>
 
-          <div className="p-5 glass-card space-y-4">
-            <h2 className="text-base font-bold text-blue-400 flex items-center gap-2"><Landmark size={15} /> Renting Parameters</h2>
-            {[
-              { label: "Monthly Rent", value: monthlyRent, set: setMonthlyRent, min: 5000, max: 200000, sliderMin: 5000, sliderMax: 100000, step: 1000, type: "currency" as const },
-              { label: "Annual Rent Hike (%)", value: rentIncrease, set: setRentIncrease, min: 0, max: 20, sliderMin: 0, sliderMax: 15, step: 0.5, type: "percent" as const },
-              { label: "Down Payment Investment CAGR (%)", value: rentInvestmentReturn, set: setRentInvestmentReturn, min: 4, max: 20, sliderMin: 4, sliderMax: 20, step: 0.5, type: "percent" as const },
-            ].map((f) => (
-              <div key={f.label} className="space-y-1.5">
-                <div className="flex justify-between items-center text-xs font-semibold">
-                  <span className="text-muted-grey">{f.label}</span>
-                  <NumericInput value={f.value} onChange={f.set} min={f.min} max={f.max} step={f.step} type={f.type} />
-                </div>
-                <input type="range" min={f.sliderMin} max={f.sliderMax} step={f.step} value={f.value} onChange={(e) => f.set(Number(e.target.value))} className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer" />
+          {/* Upfront Cash Breakdown Table & Salary Needed Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Breakdown List */}
+            <div className="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Property Cost</span>
+                <span className="font-bold text-white">{formatINR(propertyPrice)}</span>
               </div>
-            ))}
-          </div>
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>+ Stamp Duty ({(calc.stampDutyRate * 100).toFixed(0)}%)</span>
+                <span>{formatINR(calc.stampDuty)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>+ Registration (1%)</span>
+                <span>{formatINR(calc.registration)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>+ GST ({(calc.gstRate * 100).toFixed(0)}%)</span>
+                <span>{formatINR(calc.gst)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>+ Interiors & misc (4%)</span>
+                <span>{formatINR(calc.interiorsMisc)}</span>
+              </div>
 
-          <div className="p-5 glass-card space-y-4">
-            <h2 className="text-base font-bold text-emerald flex items-center gap-2"><Home size={15} /> Buying Parameters</h2>
-            {[
-              { label: "Property Price", value: propertyPrice, set: setPropertyPrice, min: 1000000, max: 50000000, sliderMin: 2000000, sliderMax: 30000000, step: 500000, type: "currency" as const },
-              { label: "Down Payment", value: downPayment, set: setDownPayment, min: 100000, max: 20000000, sliderMin: 500000, sliderMax: 10000000, step: 100000, type: "currency" as const },
-              { label: "Home Loan Rate (%)", value: loanRate, set: setLoanRate, min: 6, max: 15, sliderMin: 6.5, sliderMax: 12, step: 0.1, type: "percent" as const },
-              { label: "Property Appreciation (%)", value: propertyAppreciation, set: setPropertyAppreciation, min: 1, max: 15, sliderMin: 2, sliderMax: 12, step: 0.5, type: "percent" as const },
-            ].map((f) => (
-              <div key={f.label} className="space-y-1.5">
-                <div className="flex justify-between items-center text-xs font-semibold">
-                  <span className="text-muted-grey">{f.label}</span>
-                  <NumericInput value={f.value} onChange={f.set} min={f.min} max={f.max} step={f.step} type={f.type} />
-                </div>
-                <input type="range" min={f.sliderMin} max={f.sliderMax} step={f.step} value={f.value} onChange={(e) => f.set(Number(e.target.value))} className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer" />
+              <div className="border-t border-slate-800 pt-2 flex justify-between font-bold text-white">
+                <span>Total Actual Cost</span>
+                <span>{formatINR(calc.totalActualCost)}</span>
               </div>
-            ))}
+
+              <div className="border-t border-slate-800/80 pt-2 space-y-1.5 text-xs">
+                <div className="flex justify-between text-slate-400">
+                  <span>Down Payment ({downPaymentPct}%)</span>
+                  <span>{formatINR(calc.downPaymentAmount)}</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>Hidden Costs (cash)</span>
+                  <span>{formatINR(calc.hiddenCashOutflow)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-emerald-400 text-sm">
+                  <span>Cash You Need Upfront</span>
+                  <span>{formatINR(calc.cashYouNeedUpfront)}</span>
+                </div>
+                <div className="flex justify-between text-slate-400 pt-1">
+                  <span>Loan Amount</span>
+                  <span>{formatINR(calc.loanAmount)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-white text-sm">
+                  <span>EMI ({loanRate}%, {loanTenure} yrs)</span>
+                  <span>{formatINR(calc.monthlyEmi)} / mo</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Anxiety & Salary Needed Spotlight Cards */}
+            <div className="lg:col-span-6 space-y-4 flex flex-col justify-between">
+              {/* Salary Needed */}
+              <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-5">
+                <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">SALARY NEEDED (NET IN-HAND)</div>
+                <div className="text-3xl font-black text-emerald-300 mt-1">{formatINR(calc.requiredSalaryFor30PctEmi)} / mo</div>
+                <div className="text-xs text-emerald-400/80 mt-1 font-medium">so EMI stays ≤ 30% of your income</div>
+              </div>
+
+              {/* EMI Anxiety Zone Alert Card */}
+              <div className={`p-5 rounded-2xl border space-y-2 ${
+                calc.emiToSalaryPct > 50
+                  ? "bg-rose-950/60 border-rose-600 text-rose-200"
+                  : calc.emiToSalaryPct > 30
+                    ? "bg-amber-950/60 border-amber-600 text-amber-200"
+                    : "bg-emerald-950/60 border-emerald-600 text-emerald-200"
+              }`}>
+                <div className="flex items-center gap-2 font-extrabold text-sm uppercase tracking-wider">
+                  <AlertTriangle className="w-4 h-4" /> 
+                  {calc.emiToSalaryPct > 50 ? "⚠️ EMI ANXIETY ZONE" : calc.emiToSalaryPct > 30 ? "⚠️ MODERATE EMI BURDEN" : "✅ SAFE EMI ZONE"}
+                </div>
+                <div className="text-sm font-bold">
+                  Your salary: {formatINR(salary)} → EMI = {calc.emiToSalaryPct}% of income
+                </div>
+                <p className="text-xs leading-relaxed opacity-90">
+                  {calc.emiToSalaryPct > 50
+                    ? `One job loss = bankruptcy risk. Do not buy this house at this salary. Shortfall: ${formatINR(calc.salaryShortfall)}/mo`
+                    : calc.emiToSalaryPct > 30
+                      ? `EMI exceeds the 30% safety benchmark by ${calc.emiToSalaryPct - 30}%.`
+                      : "EMI is comfortably below 30% of in-hand salary."}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Results & Chart */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Winner Banner */}
-          <div className={`p-6 rounded-2xl border ${winner === "Buying" ? "border-emerald/40 bg-emerald/5" : "border-blue-500/40 bg-blue-500/5"} flex flex-col md:flex-row items-center justify-between gap-4`}>
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-grey flex items-center gap-1.5">
-                <Award className={winner === "Buying" ? "text-emerald" : "text-blue-400"} size={16} /> 
-                Financial Winner at Year {years}
-              </span>
-              <h3 className={`text-2xl font-black mt-1 ${winner === "Buying" ? "text-emerald" : "text-blue-400"}`}>
-                {winner === "Buying" ? "Buying Outperforms Renting" : "Renting & Investing Outperforms Buying"}
-              </h3>
-              <p className="text-xs text-muted-grey mt-1">
-                {winner === "Buying"
-                  ? `Buying builds ${fmtL(buySummary.buyerFinalWealth)} in net equity vs ${fmtL(rentSummary.renterFinalWealth)} renting portfolio.`
-                  : `Renter portfolio grows to ${fmtL(rentSummary.renterFinalWealth)} vs ${fmtL(buySummary.buyerFinalWealth)} buyer net home equity.`}
-              </p>
+        {/* Middle Verdict Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-2">
+            <div className="text-xs font-bold text-slate-400 uppercase">BUY — NET WORTH ({horizonYears} YRS)</div>
+            <div className="text-3xl font-black text-white">{formatINRWords(calc.finalBuyNetWorth)}</div>
+            <div className="text-xs text-slate-500 border-t border-slate-800/80 pt-2 space-y-0.5">
+              <div>Property Val: {formatINRWords(calc.finalBuyNetWorth)}</div>
+              <div>Loan Left: ₹0</div>
+              <div>Total EMI Paid: {formatINRWords(calc.totalEmiPaidCum)}</div>
             </div>
-            {breakEvenYear && (
-              <div className="p-3 bg-navy-bg/80 border border-border-navy rounded-xl text-center shrink-0">
-                <span className="text-[10px] uppercase font-bold text-muted-grey block">Break-even Point</span>
-                <span className="text-xl font-extrabold text-white">Year {breakEvenYear}</span>
-              </div>
-            )}
           </div>
 
-          {/* Area Chart Comparison */}
-          <div className="p-6 glass-card space-y-4">
-            <h3 className="text-sm font-bold text-white">Net Equity Wealth Trajectory Over Time</h3>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 15, left: 5, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="year" stroke="#64748b" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="#64748b" width={75} tickFormatter={(v) => v >= 10000000 ? `₹${(v / 10000000).toFixed(1)}Cr` : v >= 100000 ? `₹${(v / 100000).toFixed(0)}L` : `₹${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(v: any) => fmt(v)} />
-                  <Legend />
-                  <Area type="monotone" dataKey="Buyer Net Equity" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={2} />
-                  <Area type="monotone" dataKey="Renter Net Wealth" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.15} strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
+          <div className="bg-slate-900 border border-emerald-500/50 rounded-3xl p-6 shadow-xl space-y-2 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="text-xs font-bold text-emerald-400 uppercase">RENT + INVEST — NET WORTH</div>
+            <div className="text-3xl font-black text-emerald-300">{formatINRWords(calc.finalRentNetWorth)}</div>
+            <div className="text-xs text-slate-400 border-t border-slate-800/80 pt-2 space-y-0.5">
+              <div>Invested Corpus: {formatINRWords(calc.finalRentNetWorth)}</div>
+              <div>Total Rent Paid: {formatINRWords(calc.totalRentPaidCum)}</div>
+              <div>Upfront Seed: {formatINR(calc.cashYouNeedUpfront)}</div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-emerald-950/60 to-slate-900 border border-emerald-500/60 rounded-3xl p-6 shadow-xl space-y-2">
+            <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-xs uppercase tracking-widest">
+              <Award className="w-4 h-4" /> VERDICT
+            </div>
+            <div className="text-2xl font-black text-emerald-400">
+              {calc.rentWins ? "Renting Wins" : "Buying Wins"}
+            </div>
+            <div className="text-xs text-slate-300 space-y-1 pt-1">
+              <div>Δ Net Worth Advantage: <strong>{formatINR(calc.netWorthDelta)}</strong></div>
+              <div>EMI: <strong>{formatINR(calc.monthlyEmi)} / mo</strong></div>
+              <div>EMI / Salary Ratio: <strong>{calc.emiToSalaryPct}%</strong></div>
+            </div>
+          </div>
+        </div>
+
+        {/* 20-Year Net Worth Over Time Chart */}
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-emerald-400" /> Net Worth Over Time Comparison
+          </h3>
+
+          <div className="h-80 w-full pt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={calc.chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <XAxis dataKey="year" stroke="#64748b" tickFormatter={(y) => `Yr ${y}`} />
+                <YAxis stroke="#64748b" tickFormatter={(val) => `₹${(val / 10000000).toFixed(1)}Cr`} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "12px", color: "#f8fafc" }}
+                  formatter={(val: any) => [formatINR(Number(val)), "Net Worth"]}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="buyNetWorth" name="Buy Path" stroke="#3b82f6" strokeWidth={3} dot={false} />
+                <Line type="monotone" dataKey="rentNetWorth" name="Rent + Invest Path" stroke="#10b981" strokeWidth={3} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Left Interactive Input Sliders Controls */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6 shadow-xl">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Sliders className="w-5 h-5 text-emerald-400" /> Property & Loan Inputs
+            </h3>
+
+            {/* City */}
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase">City Preset</label>
+              <select
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm mt-1 focus:border-emerald-500 focus:outline-none"
+              >
+                <option value="Bangalore">Bangalore</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Delhi NCR">Delhi NCR</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Pune">Pune</option>
+                <option value="Chennai">Chennai</option>
+              </select>
+            </div>
+
+            {/* Salary */}
+            <div>
+              <div className="flex justify-between text-xs font-semibold mb-1">
+                <span className="text-slate-400 uppercase">Net Monthly Salary</span>
+                <span className="text-emerald-400 font-bold">{formatINR(salary)}</span>
+              </div>
+              <input
+                type="number"
+                value={salary}
+                onChange={(e) => setSalary(Number(e.target.value))}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white font-bold text-sm mb-2"
+              />
+              <input
+                type="range"
+                min={25000}
+                max={500000}
+                step={5000}
+                value={salary}
+                onChange={(e) => setSalary(Number(e.target.value))}
+                className="w-full accent-emerald-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Property Size & Price/sqft */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-slate-400 uppercase">Size (sqft)</span>
+                  <span className="text-emerald-400">{propertySizeSqft} sqft</span>
+                </div>
+                <input
+                  type="number"
+                  value={propertySizeSqft}
+                  onChange={(e) => setPropertySizeSqft(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-slate-400 uppercase">Price / sqft</span>
+                  <span className="text-emerald-400">{formatINR(pricePerSqft)}</span>
+                </div>
+                <input
+                  type="number"
+                  value={pricePerSqft}
+                  onChange={(e) => setPricePerSqft(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Monthly Rent */}
+            <div>
+              <div className="flex justify-between text-xs font-semibold mb-1">
+                <span className="text-slate-400 uppercase">Current Monthly Rent</span>
+                <span className="text-emerald-400 font-bold">{formatINR(monthlyRent)}</span>
+              </div>
+              <input
+                type="number"
+                value={monthlyRent}
+                onChange={(e) => setMonthlyRent(Number(e.target.value))}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-sm mb-2"
+              />
+              <input
+                type="range"
+                min={10000}
+                max={150000}
+                step={2000}
+                value={monthlyRent}
+                onChange={(e) => setMonthlyRent(Number(e.target.value))}
+                className="w-full accent-emerald-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Loan parameters */}
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-[11px] text-slate-400 uppercase">Down Pmt %</label>
+                <input
+                  type="number"
+                  value={downPaymentPct}
+                  onChange={(e) => setDownPaymentPct(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm mt-1"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] text-slate-400 uppercase">Loan Rate %</label>
+                <input
+                  type="number"
+                  value={loanRate}
+                  onChange={(e) => setLoanRate(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm mt-1"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] text-slate-400 uppercase">Tenure (Yrs)</label>
+                <input
+                  type="number"
+                  value={loanTenure}
+                  onChange={(e) => setLoanTenure(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm mt-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6 shadow-xl flex flex-col justify-between">
+            <div className="space-y-6">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-emerald-400" /> Economic Assumptions
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span className="text-slate-400 uppercase">Equity SIP CAGR Return</span>
+                    <span className="text-emerald-400 font-bold">{equityReturn}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={6}
+                    max={18}
+                    step={0.5}
+                    value={equityReturn}
+                    onChange={(e) => setEquityReturn(Number(e.target.value))}
+                    className="w-full accent-emerald-500 cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span className="text-slate-400 uppercase">Property Appreciation %</span>
+                    <span className="text-emerald-400 font-bold">{propertyAppreciation}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={2}
+                    max={12}
+                    step={0.5}
+                    value={propertyAppreciation}
+                    onChange={(e) => setPropertyAppreciation(Number(e.target.value))}
+                    className="w-full accent-emerald-500 cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span className="text-slate-400 uppercase">Rent Inflation %</span>
+                    <span className="text-emerald-400 font-bold">{rentInflation}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={3}
+                    max={12}
+                    step={0.5}
+                    value={rentInflation}
+                    onChange={(e) => setRentInflation(Number(e.target.value))}
+                    className="w-full accent-emerald-500 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ValarchiX 6-Engine Connect Action Banner */}
+            <div className="bg-slate-950 border border-emerald-900/60 rounded-2xl p-4 space-y-3">
+              <div className="text-xs font-bold text-emerald-400 uppercase">ValarchiX 6-Engine Connect</div>
+              <p className="text-xs text-slate-400">
+                Project this home purchase decision into your Time Machine parallel universes or update your Financial DNA debt pillars.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <a
+                  href="/time-machine"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs py-2 px-3 rounded-xl text-center transition"
+                >
+                  Simulate in Time Machine
+                </a>
+                <a
+                  href="/financial-dna"
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs py-2 px-3 rounded-xl text-center transition"
+                >
+                  Update Financial DNA
+                </a>
+              </div>
             </div>
           </div>
         </div>
