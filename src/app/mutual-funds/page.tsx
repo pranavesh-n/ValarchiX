@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Layers, Search, Info, ShieldAlert, RefreshCw, HelpCircle, GitCompare, BookOpen, Filter, ArrowUpDown, ChevronRight, TrendingUp } from "lucide-react";
+import Link from "next/link";
+import { Layers, Search, Info, ShieldAlert, RefreshCw, HelpCircle, GitCompare, BookOpen, Filter, ArrowUpDown, ChevronRight, TrendingUp, ExternalLink, Lock, ShieldCheck, Coins, BarChart2, Zap, GraduationCap, Download } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { getCurrentUserSession } from "@/lib/supabase/auth";
 
 interface SearchResult {
   schemeCode: number;
@@ -30,8 +32,57 @@ interface ParsedMetrics {
   rawNavs: NavPoint[];
 }
 
+const AMC_FACTSHEETS = [
+  { name: "SBI Mutual Fund", code: "SBI", logo: "🏛️", website: "https://www.sbimf.com/en-us/investor-corner/factsheets", pdfUrl: "https://www.sbimf.com/en-us/investor-corner/factsheets", tag: "Largest AMC in India" },
+  { name: "HDFC Mutual Fund", code: "HDFC", logo: "🏦", website: "https://www.hdfcfund.com/investor-desk/factsheets", pdfUrl: "https://www.hdfcfund.com/investor-desk/factsheets", tag: "Top Equity Asset Manager" },
+  { name: "ICICI Prudential MF", code: "ICICI", logo: "🏢", website: "https://www.icicipruamc.com/downloads/factsheets", pdfUrl: "https://www.icicipruamc.com/downloads/factsheets", tag: "High Liquidity Specialist" },
+  { name: "Nippon India MF", code: "NIPPON", logo: "🇯🇵", website: "https://mf.nipponindiaim.com/InvestorServices/Factsheets", pdfUrl: "https://mf.nipponindiaim.com/InvestorServices/Factsheets", tag: "Small Cap Leader" },
+  { name: "Kotak Mahindra MF", code: "KOTAK", logo: "💳", website: "https://www.kotakmf.com/Investor-Service/Fact-Sheets", pdfUrl: "https://www.kotakmf.com/Investor-Service/Fact-Sheets", tag: "Conservative & Growth" },
+  { name: "Parag Parikh (PPFAS)", code: "PPFAS", logo: "🐢", website: "https://amc.ppfas.com/factsheet/", pdfUrl: "https://amc.ppfas.com/factsheet/", tag: "Value & International Equity" },
+  { name: "Quant Mutual Fund", code: "QUANT", logo: "⚡", website: "https://quantmutual.com/statutory-disclosures/factsheets", pdfUrl: "https://quantmutual.com/statutory-disclosures/factsheets", tag: "VLRT Quantitative Model" },
+  { name: "Axis Mutual Fund", code: "AXIS", logo: "📈", website: "https://www.axismf.com/downloads/factsheet", pdfUrl: "https://www.axismf.com/downloads/factsheet", tag: "Quality Growth Focus" },
+  { name: "Mirae Asset MF", code: "MIRAE", logo: "🌐", website: "https://www.miraeassetmf.co.in/downloads/factsheet", pdfUrl: "https://www.miraeassetmf.co.in/downloads/factsheet", tag: "Large & Large-Mid Leader" },
+  { name: "Motilal Oswal MF", code: "MO", logo: "🎯", website: "https://www.motilaloswalmf.com/download/factsheets", pdfUrl: "https://www.motilaloswalmf.com/download/factsheets", tag: "QGLP Concentrated Stocks" },
+  { name: "UTI Mutual Fund", code: "UTI", logo: "🏛️", website: "https://www.utimf.com/downloads/factsheet/", pdfUrl: "https://www.utimf.com/downloads/factsheet/", tag: "India Oldest AMC Legacy" },
+  { name: "DSP Mutual Fund", code: "DSP", logo: "🌲", website: "https://www.dspim.com/investor-desk/factsheets", pdfUrl: "https://www.dspim.com/investor-desk/factsheets", tag: "Quantitative & Systematic" },
+  { name: "Tata Mutual Fund", code: "TATA", logo: "⚙️", website: "https://www.tatamutualfund.com/downloads/factsheet", pdfUrl: "https://www.tatamutualfund.com/downloads/factsheet", tag: "Trusted Conglomerate AMC" },
+  { name: "Bandhan Mutual Fund", code: "BANDHAN", logo: "💎", website: "https://bandhanmutual.com/downloads/factsheet", pdfUrl: "https://bandhanmutual.com/downloads/factsheet", tag: "Formerly IDFC AMC" },
+  { name: "Canara Robeco MF", code: "CANARA", logo: "🛡️", website: "https://www.canararobeco.com/downloads/factsheet", pdfUrl: "https://www.canararobeco.com/downloads/factsheet", tag: "Consistent Performance" },
+  { name: "Edelweiss MF", code: "EDELWEISS", logo: "🚀", website: "https://www.edelweissmf.com/downloads/factsheet", pdfUrl: "https://www.edelweissmf.com/downloads/factsheet", tag: "Target Maturity & Factor" },
+  { name: "Sundaram MF", code: "SUNDARAM", logo: "☀️", website: "https://www.sundarammutual.com/downloads/factsheet", pdfUrl: "https://www.sundarammutual.com/downloads/factsheet", tag: "Mid & Small Cap Specialist" },
+  { name: "Invesco Mutual Fund", code: "INVESCO", logo: "🦅", website: "https://www.invescomutualfund.com/downloads/factsheet", pdfUrl: "https://www.invescomutualfund.com/downloads/factsheet", tag: "Global Asset Manager" },
+  { name: "HSBC Mutual Fund", code: "HSBC", logo: "🌍", website: "https://www.assetmanagement.hsbc.co.in/en/mutual-funds/investor-resources/factsheets", pdfUrl: "https://www.assetmanagement.hsbc.co.in/en/mutual-funds/investor-resources/factsheets", tag: "International Multi-Asset" },
+  { name: "Franklin Templeton", code: "FRANKLIN", logo: "📜", website: "https://www.franklintempletonindia.com/investor/factsheets", pdfUrl: "https://www.franklintempletonindia.com/investor/factsheets", tag: "Global Value Investment" },
+  { name: "Aditya Birla Sun Life", code: "ABSL", logo: "🌞", website: "https://mutualfund.adityabirlacapital.com/forms-and-downloads/factsheet", pdfUrl: "https://mutualfund.adityabirlacapital.com/forms-and-downloads/factsheet", tag: "Diversified Asset Giant" },
+  { name: "PGIM India MF", code: "PGIM", logo: "🔷", website: "https://www.pgimindiamf.com/downloads/factsheet", pdfUrl: "https://www.pgimindiamf.com/downloads/factsheet", tag: "Global Investment House" },
+  { name: "Union Mutual Fund", code: "UNION", logo: "🤝", website: "https://www.unionmf.com/downloads/factsheet", pdfUrl: "https://www.unionmf.com/downloads/factsheet", tag: "PSU Bank Backed AMC" },
+  { name: "Baroda BNP Paribas MF", code: "BARODA", logo: "🏛️", website: "https://www.barodabnpparibasmf.in/downloads/factsheets", pdfUrl: "https://www.barodabnpparibasmf.in/downloads/factsheets", tag: "Indo-French Alliance" },
+  { name: "Mahindra Manulife MF", code: "MAHINDRA", logo: "🚜", website: "https://www.mahindramanulife.com/downloads/factsheets", pdfUrl: "https://www.mahindramanulife.com/downloads/factsheets", tag: "Rural & Semi-Urban Focus" },
+  { name: "JM Financial MF", code: "JM", logo: "📊", website: "https://www.jmfinancialmf.com/downloads/factsheets", pdfUrl: "https://www.jmfinancialmf.com/downloads/factsheets", tag: "Pioneer Private AMC" },
+  { name: "LIC Mutual Fund", code: "LIC", logo: "🛡️", website: "https://www.licmf.com/downloads/factsheet", pdfUrl: "https://www.licmf.com/downloads/factsheet", tag: "Sovereign Trust Legacy" },
+  { name: "Navi Mutual Fund", code: "NAVI", logo: "📱", website: "https://www.navimutualfund.com/downloads/factsheet", pdfUrl: "https://www.navimutualfund.com/downloads/factsheet", tag: "Zero-Commission Index Funds" },
+  { name: "Groww Mutual Fund", code: "GROWW", logo: "🌱", website: "https://www.growwmf.in/downloads/factsheet", pdfUrl: "https://www.growwmf.in/downloads/factsheet", tag: "Tech-First Asset House" },
+  { name: "Zerodha Fund House", code: "ZERODHA", logo: "📐", website: "https://www.zerodhafundhouse.com/downloads/factsheets", pdfUrl: "https://www.zerodhafundhouse.com/downloads/factsheets", tag: "Passive Only Index AMC" },
+  { name: "WhiteOak Capital MF", code: "WHITEOAK", logo: "🌳", website: "https://mf.whiteoakcapital.com/downloads/factsheet", pdfUrl: "https://mf.whiteoakcapital.com/downloads/factsheet", tag: "OpCo-FinCo Stock Picking" },
+  { name: "Samco Mutual Fund", code: "SAMCO", logo: "🎯", website: "https://www.samcomf.com/downloads/factsheet", pdfUrl: "https://www.samcomf.com/downloads/factsheet", tag: "HexaShield Investment Model" },
+  { name: "NJ Mutual Fund", code: "NJ", logo: "💼", website: "https://www.njmutualfund.com/downloads/factsheet", pdfUrl: "https://www.njmutualfund.com/downloads/factsheet", tag: "Rule-Based Quantitative AMC" },
+  { name: "360 ONE MF (IIFL)", code: "360ONE", logo: "⭕", website: "https://www.360.one/assetmanagement/downloads/factsheets", pdfUrl: "https://www.360.one/assetmanagement/downloads/factsheets", tag: "Focused & High Net-Worth" },
+  { name: "ITI Mutual Fund", code: "ITI", logo: "🏭", website: "https://www.itiamc.com/downloads/factsheets", pdfUrl: "https://www.itiamc.com/downloads/factsheets", tag: "Long-Term Growth Focus" },
+  { name: "Trust Mutual Fund", code: "TRUST", logo: "🤝", website: "https://www.trustmf.in/downloads/factsheet", pdfUrl: "https://www.trustmf.in/downloads/factsheet", tag: "Fixed Income & Debt Focus" },
+  { name: "Taurus Mutual Fund", code: "TAURUS", logo: "🐂", website: "https://www.taurusmutualfund.com/downloads/factsheet", pdfUrl: "https://www.taurusmutualfund.com/downloads/factsheet", tag: "Niche Sectoral Funds" },
+  { name: "Quantum Mutual Fund", code: "QUANTUM", logo: "⚛️", website: "https://www.quantumamc.com/downloads/factsheet", pdfUrl: "https://www.quantumamc.com/downloads/factsheet", tag: "Direct-Only Value Investing" },
+  { name: "Shriram Mutual Fund", code: "SHRIRAM", logo: "🏛️", website: "https://www.shrirammf.com/downloads/factsheet", pdfUrl: "https://www.shrirammf.com/downloads/factsheet", tag: "Multi-Asset & Hybrid" },
+  { name: "Helios Mutual Fund", code: "HELIOS", logo: "☀️", website: "https://www.heliosmf.in/downloads/factsheet", pdfUrl: "https://www.heliosmf.in/downloads/factsheet", tag: "Elimination Strategy AMC" },
+  { name: "Old Bridge MF", code: "OLDBRIDGE", logo: "🌉", website: "https://www.oldbridgemf.com/downloads/factsheet", pdfUrl: "https://www.oldbridgemf.com/downloads/factsheet", tag: "Cyclical & Value Focus" },
+  { name: "Bajaj Finserv MF", code: "BAJAJ", logo: "⚡", website: "https://www.bajajfinservsecurities.in/mutual-funds/factsheets", pdfUrl: "https://www.bajajfinservsecurities.in/mutual-funds/factsheets", tag: "Megatrend & Tech Focus" },
+  { name: "BOI Mutual Fund", code: "BOI", logo: "🏦", website: "https://www.boimf.in/downloads/factsheet", pdfUrl: "https://www.boimf.in/downloads/factsheet", tag: "Bank of India Asset Arm" },
+  { name: "Shine Capital MF", code: "SHINE", logo: "✨", website: "https://www.amfiindia.com/research-information/other-data/factsheets", pdfUrl: "https://www.amfiindia.com/research-information/other-data/factsheets", tag: "SEBI Registered AMC" }
+];
+
 export default function MutualFundAnalyzer() {
-  const [viewMode, setViewMode] = useState<"screener" | "analyzer">("screener");
+  const [viewMode, setViewMode] = useState<"screener" | "analyzer" | "factsheets">("screener");
+  const [session, setSession] = useState<any>(null);
+  const [amcSearch, setAmcSearch] = useState("");
   const [screenerFunds, setScreenerFunds] = useState<any[]>([]);
   const [loadingScreener, setLoadingScreener] = useState(false);
   const [screenerFilterCategory, setScreenerFilterCategory] = useState("All");
@@ -84,6 +135,7 @@ export default function MutualFundAnalyzer() {
 
   useEffect(() => {
     setMounted(true);
+    getCurrentUserSession().then((s) => setSession(s)).catch(() => {});
     fetch("/api/rates")
       .then((res) => res.json())
       .then((data) => {
@@ -311,58 +363,74 @@ export default function MutualFundAnalyzer() {
   }
 
   return (
-    <div className="space-y-10 py-6 animate-fadeIn">
+    <div className="space-y-6 sm:space-y-10 py-4 sm:py-6 animate-fadeIn min-w-0 w-full">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border-navy pb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <Layers className="text-emerald" />
-            Mutual Funds Screener & Analyzer
-          </h1>
-          <p className="text-sm text-muted-grey mt-1">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border-navy pb-5 sm:pb-6 gap-4 min-w-0 w-full">
+        <div className="space-y-1.5 min-w-0 w-full">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+              <Layers className="text-emerald shrink-0" />
+              <span>Mutual Funds Screener & Analyzer</span>
+            </h1>
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+              👑 ValarchiX Flagship Model
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-grey">
             Search real-world mutual funds, compare risk ratios, filter categories, and analyze compounding.
           </p>
-          <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-            <span className="text-[10px] text-emerald bg-emerald/5 border border-emerald/20 px-2 py-0.5 rounded font-semibold">
+          <div className="flex items-center gap-1.5 sm:gap-2 mt-2.5 flex-wrap text-[10px]">
+            <span className="text-emerald bg-emerald/5 border border-emerald/20 px-2 py-0.5 rounded font-semibold">
               Data Source: AMFI Daily NAV Cache
             </span>
-            <span className="text-[10px] text-muted-grey bg-navy-card/40 border border-border-navy px-2 py-0.5 rounded">
+            <span className="text-muted-grey bg-navy-card/40 border border-border-navy px-2 py-0.5 rounded">
               NAV Updated Daily Post 9:00 PM IST
             </span>
-            <span className="text-[10px] text-muted-grey bg-navy-card/40 border border-border-navy px-2 py-0.5 rounded">
+            <span className="text-muted-grey bg-navy-card/40 border border-border-navy px-2 py-0.5 rounded">
               Benchmarks Approximated via Index Trackers
             </span>
           </div>
         </div>
-        <div className="text-xs font-semibold text-emerald bg-emerald/5 border border-emerald/20 px-3 py-1.5 rounded-lg shrink-0">
+        <div className="text-xs font-semibold text-emerald bg-emerald/5 border border-emerald/20 px-3 py-1.5 rounded-lg shrink-0 self-start md:self-auto">
           💡 Motto: We don&apos;t tell what to pick, we tell how to pick.
         </div>
       </div>
 
       {/* Tabs & Inflation Toggle */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-border-navy/60 pb-px gap-4">
-        <div className="flex">
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-border-navy/60 pb-px gap-3 min-w-0 w-full">
+        <div className="flex overflow-x-auto no-scrollbar scrollbar-none whitespace-nowrap min-w-0 w-full pb-1 md:pb-0">
           <button
             onClick={() => setViewMode("screener")}
-            className={`flex items-center gap-2 px-6 py-3 border-b-2 text-sm font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
               viewMode === "screener"
                 ? "border-emerald text-emerald bg-emerald/5"
                 : "border-transparent text-muted-grey hover:text-white"
             }`}
           >
-            <Filter size={16} />
+            <Filter size={15} />
             <span>Mutual Fund Screener</span>
           </button>
           <button
             onClick={() => setViewMode("analyzer")}
-            className={`flex items-center gap-2 px-6 py-3 border-b-2 text-sm font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
               viewMode === "analyzer"
                 ? "border-emerald text-emerald bg-emerald/5"
                 : "border-transparent text-muted-grey hover:text-white"
             }`}
           >
-            <Layers size={16} />
+            <Layers size={15} />
             <span>Detail Fund Analyzer & Compare</span>
+          </button>
+          <button
+            onClick={() => setViewMode("factsheets")}
+            className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
+              viewMode === "factsheets"
+                ? "border-emerald text-emerald bg-emerald/5"
+                : "border-transparent text-muted-grey hover:text-white"
+            }`}
+          >
+            <BookOpen size={15} />
+            <span>AMC Factsheets & Selection Rules</span>
           </button>
         </div>
 
@@ -609,7 +677,7 @@ export default function MutualFundAnalyzer() {
             </div>
           </div>
         </div>
-      ) : (
+      ) : viewMode === "analyzer" ? (
         <div className="space-y-10 animate-fadeIn">
           {/* Main Search Panel */}
           <div className="relative max-w-xl mx-auto z-20">
@@ -923,6 +991,334 @@ export default function MutualFundAnalyzer() {
               </div>
             </div>
           )}
+        </div>
+      ) : (
+        <div className="space-y-8 animate-fadeIn">
+          {/* ===== VIEW MODE 3: AMC FACTSHEETS VAULT & 5-PILLAR SELECTION GUIDE ===== */}
+          {/* SECTION 1: How to Pick a Mutual Fund Masterclass */}
+          <div className="p-4 sm:p-6 md:p-8 rounded-2xl md:rounded-3xl border border-border-navy bg-navy-card space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border-navy pb-4 gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-emerald font-bold text-xs uppercase tracking-wider">
+                  <GraduationCap className="w-4 h-4 text-emerald" /> ValarchiX Masterclass • 6 Golden Rules
+                </div>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-heading mt-1">
+                  How to Select the Right Mutual Fund Category & Scheme
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-grey mt-1">
+                  &ldquo;We don&apos;t tell what to pick, we tell how to pick.&rdquo; Evaluate these 6 core metrics before investing a single rupee.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {/* 1. AUM */}
+              <div className="p-4 sm:p-5 rounded-2xl border border-border-navy/80 bg-navy-bg/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase text-emerald bg-emerald/10 border border-emerald/20 px-2.5 py-1 rounded-lg">
+                    1. AUM (Assets Under Management)
+                  </span>
+                  <Coins className="text-emerald shrink-0" size={18} />
+                </div>
+                <p className="text-xs text-light-grey leading-relaxed">
+                  Total capital pool invested in the fund by all investors.
+                </p>
+                <div className="p-3 rounded-xl bg-navy-card/60 border border-border-navy/60 space-y-2 text-xs">
+                  <div className="flex justify-between items-center text-rose-400">
+                    <span>🚫 &lt; ₹1,000 Cr</span>
+                    <span className="font-bold">Liquidity Risk</span>
+                  </div>
+                  <div className="flex justify-between items-center text-emerald font-bold">
+                    <span>✅ ₹3,000 Cr – ₹10,000 Cr</span>
+                    <span>Sweet Spot</span>
+                  </div>
+                  <div className="flex justify-between items-center text-amber-400">
+                    <span>⚠️ &gt; ₹10,000 Cr – ₹15,000 Cr</span>
+                    <span className="font-bold">Size Burden</span>
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-grey leading-normal">
+                  <strong>Why size matters:</strong> Very large funds (especially Small/Mid cap) struggle to deploy cash quickly without buying huge stakes or driving up stock purchase costs (impact cost).
+                </p>
+              </div>
+
+              {/* 2. Standard Deviation */}
+              <div className="p-4 sm:p-5 rounded-2xl border border-border-navy/80 bg-navy-bg/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase text-emerald bg-emerald/10 border border-emerald/20 px-2.5 py-1 rounded-lg">
+                    2. Standard Deviation (σ)
+                  </span>
+                  <BarChart2 className="text-emerald shrink-0" size={18} />
+                </div>
+                <p className="text-xs text-light-grey leading-relaxed">
+                  Measures the annual dispersion of fund returns from its historical average (volatility & journey smoothness).
+                </p>
+                <div className="p-3 rounded-xl bg-navy-card/60 border border-border-navy/60 space-y-1.5 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-grey">Lower Standard Dev:</span>
+                    <span className="text-emerald font-bold">Smoother Ride</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-grey">Higher Standard Dev:</span>
+                    <span className="text-rose-400 font-bold">Wild Volatility Swings</span>
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-grey leading-normal">
+                  <strong>ValarchiX Rule:</strong> Compare two funds with equal 15% CAGR. The fund with lower Standard Deviation offers a far more stress-free compounding journey.
+                </p>
+              </div>
+
+              {/* 3. Alpha */}
+              <div className="p-4 sm:p-5 rounded-2xl border border-border-navy/80 bg-navy-bg/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase text-emerald bg-emerald/10 border border-emerald/20 px-2.5 py-1 rounded-lg">
+                    3. Alpha (α)
+                  </span>
+                  <TrendingUp className="text-emerald shrink-0" size={18} />
+                </div>
+                <p className="text-xs text-light-grey leading-relaxed">
+                  Excess return generated by the fund manager above the benchmark index (e.g., Nifty 50).
+                </p>
+                <div className="p-3 rounded-xl bg-navy-card/60 border border-border-navy/60 space-y-2 text-xs">
+                  <div className="flex justify-between items-center text-emerald font-bold">
+                    <span>α &gt; 1.0 (Positive Alpha)</span>
+                    <span>Outperforms Index</span>
+                  </div>
+                  <div className="flex justify-between items-center text-amber-400">
+                    <span>α = 0 (Zero Alpha)</span>
+                    <span>Index Hugger</span>
+                  </div>
+                  <div className="flex justify-between items-center text-rose-400">
+                    <span>α &lt; 0 (Negative Alpha)</span>
+                    <span>Underperforms Index</span>
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-grey leading-normal">
+                  <strong>Example:</strong> If Nifty returns 12% and Fund A returns 15%, Alpha is <strong>+3.0%</strong>. If Fund B returns 10%, Alpha is <strong>-2.0%</strong> (destroying value after active fees).
+                </p>
+              </div>
+
+              {/* 4. Beta */}
+              <div className="p-4 sm:p-5 rounded-2xl border border-border-navy/80 bg-navy-bg/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase text-emerald bg-emerald/10 border border-emerald/20 px-2.5 py-1 rounded-lg">
+                    4. Beta (β)
+                  </span>
+                  <Zap className="text-emerald shrink-0" size={18} />
+                </div>
+                <p className="text-xs text-light-grey leading-relaxed">
+                  Market sensitivity ratio — measures how violently the fund moves relative to market swings.
+                </p>
+                <div className="p-3 rounded-xl bg-navy-card/60 border border-border-navy/60 space-y-2 text-xs">
+                  <div className="flex justify-between items-center text-rose-400">
+                    <span>β &gt; 1.0 (High Beta)</span>
+                    <span>More Volatile</span>
+                  </div>
+                  <div className="flex justify-between items-center text-amber-400">
+                    <span>β = 1.0</span>
+                    <span>Syncs with Market</span>
+                  </div>
+                  <div className="flex justify-between items-center text-emerald font-bold">
+                    <span>β &lt; 1.0 (Low Beta)</span>
+                    <span>Defensive / Protected</span>
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-grey leading-normal">
+                  <strong>Example:</strong> If Nifty crashes 10%, a fund with <strong>β = 0.85</strong> drops only ~8.5%, protecting your capital during market crashes.
+                </p>
+              </div>
+
+              {/* 5. Sharpe Ratio */}
+              <div className="p-4 sm:p-5 rounded-2xl border border-border-navy/80 bg-navy-bg/50 space-y-3 md:col-span-2 lg:col-span-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase text-emerald bg-emerald/10 border border-emerald/20 px-2.5 py-1 rounded-lg">
+                    5. Sharpe Ratio (Risk-Adjusted Return)
+                  </span>
+                  <ShieldCheck className="text-emerald shrink-0" size={18} />
+                </div>
+                <p className="text-xs text-light-grey leading-relaxed">
+                  Calculates excess return per unit of total risk taken: <code className="text-emerald font-mono font-bold bg-emerald/10 px-2 py-0.5 rounded">Sharpe = (Fund Return - Risk Free Rate) / Standard Deviation</code>
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3 pt-1">
+                  <div className="p-3 rounded-xl bg-navy-card/60 border border-border-navy/60 text-xs space-y-1">
+                    <span className="text-muted-grey font-semibold block">Sharpe Ratio &gt; 1.2:</span>
+                    <span className="text-emerald font-bold block">Excellent Risk-Adjusted Reward</span>
+                    <p className="text-[10px] text-muted-grey">The fund manager generates high compounding returns while controlling downside risk.</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-navy-card/60 border border-border-navy/60 text-xs space-y-1">
+                    <span className="text-muted-grey font-semibold block">Sharpe Ratio &lt; 0.6:</span>
+                    <span className="text-rose-400 font-bold block">Poor Risk Reward</span>
+                    <p className="text-[10px] text-muted-grey">Taking excessive volatility risk for mediocre returns.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 6. Rolling Returns (The Ultimate Truth Ratio) */}
+              <div className="p-4 sm:p-6 rounded-2xl border border-emerald/40 bg-gradient-to-br from-navy-bg/90 via-navy-card to-emerald/5 space-y-4 md:col-span-2 lg:col-span-3 shadow-xl">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border-navy/60 pb-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-extrabold uppercase text-emerald bg-emerald/10 border border-emerald/20 px-2.5 py-1 rounded-lg">
+                      6. Rolling Returns (The Ultimate Consistency Benchmark)
+                    </span>
+                    <span className="text-[10px] text-emerald font-bold bg-emerald/10 border border-emerald/20 px-2 py-0.5 rounded">
+                      ValarchiX Gold Standard
+                    </span>
+                  </div>
+                  <a
+                    href="https://www.advisorkhoj.com/mutual-funds-research/rolling-returns"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald text-navy-bg font-extrabold text-xs hover:bg-emerald/90 transition cursor-pointer shadow-md"
+                  >
+                    <span>Explore Live Rolling Returns on AdvisorKhoj</span>
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 text-xs text-light-grey leading-relaxed">
+                  <div className="space-y-2 p-3.5 rounded-xl bg-navy-card/60 border border-border-navy/60">
+                    <h4 className="font-bold text-rose-400 flex items-center gap-1.5 text-xs">
+                      <span>⚠️ Why 1Y, 3Y, 5Y Trailing CAGR is Misleading</span>
+                    </h4>
+                    <p className="text-[11px] text-muted-grey leading-relaxed">
+                      Point-to-point trailing CAGR depends heavily on luck and start/end dates. If the market peaked today, trailing 3Y returns look artificially high. If the market crashed yesterday, trailing 3Y returns look unfairly poor.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 p-3.5 rounded-xl bg-navy-card/60 border border-border-navy/60">
+                    <h4 className="font-bold text-emerald flex items-center gap-1.5 text-xs">
+                      <span>✅ What is Rolling Returns Consistency?</span>
+                    </h4>
+                    <p className="text-[11px] text-muted-grey leading-relaxed">
+                      Rolling returns evaluate performance across hundreds of overlapping holding windows (e.g., 3-year returns evaluated every single day for 10 years). It tells you the exact percentage probability of achieving 12%+ returns regardless of when you start investing.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl bg-emerald/10 border border-emerald/20 text-xs">
+                  <span className="text-light-grey text-center sm:text-left text-[11px]">
+                    💡 <strong>ValarchiX Recommendation:</strong> Always analyze 3-year and 5-year rolling returns matrices on AdvisorKhoj to verify if a fund manager delivers consistent returns across all market cycles.
+                  </span>
+                  <a
+                    href="https://www.advisorkhoj.com/mutual-funds-research/rolling-returns"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 px-4 py-2 rounded-xl bg-emerald/20 border border-emerald/40 text-emerald hover:bg-emerald hover:text-navy-bg font-bold text-xs transition cursor-pointer flex items-center gap-1"
+                  >
+                    <span>AdvisorKhoj Rolling Tool</span>
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 2: AMC Official Factsheets Vault */}
+          <div className="p-4 sm:p-6 md:p-8 rounded-2xl md:rounded-3xl border border-border-navy bg-navy-card space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border-navy pb-4 gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-emerald font-bold text-xs uppercase tracking-wider">
+                  <Download className="w-4 h-4 text-emerald" /> Free Investor Vault • Official AMC Factsheets
+                </div>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-heading mt-1">
+                  Official AMC Monthly Factsheet Download Hub
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-grey mt-1">
+                  Direct official monthly factsheets, scheme portfolios, and fund manager commentary for 20+ top Indian AMCs.
+                </p>
+              </div>
+            </div>
+
+            {!session?.user ? (
+              /* LOCKED VAULT BANNER (for logged-out visitors) */
+              <div className="p-6 sm:p-10 rounded-3xl border border-emerald/30 bg-gradient-to-br from-navy-card via-navy-bg to-emerald/10 text-center space-y-5 shadow-2xl animate-fadeIn">
+                <div className="w-16 h-16 rounded-2xl bg-emerald/10 border border-emerald/30 text-emerald flex items-center justify-center mx-auto text-3xl shadow-lg">
+                  🔒
+                </div>
+                <div className="max-w-xl mx-auto space-y-2">
+                  <h3 className="text-lg sm:text-xl font-extrabold text-heading">
+                    Official AMC Factsheets Vault is Locked
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-grey leading-relaxed">
+                    Accessing official monthly factsheet downloads across 20+ Indian Asset Management Companies is exclusively free for signed-in ValarchiX account holders.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <Link
+                    href="/auth"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald hover:bg-emerald/90 text-navy-bg font-extrabold text-xs sm:text-sm shadow-xl shadow-emerald/20 transition-all cursor-pointer"
+                  >
+                    <Lock size={16} />
+                    <span>Sign In to Unlock Official AMC Factsheets</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              /* UNLOCKED VAULT (for signed-in users) */
+              <div className="space-y-6 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-navy-bg/60 p-4 rounded-2xl border border-border-navy">
+                  <div className="relative w-full sm:w-80">
+                    <Search className="absolute left-3 top-2.5 text-muted-grey" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search AMC (e.g. SBI, Quant, PPFAS)..."
+                      value={amcSearch}
+                      onChange={(e) => setAmcSearch(e.target.value)}
+                      className="w-full bg-navy-card border border-border-navy rounded-xl pl-9 pr-4 py-2 text-xs text-light-grey outline-none focus:border-emerald"
+                    />
+                  </div>
+                  <div className="text-xs font-semibold text-emerald bg-emerald/10 border border-emerald/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                    <ShieldCheck size={14} />
+                    <span>Logged-In Vault Active • Free Factsheet Access</span>
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {AMC_FACTSHEETS.filter((amc) =>
+                    amc.name.toLowerCase().includes(amcSearch.toLowerCase()) ||
+                    amc.code.toLowerCase().includes(amcSearch.toLowerCase()) ||
+                    amc.tag.toLowerCase().includes(amcSearch.toLowerCase())
+                  ).map((amc) => (
+                    <div key={amc.code} className="p-4 rounded-2xl border border-border-navy bg-navy-bg/60 hover:border-emerald/40 transition space-y-3 flex flex-col justify-between shadow-lg">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl">{amc.logo}</span>
+                          <span className="text-[10px] font-bold text-emerald bg-emerald/10 border border-emerald/20 px-2 py-0.5 rounded">
+                            Latest Factsheet
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-heading">{amc.name}</h4>
+                          <p className="text-[11px] text-muted-grey mt-0.5">{amc.tag}</p>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 flex items-center gap-2">
+                        <a
+                          href={amc.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald/10 border border-emerald/30 text-emerald hover:bg-emerald hover:text-navy-bg transition text-xs font-bold cursor-pointer"
+                        >
+                          <Download size={14} />
+                          <span>Factsheet PDF</span>
+                        </a>
+                        <a
+                          href={amc.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-xl border border-border-navy bg-navy-card text-muted-grey hover:text-white hover:border-emerald/40 transition cursor-pointer"
+                          title="Visit Official AMC Portal"
+                        >
+                          <ExternalLink size={14} />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

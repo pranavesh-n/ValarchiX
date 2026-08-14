@@ -102,9 +102,19 @@ export default function SwpCalculator() {
     const monthTable = [];
     let tableCorpus = initialCorpus;
     let currentMonthlyWithdrawal = monthlyWithdrawal;
+    const totalMonths = years * 12;
 
-    for (let m = 1; m <= Math.min(240, years * 12); m++) {
-      if (tableCorpus <= 0) break;
+    for (let m = 1; m <= totalMonths; m++) {
+      if (tableCorpus <= 0) {
+        monthTable.push({
+          month: m,
+          opening: 0,
+          withdrawal: 0,
+          returns: 0,
+          closing: 0,
+        });
+        continue;
+      }
       const opening = tableCorpus;
       const returns = opening * monthlyRate;
       const withdrawal = Math.min(opening + returns, currentMonthlyWithdrawal);
