@@ -133,28 +133,28 @@ export default function StepUpSipCalculator() {
   }
 
   return (
-    <div className="space-y-10 py-6 animate-fadeIn">
+    <div className="space-y-6 sm:space-y-8 py-4 sm:py-6 animate-fadeIn max-w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border-navy pb-6 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border-navy pb-4 sm:pb-6 gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <ArrowUpRight className="text-emerald" />
-            Step Up SIP Compounding Simulator
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-heading tracking-tight flex items-center gap-2">
+            <ArrowUpRight className="text-emerald shrink-0" />
+            <span>Step Up SIP Compounding Simulator</span>
           </h1>
-          <p className="text-sm text-muted-grey mt-1">
-            Simulate how a yearly increase in SIP contributions (either by % or flat amount) accelerates your long-term wealth compounding versus a normal flat SIP.
+          <p className="text-xs sm:text-sm text-muted-grey mt-1">
+            Simulate how a yearly increase in SIP contributions accelerates your long-term wealth compounding versus a normal flat SIP.
           </p>
         </div>
-        <div className="text-xs font-semibold text-emerald bg-emerald/5 border border-emerald/20 px-3 py-1.5 rounded-lg">
+        <div className="hidden sm:block text-xs font-semibold text-emerald bg-emerald/5 border border-emerald/20 px-3 py-1.5 rounded-lg shrink-0">
           💡 Motto: We don&apos;t tell what to pick, we tell how to pick.
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Sliders and Controls */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="p-6 glass-card space-y-6">
-            <h2 className="text-lg font-bold text-white">Investment Parameters</h2>
+        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+          <div className="p-4 sm:p-6 rounded-2xl md:rounded-3xl border border-border-navy bg-navy-card space-y-4 sm:space-y-5 shadow-xl">
+            <h2 className="text-base sm:text-lg font-bold text-heading">Investment Parameters</h2>
 
             {/* Initial Monthly SIP Amount */}
             <div className="space-y-2">

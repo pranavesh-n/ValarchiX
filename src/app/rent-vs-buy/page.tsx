@@ -149,21 +149,23 @@ export default function RentVsBuyPage() {
   }, [city, propertyPrice, propertyType, downPaymentPct, loanRate, loanTenure, salary, monthlyRent, equityReturn, propertyAppreciation, rentInflation, horizonYears]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8">
+    <div className="space-y-6 sm:space-y-8 py-4 sm:py-6 animate-fadeIn max-w-full overflow-x-hidden">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8 border-b border-slate-800 pb-6">
-        <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm mb-1 uppercase tracking-wider">
-          <Building className="w-4 h-4" /> Real Estate Intelligence • ValarchiX
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border-navy pb-4 sm:pb-6 gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-emerald font-bold text-sm mb-1 uppercase tracking-wider">
+            <Building className="w-4 h-4 text-emerald" /> Real Estate Intelligence • ValarchiX
+          </div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-heading">ValarchiX Buy vs Rent Engine</h1>
+          <p className="text-xs sm:text-sm text-muted-grey mt-1">
+            Compare your 20-year net worth: pay EMI and own the home, or rent cheap and invest the difference with pure discipline.
+          </p>
         </div>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-white">ValarchiX Buy vs Rent Engine</h1>
-        <p className="text-slate-400 text-sm mt-1">
-          Compare your 20-year net worth: pay EMI and own the home, or rent cheap and invest the difference with pure discipline.
-        </p>
       </div>
 
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Top Hero: Affordability Reality Check */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
+        <div className="bg-navy-card border border-border-navy rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-3">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 font-bold text-slate-200 text-base">

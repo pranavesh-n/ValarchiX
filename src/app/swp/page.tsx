@@ -69,12 +69,9 @@ export default function SwpCalculator() {
     for (let y = 1; y <= years; y++) {
       let yearlyWithdrawn = 0;
 
-      // Calculate month by month for the year
       for (let m = 1; m <= 12; m++) {
         if (currentCorpus > 0) {
-          // 1. Add monthly compounding yield
           currentCorpus = currentCorpus * (1 + monthlyRate);
-          // 2. Subtract withdrawal
           const withdrawAmt = Math.min(currentCorpus, baseWithdrawal);
           currentCorpus = currentCorpus - withdrawAmt;
 
@@ -91,7 +88,6 @@ export default function SwpCalculator() {
         }
       }
 
-      // If adjustWithdrawal is checked, inflate the monthly pension target for the next year
       if (adjustWithdrawal) {
         baseWithdrawal = baseWithdrawal * (1 + infRate);
       }
@@ -103,7 +99,6 @@ export default function SwpCalculator() {
       });
     }
 
-    // Month-by-month breakdown table data
     const monthTable = [];
     let tableCorpus = initialCorpus;
     let currentMonthlyWithdrawal = monthlyWithdrawal;
@@ -150,31 +145,31 @@ export default function SwpCalculator() {
   };
 
   return (
-    <div className="space-y-10 py-6 animate-fadeIn">
+    <div className="space-y-6 sm:space-y-8 py-4 sm:py-6 animate-fadeIn max-w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border-navy pb-6 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border-navy pb-4 sm:pb-6 gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <ArrowDownLeft className="text-emerald" />
-            SWP Calculator (Systematic Withdrawal Plan)
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-heading tracking-tight flex items-center gap-2">
+            <ArrowDownLeft className="text-emerald shrink-0" />
+            <span>SWP Calculator</span>
           </h1>
-          <p className="text-sm text-muted-grey mt-1">
+          <p className="text-xs sm:text-sm text-muted-grey mt-1">
             Simulate monthly cash flow generation from a mutual fund and track safe withdrawal corpus lifetime.
           </p>
         </div>
-        <div className="text-xs font-semibold text-emerald bg-emerald/5 border border-emerald/20 px-3 py-1.5 rounded-lg">
+        <div className="hidden sm:block text-xs font-semibold text-emerald bg-emerald/5 border border-emerald/20 px-3 py-1.5 rounded-lg shrink-0">
           💡 Motto: We don&apos;t tell what to pick, we tell how to pick.
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Controls Column */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="p-6 glass-card space-y-6">
-            <h2 className="text-lg font-bold text-white">Investment Settings</h2>
+        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+          <div className="p-4 sm:p-6 rounded-2xl md:rounded-3xl border border-border-navy bg-navy-card space-y-4 sm:space-y-5 shadow-xl">
+            <h2 className="text-base sm:text-lg font-bold text-heading">Investment Settings</h2>
 
             {/* Initial Corpus Slider */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs font-semibold">
                 <span className="text-muted-grey">Initial Corpus</span>
                 <NumericInput
@@ -193,16 +188,16 @@ export default function SwpCalculator() {
                 step={500000}
                 value={initialCorpus}
                 onChange={(e) => handleCorpusChange(Number(e.target.value))}
-                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+                className="w-full max-w-full accent-emerald bg-navy-bg h-1.5 rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-muted-grey">
+              <div className="flex justify-between text-[9px] sm:text-[10px] text-muted-grey">
                 <span>₹1L</span>
-                <span>₹50 Crore</span>
+                <span>₹50 Cr</span>
               </div>
             </div>
 
             {/* Annual Withdrawal Rate (%) Slider */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs font-semibold">
                 <span className="text-muted-grey">Annual Withdrawal Rate</span>
                 <NumericInput
@@ -221,43 +216,43 @@ export default function SwpCalculator() {
                 step={0.1}
                 value={withdrawalRate}
                 onChange={(e) => handleWithdrawalRateChange(Number(e.target.value))}
-                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+                className="w-full max-w-full accent-emerald bg-navy-bg h-1.5 rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-muted-grey">
-                <span>1% (Conservative)</span>
+              <div className="flex justify-between text-[9px] sm:text-[10px] text-muted-grey">
+                <span>1% (Safe)</span>
                 <span>3% (India Benchmark)</span>
-                <span>15% (Aggressive)</span>
+                <span>15% (High)</span>
               </div>
               <div className="flex flex-wrap gap-1.5 pt-1">
                 <button
                   type="button"
                   onClick={() => handleWithdrawalRateChange(3.0)}
-                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${withdrawalRate === 3.0 ? "bg-emerald text-navy-bg" : "text-emerald border border-emerald/20 bg-emerald/5 hover:bg-emerald/10"
+                  className={`text-[9px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${withdrawalRate === 3.0 ? "bg-emerald text-navy-bg" : "text-emerald border border-emerald/20 bg-emerald/5 hover:bg-emerald/10"
                     }`}
                 >
-                  🇮🇳 3.0% (India Safe)
+                  🇮🇳 3% (India Safe)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleWithdrawalRateChange(4.0)}
-                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${withdrawalRate === 4.0 ? "bg-emerald text-navy-bg" : "text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light"
+                  className={`text-[9px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${withdrawalRate === 4.0 ? "bg-emerald text-navy-bg" : "text-heading border border-border-navy bg-navy-light/40 hover:bg-navy-light"
                     }`}
                 >
-                  4.0% (Trinity)
+                  4% (Trinity)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleWithdrawalRateChange(6.0)}
-                  className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${withdrawalRate === 6.0 ? "bg-amber-400 text-navy-bg" : "text-amber-400 border border-amber-400/20 bg-amber-400/5 hover:bg-amber-400/10"
+                  className={`text-[9px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${withdrawalRate === 6.0 ? "bg-amber-400 text-navy-bg" : "text-amber-400 border border-amber-400/20 bg-amber-400/5 hover:bg-amber-400/10"
                     }`}
                 >
-                  6.0% (Moderate)
+                  6% (Moderate)
                 </button>
               </div>
             </div>
 
             {/* Monthly Withdrawal Slider */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs font-semibold">
                 <span className="text-muted-grey">Desired Monthly Pension</span>
                 <NumericInput
@@ -276,16 +271,16 @@ export default function SwpCalculator() {
                 step={5000}
                 value={monthlyWithdrawal}
                 onChange={(e) => handleMonthlyWithdrawalChange(Number(e.target.value))}
-                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+                className="w-full max-w-full accent-emerald bg-navy-bg h-1.5 rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-muted-grey">
+              <div className="flex justify-between text-[9px] sm:text-[10px] text-muted-grey">
                 <span>₹5K</span>
                 <span>₹50L / Mo</span>
               </div>
             </div>
 
             {/* Expected Return Rate */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs font-semibold">
                 <span className="text-muted-grey">Expected Yield (p.a.)</span>
                 <NumericInput
@@ -304,9 +299,9 @@ export default function SwpCalculator() {
                 step={0.5}
                 value={expectedReturn}
                 onChange={(e) => setExpectedReturn(Number(e.target.value))}
-                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+                className="w-full max-w-full accent-emerald bg-navy-bg h-1.5 rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-muted-grey">
+              <div className="flex justify-between text-[9px] sm:text-[10px] text-muted-grey">
                 <span>4%</span>
                 <span>30%</span>
               </div>
@@ -314,7 +309,7 @@ export default function SwpCalculator() {
                 <button
                   type="button"
                   onClick={() => setExpectedReturn(rates.bondYield10Y)}
-                  className="text-[9px] font-bold text-emerald border border-emerald/20 bg-emerald/5 hover:bg-emerald/10 px-2 py-0.5 rounded transition-all"
+                  className="text-[9px] font-bold text-emerald border border-emerald/20 bg-emerald/5 hover:bg-emerald/10 px-2 py-0.5 rounded transition-all cursor-pointer"
                 >
                   Sovereign 10Y Yield ({rates.bondYield10Y}%)
                 </button>
@@ -322,7 +317,7 @@ export default function SwpCalculator() {
             </div>
 
             {/* SWP Horizon Slider */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs font-semibold">
                 <span className="text-muted-grey">SWP Horizon</span>
                 <NumericInput
@@ -341,16 +336,16 @@ export default function SwpCalculator() {
                 step={1}
                 value={years}
                 onChange={(e) => setYears(Number(e.target.value))}
-                className="w-full accent-emerald bg-navy-bg h-1 rounded-lg cursor-pointer"
+                className="w-full max-w-full accent-emerald bg-navy-bg h-1.5 rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-muted-grey">
+              <div className="flex justify-between text-[9px] sm:text-[10px] text-muted-grey">
                 <span>5 Yrs</span>
                 <span>100 Yrs</span>
               </div>
             </div>
 
             {/* Adjust Withdrawal for Inflation */}
-            <div className="border-t border-border-navy pt-4 space-y-4">
+            <div className="border-t border-border-navy pt-3 space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-muted-grey flex items-center gap-1.5">
                   Inflate Pension Annually
@@ -360,14 +355,14 @@ export default function SwpCalculator() {
                   type="checkbox"
                   checked={adjustWithdrawal}
                   onChange={(e) => setAdjustWithdrawal(e.target.checked)}
-                  className="rounded border-border-navy text-emerald focus:ring-emerald accent-emerald h-4 w-4"
+                  className="rounded border-border-navy text-emerald focus:ring-emerald accent-emerald h-4 w-4 cursor-pointer"
                 />
               </div>
 
               {adjustWithdrawal && (
-                <div className="space-y-2 animate-fadeIn">
+                <div className="space-y-1.5 animate-fadeIn">
                   <div className="flex justify-between items-center text-xs font-semibold">
-                    <span className="text-muted-grey">Expected Inflation Rate</span>
+                    <span className="text-muted-grey">Expected Inflation</span>
                     <NumericInput
                       value={inflation}
                       onChange={setInflation}
@@ -385,9 +380,9 @@ export default function SwpCalculator() {
                     step={0.5}
                     value={inflation}
                     onChange={(e) => setInflation(Number(e.target.value))}
-                    className="w-full accent-amber-500 bg-navy-bg h-1 rounded-lg cursor-pointer"
+                    className="w-full max-w-full accent-amber-500 bg-navy-bg h-1.5 rounded-lg cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-muted-grey">
+                  <div className="flex justify-between text-[9px] sm:text-[10px] text-muted-grey">
                     <span>3%</span>
                     <span>20%</span>
                   </div>
@@ -398,7 +393,7 @@ export default function SwpCalculator() {
         </div>
 
         {/* Results Panel */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Status Banners */}
           {calculations.depletionYear !== null || calculations.remainingCorpus <= 0 ? (
             <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start gap-3 text-red-400 text-xs leading-relaxed animate-pulse">
@@ -427,49 +422,49 @@ export default function SwpCalculator() {
           )}
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
-              <span className="text-[10px] uppercase font-bold text-muted-grey block">Initial Principal</span>
-              <p className="text-lg font-bold text-white mt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+            <div className="p-3 sm:p-4 rounded-xl border border-border-navy bg-navy-card">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-grey block">Initial Principal</span>
+              <p className="text-sm sm:text-lg font-bold text-heading mt-1">
                 {formatCurrency(initialCorpus)}
               </p>
               <span className="text-[9px] text-muted-grey block mt-0.5">
-                Withdrawal Rate: {calculations.withdrawalRate.toFixed(2)}% / yr
+                Rate: {calculations.withdrawalRate.toFixed(1)}%/yr
               </span>
             </div>
-            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
-              <span className="text-[10px] uppercase font-bold text-muted-grey block">Total Pension Paid Out</span>
-              <p className="text-lg font-bold text-emerald mt-1">
+            <div className="p-3 sm:p-4 rounded-xl border border-border-navy bg-navy-card">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-grey block">Total Pension Paid Out</span>
+              <p className="text-sm sm:text-lg font-bold text-emerald mt-1">
                 {formatCurrency(calculations.totalWithdrawn)}
               </p>
             </div>
-            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
-              <span className="text-[10px] uppercase font-bold text-muted-grey block">Annual Withdrawal Rate</span>
-              <p className={`text-lg font-bold mt-1 ${calculations.withdrawalRate <= 4 ? "text-emerald" : calculations.withdrawalRate <= 6 ? "text-amber-400" : "text-red-400"}`}>
+            <div className="p-3 sm:p-4 rounded-xl border border-border-navy bg-navy-card">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-grey block">Annual Withdrawal Rate</span>
+              <p className={`text-sm sm:text-lg font-bold mt-1 ${calculations.withdrawalRate <= 4 ? "text-emerald" : calculations.withdrawalRate <= 6 ? "text-amber-400" : "text-red-400"}`}>
                 {calculations.withdrawalRate.toFixed(2)}%
               </p>
               <span className="text-[9px] text-muted-grey block mt-0.5">
-                {calculations.withdrawalRate <= 4 ? "Safe (< 4.0%)" : calculations.withdrawalRate <= 6 ? "Moderate (4-6%)" : "Aggressive (> 6.0%)"}
+                {calculations.withdrawalRate <= 4 ? "Safe (< 4%)" : calculations.withdrawalRate <= 6 ? "Moderate" : "High"}
               </span>
             </div>
-            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
-              <span className="text-[10px] uppercase font-bold text-muted-grey block">Remaining Balance</span>
-              <p className={`text-lg font-bold mt-1 ${calculations.remainingCorpus >= initialCorpus ? "text-emerald" : calculations.remainingCorpus > 0 ? "text-amber-400" : "text-red-400"}`}>
+            <div className="p-3 sm:p-4 rounded-xl border border-border-navy bg-navy-card">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-grey block">Remaining Balance</span>
+              <p className={`text-sm sm:text-lg font-bold mt-1 ${calculations.remainingCorpus >= initialCorpus ? "text-emerald" : calculations.remainingCorpus > 0 ? "text-amber-400" : "text-red-400"}`}>
                 {formatCurrency(calculations.remainingCorpus)}
               </p>
             </div>
           </div>
 
           {/* Chart Display */}
-          <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/20 space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+          <div className="p-4 sm:p-6 rounded-2xl border border-border-navy bg-navy-card space-y-4 shadow-xl">
+            <h3 className="text-xs sm:text-sm font-bold text-heading uppercase tracking-wider">
               SWP Wealth Exhaustion Curve Map
             </h3>
-            <div className="h-[280px]">
+            <div className="h-[240px] sm:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={calculations.chartData}
-                  margin={{ top: 10, right: 15, left: 5, bottom: 0 }}
+                  margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
                 >
                   <defs>
                     <linearGradient id="colorCorpus" x1="0" y1="0" x2="0" y2="1">
@@ -482,24 +477,25 @@ export default function SwpCalculator() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#112d55" vertical={false} />
-                  <XAxis dataKey="year" stroke="#64748b" fontSize={11} tickLine={false} />
+                  <XAxis dataKey="year" stroke="#64748b" fontSize={10} tickLine={false} />
                   <YAxis
                     stroke="#64748b"
-                    fontSize={11}
+                    fontSize={10}
                     tickLine={false}
-                    width={75}
-                    tickFormatter={(val) => val >= 10000000 ? `₹${(val / 10000000).toFixed(1)}Cr` : val >= 100000 ? `₹${(val / 100000).toFixed(0)}L` : val >= 1000 ? `₹${(val / 1000).toFixed(0)}K` : `₹${val}`}
+                    width={50}
+                    tickFormatter={(val) => val >= 10000000 ? `${(val / 10000000).toFixed(0)}Cr` : val >= 100000 ? `${(val / 100000).toFixed(0)}L` : val >= 1000 ? `${(val / 1000).toFixed(0)}K` : `${val}`}
                   />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#081c3a",
                       borderColor: "#112d55",
                       borderRadius: "8px",
-                      color: "#f1f5f9"
+                      color: "#f1f5f9",
+                      fontSize: "12px"
                     }}
                     formatter={(v: any, name: any) => [formatCurrency(v), name]}
                   />
-                  <Legend iconType="circle" />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: "11px" }} />
                   <Area
                     type="monotone"
                     dataKey="Remaining Corpus"
@@ -521,7 +517,7 @@ export default function SwpCalculator() {
             </div>
           </div>
 
-          {/* Month-by-Month Breakdown Table (Stonkzz 12-month paginated ledger style) */}
+          {/* Month-by-Month Breakdown Table (12-month paginated ledger style) */}
           {(() => {
             const itemsPerPage = 12;
             const totalPages = Math.max(1, Math.ceil(calculations.monthTable.length / itemsPerPage));
@@ -532,135 +528,60 @@ export default function SwpCalculator() {
             );
 
             return (
-              <div className="p-6 rounded-2xl border border-border-navy bg-navy-card space-y-4 shadow-xl">
+              <div className="p-4 sm:p-6 rounded-2xl border border-border-navy bg-navy-card space-y-4 shadow-xl">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-extrabold text-heading">Month-by-Month Breakdown</h3>
-                  <span className="text-xs text-muted-grey">Year {currentPageBounded} of {totalPages} (12 Months/Yr)</span>
+                  <h3 className="text-sm sm:text-base font-extrabold text-heading">Month-by-Month Breakdown</h3>
+                  <span className="text-[11px] text-muted-grey">Yr {currentPageBounded} of {totalPages} (12 Mo/Yr)</span>
                 </div>
 
                 <div className="overflow-x-auto border border-border-navy/60 rounded-xl">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-navy-bg border-b border-border-navy text-muted-grey uppercase font-bold text-[11px]">
+                    <thead className="bg-navy-bg border-b border-border-navy text-muted-grey uppercase font-bold text-[10px]">
                       <tr>
-                        <th className="py-3 px-4">Month</th>
-                        <th className="py-3 px-4">Opening</th>
-                        <th className="py-3 px-4">Withdrawal</th>
-                        <th className="py-3 px-4">Returns</th>
-                        <th className="py-3 px-4">Closing</th>
+                        <th className="py-2.5 px-3">Mo</th>
+                        <th className="py-2.5 px-3">Opening</th>
+                        <th className="py-2.5 px-3">Withdrawal</th>
+                        <th className="py-2.5 px-3">Returns</th>
+                        <th className="py-2.5 px-3">Closing</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border-navy/40 font-mono text-light-grey">
+                    <tbody className="divide-y divide-border-navy/40">
                       {paginatedRows.map((row) => (
                         <tr key={row.month} className="hover:bg-navy-light/40 transition">
-                          <td className="py-2.5 px-4 font-sans font-bold text-heading">{row.month}</td>
-                          <td className="py-2.5 px-4">{formatCurrency(row.opening)}</td>
-                          <td className="py-2.5 px-4 text-rose-400 font-medium">-{formatCurrency(row.withdrawal)}</td>
-                          <td className="py-2.5 px-4 text-emerald font-medium">+{formatCurrency(row.returns)}</td>
-                          <td className="py-2.5 px-4 font-bold text-heading">{formatCurrency(row.closing)}</td>
+                          <td className="py-2 px-3 font-bold text-heading">#{row.month}</td>
+                          <td className="py-2 px-3 text-light-grey">{formatCurrency(row.opening)}</td>
+                          <td className="py-2 px-3 font-semibold text-rose-400">-{formatCurrency(row.withdrawal)}</td>
+                          <td className="py-2 px-3 text-emerald">+{formatCurrency(row.returns)}</td>
+                          <td className="py-2 px-3 font-bold text-heading">{formatCurrency(row.closing)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
 
-                {/* 12-Month Year Pagination Bar */}
-                <div className="flex items-center justify-center gap-3 pt-2">
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-between pt-2">
                   <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPageBounded === 1}
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                    className="flex items-center gap-1 text-xs font-bold text-muted-grey hover:text-heading disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer px-3 py-1.5 rounded-lg border border-border-navy hover:bg-navy-light/50"
+                    className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-border-navy bg-navy-bg text-light-grey disabled:opacity-40 disabled:cursor-not-allowed hover:border-emerald/40 transition cursor-pointer"
                   >
-                    <ChevronLeft size={15} /> Previous
+                    <ChevronLeft size={14} /> Prev Year
                   </button>
-                  <span className="bg-amber-500 text-slate-950 font-extrabold text-xs px-3.5 py-1.5 rounded-xl shadow-md">
-                    {currentPageBounded} / {totalPages}
+                  <span className="text-xs font-semibold text-muted-grey">
+                    Year {currentPageBounded} / {totalPages}
                   </span>
                   <button
-                    disabled={currentPageBounded >= totalPages}
-                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                    className="flex items-center gap-1 text-xs font-bold text-muted-grey hover:text-heading disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer px-3 py-1.5 rounded-lg border border-border-navy hover:bg-navy-light/50"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPageBounded === totalPages}
+                    className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-border-navy bg-navy-bg text-light-grey disabled:opacity-40 disabled:cursor-not-allowed hover:border-emerald/40 transition cursor-pointer"
                   >
-                    Next <ChevronRight size={15} />
+                    Next Year <ChevronRight size={14} />
                   </button>
                 </div>
               </div>
             );
           })()}
-
-          {/* Education card */}
-          <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-1.5">
-              <Info className="text-emerald" size={18} />
-              Educational Concept: Safe Withdrawal Limits & Line Intersections
-            </h3>
-            <div className="text-xs text-muted-grey leading-relaxed space-y-2">
-              <p>
-                <strong>Why do the lines intersect?</strong> The <span className="text-blue-400 font-semibold">Blue Line (Cumulative Withdrawn)</span> tracks the total lifetime sum of all monthly pension payouts collected so far. The <span className="text-emerald font-semibold">Green Line (Remaining Corpus)</span> tracks your live investment balance.
-              </p>
-              <p>
-                When the two lines cross , it simply means <strong>you have taken out more money in total pension than what currently remains in your fund</strong>. It does <em>NOT</em> mean your corpus is exhausted!
-              </p>
-              <p>
-                <strong>When is the corpus actually exhausted?</strong> Your money is ONLY depleted if the <span className="text-emerald font-semibold">Green Line drops to ₹0</span>. Because your corpus compounds at a certain interest rate-annually compounded, it generates enough growth to pay out, your monthly withdrawal amount in total pension while still retaining principal amount in corpus!
-              </p>
-            </div>
-          </div>
-
-          {/* Collapsible Math Audit Section */}
-          <div className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
-            <button
-              onClick={() => setShowAudit(!showAudit)}
-              className="w-full flex justify-between items-center text-sm font-bold text-white hover:text-emerald transition-colors cursor-pointer"
-            >
-              <span className="flex items-center gap-1.5">
-                <HelpCircle className="text-emerald" size={18} />
-                How This is Calculated & Excel Replication
-              </span>
-              <ChevronDown className={`w-4 h-4 transform transition-transform ${showAudit ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showAudit && (
-              <div className="text-xs text-muted-grey leading-relaxed space-y-4 pt-4 border-t border-border-navy/60 animate-fadeIn">
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-white">Mathematical Formula & Depletion Mechanics</h4>
-                  <div className="bg-navy-bg/50 p-3 rounded-xl space-y-2 font-mono">
-                    <p>
-                      <strong>Monthly SWP Calculation Loop:</strong>
-                      <br />
-                      For each month m = 1 to (years * 12):
-                      <br />
-                      1. Interest Accrued: I_m = Corpus_(m-1) * (r_expected / 12)
-                      <br />
-                      2. Withdrawal Amount: W_m (adjusted for yearly inflation if selected)
-                      <br />
-                      3. New Corpus: Corpus_m = Corpus_(m-1) + I_m - W_m
-                    </p>
-                    <p>
-                      <strong>Inflation Adjustment on Withdrawals:</strong>
-                      <br />
-                      Every 12 months, W is step-increased: W_new = W_old * (1 + inflation_rate)
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-white">Excel Replication (Audit Script)</h4>
-                  <p>To audit or build your own SWP ledger in Excel, build a table with columns:</p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li><strong>Month (A):</strong> Row indices (e.g. 1 to 240)</li>
-                    <li><strong>Opening Balance (B):</strong> `=B1 + D1 - E1` (starts with corpus, e.g. `5000000`)</li>
-                    <li><strong>Interest Earned (C):</strong> `=B2 * ({expectedReturn}%/12)`</li>
-                    <li><strong>Withdrawal (D):</strong> `{monthlyWithdrawal}` (for first 12 rows, then `{monthlyWithdrawal} * (1 + {inflation}%)` for the next 12, etc.)</li>
-                    <li><strong>Ending Balance (E):</strong> `=B2 + C2 - D2`</li>
-                  </ul>
-                </div>
-
-                <p className="text-[10px] text-amber-500 border-t border-border-navy/60 pt-3">
-                  ⚠️ <strong>Disclaimer:</strong> This tool is for training purposes only and represents a mathematical compound interest simulator. It does not provide SEBI-registered investment advice or guarantee any capital performance.
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 interface NumericInputProps {
   value: number;
@@ -36,22 +36,11 @@ export default function NumericInput({
         maximumFractionDigits: 2
       }).format(val);
     }
-    if (type === "years") {
-      return val.toString();
-    }
     return val.toString();
   };
 
-  // Sync temp value when prop changes outside of focus
-  useEffect(() => {
-    if (!isFocused) {
-      setTempValue(formatValue(value));
-    }
-  }, [value, isFocused, type]);
-
   const handleFocus = () => {
     setIsFocused(true);
-    // When focused, show the raw number without formatting commas
     setTempValue(value.toString());
   };
 
@@ -77,12 +66,10 @@ export default function NumericInput({
       parsed = 0;
     }
     
-    // Allow any non-negative number typed by the user without step-rounding or clamping to artificial high minimums
     const validNumber = Math.max(0, parsed);
     const finalVal = Number(validNumber.toFixed(4));
 
     onChange(finalVal);
-    setTempValue(formatValue(finalVal));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -91,6 +78,8 @@ export default function NumericInput({
     }
   };
 
+  const displayValue = isFocused ? tempValue : formatValue(value);
+
   return (
     <div className={`flex items-center gap-1 bg-navy-bg/55 border border-border-navy/60 focus-within:border-emerald/50 rounded-lg px-2 py-0.5 text-xs text-emerald font-bold transition-all w-24 md:w-28 shrink-0 ${className}`}>
       {type === "currency" && (
@@ -98,7 +87,7 @@ export default function NumericInput({
       )}
       <input
         type={isFocused ? "number" : "text"}
-        value={tempValue}
+        value={displayValue}
         onChange={handleChange}
         onFocus={handleFocus}
         onBlur={handleBlur}

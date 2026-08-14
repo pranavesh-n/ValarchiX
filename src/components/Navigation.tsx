@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   Layers,
@@ -44,6 +44,7 @@ import {
   Lock,
   Baby
 } from "lucide-react";
+import { getCurrentUserSession } from "@/lib/supabase/auth";
 
 const NAV_ITEMS = [
   {
@@ -143,10 +144,9 @@ const BOTTOM_TABS = [
   { name: "Vault", href: "/auth", icon: Lock, type: "link" as const },
 ];
 
-import { getCurrentUserSession } from "@/lib/supabase/auth";
-
 export default function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -391,7 +391,7 @@ export default function Navigation() {
                 onClick={() => {
                   if (tab.type === "link") {
                     setMobileDrawer(null);
-                    window.location.href = tab.href;
+                    router.push(tab.href);
                   } else {
                     setMobileDrawer(mobileDrawer === tab.name ? null : tab.name);
                   }
