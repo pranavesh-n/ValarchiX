@@ -33,51 +33,118 @@ interface ParsedMetrics {
 }
 
 const AMC_FACTSHEETS = [
-  { name: "SBI Mutual Fund", code: "SBI", logo: "🏛️", website: "https://www.sbimf.com/en-us/investor-corner/factsheets", pdfUrl: "https://www.sbimf.com/en-us/investor-corner/factsheets", tag: "Largest AMC in India" },
-  { name: "HDFC Mutual Fund", code: "HDFC", logo: "🏦", website: "https://www.hdfcfund.com/investor-desk/factsheets", pdfUrl: "https://www.hdfcfund.com/investor-desk/factsheets", tag: "Top Equity Asset Manager" },
-  { name: "ICICI Prudential MF", code: "ICICI", logo: "🏢", website: "https://www.icicipruamc.com/downloads/factsheets", pdfUrl: "https://www.icicipruamc.com/downloads/factsheets", tag: "High Liquidity Specialist" },
-  { name: "Nippon India MF", code: "NIPPON", logo: "🇯🇵", website: "https://mf.nipponindiaim.com/InvestorServices/Factsheets", pdfUrl: "https://mf.nipponindiaim.com/InvestorServices/Factsheets", tag: "Small Cap Leader" },
-  { name: "Kotak Mahindra MF", code: "KOTAK", logo: "💳", website: "https://www.kotakmf.com/Investor-Service/Fact-Sheets", pdfUrl: "https://www.kotakmf.com/Investor-Service/Fact-Sheets", tag: "Conservative & Growth" },
-  { name: "Parag Parikh (PPFAS)", code: "PPFAS", logo: "🐢", website: "https://amc.ppfas.com/factsheet/", pdfUrl: "https://amc.ppfas.com/factsheet/", tag: "Value & International Equity" },
-  { name: "Quant Mutual Fund", code: "QUANT", logo: "⚡", website: "https://quantmutual.com/statutory-disclosures/factsheets", pdfUrl: "https://quantmutual.com/statutory-disclosures/factsheets", tag: "VLRT Quantitative Model" },
-  { name: "Axis Mutual Fund", code: "AXIS", logo: "📈", website: "https://www.axismf.com/downloads/factsheet", pdfUrl: "https://www.axismf.com/downloads/factsheet", tag: "Quality Growth Focus" },
-  { name: "Mirae Asset MF", code: "MIRAE", logo: "🌐", website: "https://www.miraeassetmf.co.in/downloads/factsheet", pdfUrl: "https://www.miraeassetmf.co.in/downloads/factsheet", tag: "Large & Large-Mid Leader" },
-  { name: "Motilal Oswal MF", code: "MO", logo: "🎯", website: "https://www.motilaloswalmf.com/download/factsheets", pdfUrl: "https://www.motilaloswalmf.com/download/factsheets", tag: "QGLP Concentrated Stocks" },
-  { name: "UTI Mutual Fund", code: "UTI", logo: "🏛️", website: "https://www.utimf.com/downloads/factsheet/", pdfUrl: "https://www.utimf.com/downloads/factsheet/", tag: "India Oldest AMC Legacy" },
-  { name: "DSP Mutual Fund", code: "DSP", logo: "🌲", website: "https://www.dspim.com/investor-desk/factsheets", pdfUrl: "https://www.dspim.com/investor-desk/factsheets", tag: "Quantitative & Systematic" },
-  { name: "Tata Mutual Fund", code: "TATA", logo: "⚙️", website: "https://www.tatamutualfund.com/downloads/factsheet", pdfUrl: "https://www.tatamutualfund.com/downloads/factsheet", tag: "Trusted Conglomerate AMC" },
-  { name: "Bandhan Mutual Fund", code: "BANDHAN", logo: "💎", website: "https://bandhanmutual.com/downloads/factsheet", pdfUrl: "https://bandhanmutual.com/downloads/factsheet", tag: "Formerly IDFC AMC" },
-  { name: "Canara Robeco MF", code: "CANARA", logo: "🛡️", website: "https://www.canararobeco.com/downloads/factsheet", pdfUrl: "https://www.canararobeco.com/downloads/factsheet", tag: "Consistent Performance" },
-  { name: "Edelweiss MF", code: "EDELWEISS", logo: "🚀", website: "https://www.edelweissmf.com/downloads/factsheet", pdfUrl: "https://www.edelweissmf.com/downloads/factsheet", tag: "Target Maturity & Factor" },
-  { name: "Sundaram MF", code: "SUNDARAM", logo: "☀️", website: "https://www.sundarammutual.com/downloads/factsheet", pdfUrl: "https://www.sundarammutual.com/downloads/factsheet", tag: "Mid & Small Cap Specialist" },
-  { name: "Invesco Mutual Fund", code: "INVESCO", logo: "🦅", website: "https://www.invescomutualfund.com/downloads/factsheet", pdfUrl: "https://www.invescomutualfund.com/downloads/factsheet", tag: "Global Asset Manager" },
-  { name: "HSBC Mutual Fund", code: "HSBC", logo: "🌍", website: "https://www.assetmanagement.hsbc.co.in/en/mutual-funds/investor-resources/factsheets", pdfUrl: "https://www.assetmanagement.hsbc.co.in/en/mutual-funds/investor-resources/factsheets", tag: "International Multi-Asset" },
-  { name: "Franklin Templeton", code: "FRANKLIN", logo: "📜", website: "https://www.franklintempletonindia.com/investor/factsheets", pdfUrl: "https://www.franklintempletonindia.com/investor/factsheets", tag: "Global Value Investment" },
-  { name: "Aditya Birla Sun Life", code: "ABSL", logo: "🌞", website: "https://mutualfund.adityabirlacapital.com/forms-and-downloads/factsheet", pdfUrl: "https://mutualfund.adityabirlacapital.com/forms-and-downloads/factsheet", tag: "Diversified Asset Giant" },
-  { name: "PGIM India MF", code: "PGIM", logo: "🔷", website: "https://www.pgimindiamf.com/downloads/factsheet", pdfUrl: "https://www.pgimindiamf.com/downloads/factsheet", tag: "Global Investment House" },
-  { name: "Union Mutual Fund", code: "UNION", logo: "🤝", website: "https://www.unionmf.com/downloads/factsheet", pdfUrl: "https://www.unionmf.com/downloads/factsheet", tag: "PSU Bank Backed AMC" },
-  { name: "Baroda BNP Paribas MF", code: "BARODA", logo: "🏛️", website: "https://www.barodabnpparibasmf.in/downloads/factsheets", pdfUrl: "https://www.barodabnpparibasmf.in/downloads/factsheets", tag: "Indo-French Alliance" },
-  { name: "Mahindra Manulife MF", code: "MAHINDRA", logo: "🚜", website: "https://www.mahindramanulife.com/downloads/factsheets", pdfUrl: "https://www.mahindramanulife.com/downloads/factsheets", tag: "Rural & Semi-Urban Focus" },
-  { name: "JM Financial MF", code: "JM", logo: "📊", website: "https://www.jmfinancialmf.com/downloads/factsheets", pdfUrl: "https://www.jmfinancialmf.com/downloads/factsheets", tag: "Pioneer Private AMC" },
-  { name: "LIC Mutual Fund", code: "LIC", logo: "🛡️", website: "https://www.licmf.com/downloads/factsheet", pdfUrl: "https://www.licmf.com/downloads/factsheet", tag: "Sovereign Trust Legacy" },
-  { name: "Navi Mutual Fund", code: "NAVI", logo: "📱", website: "https://www.navimutualfund.com/downloads/factsheet", pdfUrl: "https://www.navimutualfund.com/downloads/factsheet", tag: "Zero-Commission Index Funds" },
-  { name: "Groww Mutual Fund", code: "GROWW", logo: "🌱", website: "https://www.growwmf.in/downloads/factsheet", pdfUrl: "https://www.growwmf.in/downloads/factsheet", tag: "Tech-First Asset House" },
-  { name: "Zerodha Fund House", code: "ZERODHA", logo: "📐", website: "https://www.zerodhafundhouse.com/downloads/factsheets", pdfUrl: "https://www.zerodhafundhouse.com/downloads/factsheets", tag: "Passive Only Index AMC" },
-  { name: "WhiteOak Capital MF", code: "WHITEOAK", logo: "🌳", website: "https://mf.whiteoakcapital.com/downloads/factsheet", pdfUrl: "https://mf.whiteoakcapital.com/downloads/factsheet", tag: "OpCo-FinCo Stock Picking" },
-  { name: "Samco Mutual Fund", code: "SAMCO", logo: "🎯", website: "https://www.samcomf.com/downloads/factsheet", pdfUrl: "https://www.samcomf.com/downloads/factsheet", tag: "HexaShield Investment Model" },
-  { name: "NJ Mutual Fund", code: "NJ", logo: "💼", website: "https://www.njmutualfund.com/downloads/factsheet", pdfUrl: "https://www.njmutualfund.com/downloads/factsheet", tag: "Rule-Based Quantitative AMC" },
-  { name: "360 ONE MF (IIFL)", code: "360ONE", logo: "⭕", website: "https://www.360.one/assetmanagement/downloads/factsheets", pdfUrl: "https://www.360.one/assetmanagement/downloads/factsheets", tag: "Focused & High Net-Worth" },
-  { name: "ITI Mutual Fund", code: "ITI", logo: "🏭", website: "https://www.itiamc.com/downloads/factsheets", pdfUrl: "https://www.itiamc.com/downloads/factsheets", tag: "Long-Term Growth Focus" },
-  { name: "Trust Mutual Fund", code: "TRUST", logo: "🤝", website: "https://www.trustmf.in/downloads/factsheet", pdfUrl: "https://www.trustmf.in/downloads/factsheet", tag: "Fixed Income & Debt Focus" },
-  { name: "Taurus Mutual Fund", code: "TAURUS", logo: "🐂", website: "https://www.taurusmutualfund.com/downloads/factsheet", pdfUrl: "https://www.taurusmutualfund.com/downloads/factsheet", tag: "Niche Sectoral Funds" },
-  { name: "Quantum Mutual Fund", code: "QUANTUM", logo: "⚛️", website: "https://www.quantumamc.com/downloads/factsheet", pdfUrl: "https://www.quantumamc.com/downloads/factsheet", tag: "Direct-Only Value Investing" },
-  { name: "Shriram Mutual Fund", code: "SHRIRAM", logo: "🏛️", website: "https://www.shrirammf.com/downloads/factsheet", pdfUrl: "https://www.shrirammf.com/downloads/factsheet", tag: "Multi-Asset & Hybrid" },
-  { name: "Helios Mutual Fund", code: "HELIOS", logo: "☀️", website: "https://www.heliosmf.in/downloads/factsheet", pdfUrl: "https://www.heliosmf.in/downloads/factsheet", tag: "Elimination Strategy AMC" },
-  { name: "Old Bridge MF", code: "OLDBRIDGE", logo: "🌉", website: "https://www.oldbridgemf.com/downloads/factsheet", pdfUrl: "https://www.oldbridgemf.com/downloads/factsheet", tag: "Cyclical & Value Focus" },
-  { name: "Bajaj Finserv MF", code: "BAJAJ", logo: "⚡", website: "https://www.bajajfinservsecurities.in/mutual-funds/factsheets", pdfUrl: "https://www.bajajfinservsecurities.in/mutual-funds/factsheets", tag: "Megatrend & Tech Focus" },
-  { name: "BOI Mutual Fund", code: "BOI", logo: "🏦", website: "https://www.boimf.in/downloads/factsheet", pdfUrl: "https://www.boimf.in/downloads/factsheet", tag: "Bank of India Asset Arm" },
-  { name: "Shine Capital MF", code: "SHINE", logo: "✨", website: "https://www.amfiindia.com/research-information/other-data/factsheets", pdfUrl: "https://www.amfiindia.com/research-information/other-data/factsheets", tag: "SEBI Registered AMC" }
+  { name: "SBI Mutual Fund", code: "SBI", logo: "🏛️", website: "https://www.sbimf.com", tag: "Largest AMC in India" },
+  { name: "HDFC Mutual Fund", code: "HDFC", logo: "🏦", website: "https://www.hdfcfund.com", tag: "Top Equity Asset Manager" },
+  { name: "ICICI Prudential MF", code: "ICICI", logo: "🏢", website: "https://www.icicipruamc.com", tag: "High Liquidity Specialist" },
+  { name: "Nippon India MF", code: "NIPPON", logo: "🇯🇵", website: "https://mf.nipponindiaim.com", tag: "Small Cap Leader" },
+  { name: "Kotak Mahindra MF", code: "KOTAK", logo: "💳", website: "https://www.kotakmf.com", tag: "Conservative & Growth" },
+  { name: "Parag Parikh (PPFAS)", code: "PPFAS", logo: "🐢", website: "https://amc.ppfas.com", tag: "Value & International Equity" },
+  { name: "Quant Mutual Fund", code: "QUANT", logo: "⚡", website: "https://quantmutual.com", tag: "VLRT Quantitative Model" },
+  { name: "Axis Mutual Fund", code: "AXIS", logo: "📈", website: "https://www.axismf.com", tag: "Quality Growth Focus" },
+  { name: "Mirae Asset MF", code: "MIRAE", logo: "🌐", website: "https://www.miraeassetmf.co.in", tag: "Large & Large-Mid Leader" },
+  { name: "Motilal Oswal MF", code: "MO", logo: "🎯", website: "https://www.motilaloswalmf.com", tag: "QGLP Concentrated Stocks" },
+  { name: "UTI Mutual Fund", code: "UTI", logo: "🏛️", website: "https://www.utimf.com", tag: "India Oldest AMC Legacy" },
+  { name: "DSP Mutual Fund", code: "DSP", logo: "🌲", website: "https://www.dspim.com", tag: "Quantitative & Systematic" },
+  { name: "Tata Mutual Fund", code: "TATA", logo: "⚙️", website: "https://www.tatamutualfund.com", tag: "Trusted Conglomerate AMC" },
+  { name: "Bandhan Mutual Fund", code: "BANDHAN", logo: "💎", website: "https://bandhanmutual.com", tag: "Formerly IDFC AMC" },
+  { name: "Canara Robeco MF", code: "CANARA", logo: "🛡️", website: "https://www.canararobeco.com", tag: "Consistent Performance" },
+  { name: "Edelweiss MF", code: "EDELWEISS", logo: "🚀", website: "https://www.edelweissmf.com", tag: "Target Maturity & Factor" },
+  { name: "Sundaram MF", code: "SUNDARAM", logo: "☀️", website: "https://www.sundarammutual.com", tag: "Mid & Small Cap Specialist" },
+  { name: "Invesco Mutual Fund", code: "INVESCO", logo: "🦅", website: "https://www.invescomutualfund.com", tag: "Global Asset Manager" },
+  { name: "HSBC Mutual Fund", code: "HSBC", logo: "🌍", website: "https://www.assetmanagement.hsbc.co.in", tag: "International Multi-Asset" },
+  { name: "Franklin Templeton", code: "FRANKLIN", logo: "📜", website: "https://www.franklintempletonindia.com", tag: "Global Value Investment" },
+  { name: "Aditya Birla Sun Life", code: "ABSL", logo: "🌞", website: "https://www.adityabirlacapital.com", tag: "Diversified Asset Giant" },
+  { name: "PGIM India MF", code: "PGIM", logo: "🔷", website: "https://www.pgimindia.com", tag: "Global Investment House" },
+  { name: "Union Mutual Fund", code: "UNION", logo: "🤝", website: "https://www.unionmf.com", tag: "PSU Bank Backed AMC" },
+  { name: "Baroda BNP Paribas MF", code: "BARODA", logo: "🏛️", website: "https://www.barodabnpparibasmf.in", tag: "Indo-French Alliance" },
+  { name: "Mahindra Manulife MF", code: "MAHINDRA", logo: "🚜", website: "https://www.mahindramanulife.com", tag: "Rural & Semi-Urban Focus" },
+  { name: "JM Financial MF", code: "JM", logo: "📊", website: "https://www.jmfl.com", tag: "Pioneer Private AMC" },
+  { name: "LIC Mutual Fund", code: "LIC", logo: "🛡️", website: "https://www.licmf.com", tag: "Sovereign Trust Legacy" },
+  { name: "Navi Mutual Fund", code: "NAVI", logo: "📱", website: "https://www.navimutualfund.com", tag: "Zero-Commission Index Funds" },
+  { name: "Groww Mutual Fund", code: "GROWW", logo: "🌱", website: "https://www.growwmf.in", tag: "Tech-First Asset House" },
+  { name: "Zerodha Fund House", code: "ZERODHA", logo: "📐", website: "https://www.zerodhafundhouse.com", tag: "Passive Only Index AMC" },
+  { name: "WhiteOak Capital MF", code: "WHITEOAK", logo: "🌳", website: "https://mf.whiteoakcapital.com", tag: "OpCo-FinCo Stock Picking" },
+  { name: "Samco Mutual Fund", code: "SAMCO", logo: "🎯", website: "https://www.samco.in", tag: "HexaShield Investment Model" },
+  { name: "NJ Mutual Fund", code: "NJ", logo: "💼", website: "https://www.njgroup.in", tag: "Rule-Based Quantitative AMC" },
+  { name: "360 ONE MF (IIFL)", code: "360ONE", logo: "⭕", website: "https://www.360.one", tag: "Focused & High Net-Worth" },
+  { name: "ITI Mutual Fund", code: "ITI", logo: "🏭", website: "https://www.itiamc.com", tag: "Long-Term Growth Focus" },
+  { name: "Trust Mutual Fund", code: "TRUST", logo: "🤝", website: "https://www.trustgroup.in", tag: "Fixed Income & Debt Focus" },
+  { name: "Taurus Mutual Fund", code: "TAURUS", logo: "🐂", website: "https://www.taurusmutualfund.com", tag: "Niche Sectoral Funds" },
+  { name: "Quantum Mutual Fund", code: "QUANTUM", logo: "⚛️", website: "https://www.quantumamc.com", tag: "Direct-Only Value Investing" },
+  { name: "Shriram Mutual Fund", code: "SHRIRAM", logo: "🏛️", website: "https://www.shrirammf.in", tag: "Multi-Asset & Hybrid" },
+  { name: "Helios Mutual Fund", code: "HELIOS", logo: "☀️", website: "https://www.helioscapital.in", tag: "Elimination Strategy AMC" },
+  { name: "Old Bridge MF", code: "OLDBRIDGE", logo: "🌉", website: "https://www.oldbridgemf.com", tag: "Cyclical & Value Focus" },
+  { name: "Bajaj Finserv MF", code: "BAJAJ", logo: "⚡", website: "https://www.bajajfinservamc.in", tag: "Megatrend & Tech Focus" },
+  { name: "BOI Mutual Fund", code: "BOI", logo: "🏦", website: "https://www.boimf.in", tag: "Bank of India Asset Arm" }
 ];
+
+const AMC_BRAND_EMBLEMS: Record<string, { bg: string; text: string; label: string; icon: string }> = {
+  SBI: { bg: "bg-[#00529B]", text: "text-white", label: "SBI MF", icon: "🏛️" },
+  HDFC: { bg: "bg-[#004B8D]", text: "text-white", label: "HDFC MF", icon: "🏦" },
+  ICICI: { bg: "bg-[#F37021]", text: "text-white", label: "ICICI PRU", icon: "🏢" },
+  NIPPON: { bg: "bg-[#E31E24]", text: "text-white", label: "NIPPON", icon: "🇯🇵" },
+  KOTAK: { bg: "bg-[#ED1C24]", text: "text-white", label: "KOTAK MF", icon: "💳" },
+  PPFAS: { bg: "bg-[#059669]", text: "text-white", label: "PPFAS", icon: "🐢" },
+  QUANT: { bg: "bg-[#0f172a]", text: "text-[#00FFCC]", label: "QUANT", icon: "⚡" },
+  AXIS: { bg: "bg-[#971756]", text: "text-white", label: "AXIS MF", icon: "📈" },
+  MIRAE: { bg: "bg-[#F37023]", text: "text-white", label: "MIRAE", icon: "🌐" },
+  MO: { bg: "bg-[#4B2E83]", text: "text-white", label: "MOTILAL", icon: "🎯" },
+  UTI: { bg: "bg-[#002B66]", text: "text-[#FF8C00]", label: "UTI MF", icon: "🏛️" },
+  DSP: { bg: "bg-[#00875A]", text: "text-white", label: "DSP MF", icon: "🌲" },
+  TATA: { bg: "bg-[#0054A6]", text: "text-white", label: "TATA MF", icon: "⚙️" },
+  BANDHAN: { bg: "bg-[#DB2777]", text: "text-white", label: "BANDHAN", icon: "💎" },
+  CANARA: { bg: "bg-[#0072CE]", text: "text-white", label: "CANARA", icon: "🛡️" },
+  EDELWEISS: { bg: "bg-[#1E3A8A]", text: "text-white", label: "EDELWEISS", icon: "🚀" },
+  SUNDARAM: { bg: "bg-[#EAB308]", text: "text-slate-950", label: "SUNDARAM", icon: "☀️" },
+  INVESCO: { bg: "bg-[#0B192C]", text: "text-white", label: "INVESCO", icon: "🦅" },
+  HSBC: { bg: "bg-[#DB0011]", text: "text-white", label: "HSBC MF", icon: "🌍" },
+  FRANKLIN: { bg: "bg-[#1E40AF]", text: "text-white", label: "FRANKLIN", icon: "📜" },
+  ABSL: { bg: "bg-[#C2410C]", text: "text-white", label: "ABSL MF", icon: "🌞" },
+  PGIM: { bg: "bg-[#1E3A8A]", text: "text-white", label: "PGIM", icon: "🔷" },
+  UNION: { bg: "bg-[#2563EB]", text: "text-white", label: "UNION MF", icon: "🤝" },
+  BARODA: { bg: "bg-[#047857]", text: "text-white", label: "BARODA BNP", icon: "🏛️" },
+  MAHINDRA: { bg: "bg-[#DC2626]", text: "text-white", label: "MAHINDRA", icon: "🚜" },
+  JM: { bg: "bg-[#334155]", text: "text-white", label: "JM MF", icon: "📊" },
+  LIC: { bg: "bg-[#D97706]", text: "text-white", label: "LIC MF", icon: "🛡️" },
+  NAVI: { bg: "bg-[#10B981]", text: "text-white", label: "NAVI MF", icon: "📱" },
+  GROWW: { bg: "bg-[#00D09C]", text: "text-slate-950", label: "GROWW", icon: "🌱" },
+  ZERODHA: { bg: "bg-[#387ED1]", text: "text-white", label: "ZERODHA", icon: "📐" },
+  WHITEOAK: { bg: "bg-[#064E3B]", text: "text-white", label: "WHITEOAK", icon: "🌳" },
+  SAMCO: { bg: "bg-[#B91C1C]", text: "text-white", label: "SAMCO", icon: "🎯" },
+  NJ: { bg: "bg-[#1D4ED8]", text: "text-white", label: "NJ MF", icon: "💼" },
+  "360ONE": { bg: "bg-[#0f172a]", text: "text-[#F59E0B]", label: "360 ONE", icon: "⭕" },
+  ITI: { bg: "bg-[#6B21A8]", text: "text-white", label: "ITI MF", icon: "🏭" },
+  TRUST: { bg: "bg-[#3730A3]", text: "text-white", label: "TRUST MF", icon: "🤝" },
+  TAURUS: { bg: "bg-[#9F1239]", text: "text-white", label: "TAURUS", icon: "🐂" },
+  QUANTUM: { bg: "bg-[#C2410C]", text: "text-white", label: "QUANTUM", icon: "⚛️" },
+  SHRIRAM: { bg: "bg-[#1D4ED8]", text: "text-white", label: "SHRIRAM", icon: "🏛️" },
+  HELIOS: { bg: "bg-[#F97316]", text: "text-white", label: "HELIOS", icon: "☀️" },
+  OLDBRIDGE: { bg: "bg-[#1E293B]", text: "text-[#F59E0B]", label: "OLD BRIDGE", icon: "🌉" },
+  BAJAJ: { bg: "bg-[#0284C7]", text: "text-white", label: "BAJAJ", icon: "⚡" },
+  BOI: { bg: "bg-[#1D4ED8]", text: "text-white", label: "BOI MF", icon: "🏦" },
+  SHINE: { bg: "bg-[#059669]", text: "text-white", label: "SHINE", icon: "✨" },
+};
+
+const AMCLogo = ({ name, code }: { website: string; name: string; code?: string }) => {
+  const emblem = (code && AMC_BRAND_EMBLEMS[code]) || {
+    bg: "bg-gradient-to-br from-emerald/30 via-navy-card to-emerald/10",
+    text: "text-emerald",
+    label: (code || name.slice(0, 4)).toUpperCase(),
+    icon: "🏦",
+  };
+
+  return (
+    <div
+      className={`w-11 h-11 rounded-2xl ${emblem.bg} ${emblem.text} flex flex-col items-center justify-center shadow-lg shrink-0 p-1 border border-white/20 relative overflow-hidden group hover:scale-105 transition-all`}
+      title={name}
+    >
+      <span className="text-xs leading-none mb-0.5">{emblem.icon}</span>
+      <span className="font-black text-[8px] tracking-tighter uppercase leading-none whitespace-nowrap overflow-hidden text-ellipsis max-w-full px-0.5">
+        {emblem.label}
+      </span>
+    </div>
+  );
+};
 
 export default function MutualFundAnalyzer() {
   const [viewMode, setViewMode] = useState<"screener" | "analyzer" | "factsheets">("screener");
@@ -1224,7 +1291,7 @@ export default function MutualFundAnalyzer() {
                   Official AMC Monthly Factsheet Download Hub
                 </h2>
                 <p className="text-xs sm:text-sm text-muted-grey mt-1">
-                  Direct official monthly factsheets, scheme portfolios, and fund manager commentary for 20+ top Indian AMCs.
+                  Direct official monthly factsheets, scheme portfolios, and fund manager commentary for all 44 Indian AMCs.
                 </p>
               </div>
             </div>
@@ -1240,7 +1307,7 @@ export default function MutualFundAnalyzer() {
                     Official AMC Factsheets Vault is Locked
                   </h3>
                   <p className="text-xs sm:text-sm text-muted-grey leading-relaxed">
-                    Accessing official monthly factsheet downloads across 20+ Indian Asset Management Companies is exclusively free for signed-in ValarchiX account holders.
+                    Accessing official monthly factsheet downloads across all 44 Indian Asset Management Companies is exclusively free for signed-in ValarchiX account holders.
                   </p>
                 </div>
                 <div className="pt-2">
@@ -1282,7 +1349,7 @@ export default function MutualFundAnalyzer() {
                     <div key={amc.code} className="p-4 rounded-2xl border border-border-navy bg-navy-bg/60 hover:border-emerald/40 transition space-y-3 flex flex-col justify-between shadow-lg">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-2xl">{amc.logo}</span>
+                          <AMCLogo website={amc.website} name={amc.name} code={amc.code} />
                           <span className="text-[10px] font-bold text-emerald bg-emerald/10 border border-emerald/20 px-2 py-0.5 rounded">
                             Latest Factsheet
                           </span>
@@ -1295,7 +1362,7 @@ export default function MutualFundAnalyzer() {
 
                       <div className="pt-2 flex items-center gap-2">
                         <a
-                          href={amc.pdfUrl}
+                          href={`https://www.google.com/search?q=${encodeURIComponent(amc.name + " monthly factsheet pdf latest download")}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald/10 border border-emerald/30 text-emerald hover:bg-emerald hover:text-navy-bg transition text-xs font-bold cursor-pointer"
