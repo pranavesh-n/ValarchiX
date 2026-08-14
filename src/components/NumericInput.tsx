@@ -81,9 +81,9 @@ export default function NumericInput({
   const displayValue = isFocused ? tempValue : formatValue(value);
 
   return (
-    <div className={`flex items-center gap-1 bg-navy-bg/55 border border-border-navy/60 focus-within:border-emerald/50 rounded-lg px-2 py-0.5 text-xs text-emerald font-bold transition-all w-24 md:w-28 shrink-0 ${className}`}>
+    <div className={`flex items-center gap-1 bg-navy-bg/75 border border-border-navy/60 focus-within:border-emerald/60 rounded-lg px-2 py-1 text-xs text-emerald font-bold transition-all w-28 sm:w-32 md:w-36 shrink-0 ${className}`}>
       {type === "currency" && (
-        <span className="text-muted-grey/60 text-[10px] select-none">₹</span>
+        <span className="text-muted-grey/60 text-[10px] sm:text-xs select-none shrink-0">₹</span>
       )}
       <input
         type={isFocused ? "number" : "text"}
@@ -93,13 +93,13 @@ export default function NumericInput({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         step="any"
-        className="w-full bg-transparent text-emerald font-bold text-right outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-full bg-transparent text-emerald font-mono font-bold text-right text-xs sm:text-sm outline-none min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       {type === "percent" && (
-        <span className="text-muted-grey/60 text-[10px] ml-0.5 select-none">%</span>
+        <span className="text-muted-grey/60 text-[10px] sm:text-xs ml-0.5 select-none shrink-0">%</span>
       )}
       {type === "years" && (
-        <span className="text-muted-grey/60 text-[10px] ml-0.5 select-none">Yr{value !== 1 ? "s" : ""}</span>
+        <span className="text-muted-grey/60 text-[10px] sm:text-xs ml-0.5 select-none shrink-0">Yr{value !== 1 ? "s" : ""}</span>
       )}
     </div>
   );

@@ -169,9 +169,9 @@ export default function SwpCalculator() {
             <h2 className="text-base sm:text-lg font-bold text-heading">Investment Settings</h2>
 
             {/* Initial Corpus Slider */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs font-semibold">
-                <span className="text-muted-grey">Initial Corpus</span>
+            <div className="space-y-1.5 min-w-0 w-full">
+              <div className="flex justify-between items-center text-xs font-semibold gap-2 min-w-0 w-full">
+                <span className="text-muted-grey min-w-0 truncate">Initial Corpus</span>
                 <NumericInput
                   value={initialCorpus}
                   onChange={handleCorpusChange}
@@ -197,9 +197,9 @@ export default function SwpCalculator() {
             </div>
 
             {/* Annual Withdrawal Rate (%) Slider */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs font-semibold">
-                <span className="text-muted-grey">Annual Withdrawal Rate</span>
+            <div className="space-y-1.5 min-w-0 w-full">
+              <div className="flex justify-between items-center text-xs font-semibold gap-2 min-w-0 w-full">
+                <span className="text-muted-grey min-w-0 truncate">Annual Withdrawal Rate</span>
                 <NumericInput
                   value={withdrawalRate}
                   onChange={handleWithdrawalRateChange}
@@ -252,9 +252,9 @@ export default function SwpCalculator() {
             </div>
 
             {/* Monthly Withdrawal Slider */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs font-semibold">
-                <span className="text-muted-grey">Desired Monthly Pension</span>
+            <div className="space-y-1.5 min-w-0 w-full">
+              <div className="flex justify-between items-center text-xs font-semibold gap-2 min-w-0 w-full">
+                <span className="text-muted-grey min-w-0 truncate">Desired Monthly Pension</span>
                 <NumericInput
                   value={monthlyWithdrawal}
                   onChange={handleMonthlyWithdrawalChange}
@@ -280,9 +280,9 @@ export default function SwpCalculator() {
             </div>
 
             {/* Expected Return Rate */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs font-semibold">
-                <span className="text-muted-grey">Expected Yield (p.a.)</span>
+            <div className="space-y-1.5 min-w-0 w-full">
+              <div className="flex justify-between items-center text-xs font-semibold gap-2 min-w-0 w-full">
+                <span className="text-muted-grey min-w-0 truncate">Expected Yield (p.a.)</span>
                 <NumericInput
                   value={expectedReturn}
                   onChange={setExpectedReturn}
@@ -317,9 +317,9 @@ export default function SwpCalculator() {
             </div>
 
             {/* SWP Horizon Slider */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs font-semibold">
-                <span className="text-muted-grey">SWP Horizon</span>
+            <div className="space-y-1.5 min-w-0 w-full">
+              <div className="flex justify-between items-center text-xs font-semibold gap-2 min-w-0 w-full">
+                <span className="text-muted-grey min-w-0 truncate">SWP Horizon</span>
                 <NumericInput
                   value={years}
                   onChange={setYears}
