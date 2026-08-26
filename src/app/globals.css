@@ -208,22 +208,61 @@
   color: var(--heading-color) !important;
 }
 
+/* Light Mode Input & Form Elements Contrast */
+.light input:not([type="checkbox"]):not([type="radio"]),
+.light select,
+.light textarea {
+  color: #0f172a;
+  background-color: #ffffff;
+}
+
+.light input[type="range"] {
+  background-color: #e2e8f0;
+}
+
+/* Light Mode Table Contrast */
+.light table {
+  color: var(--text-main-color);
+}
+
+.light th {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light td {
+  border-color: #f1f5f9 !important;
+}
+
+.light tr:hover {
+  background-color: #f8fafc;
+}
+
 /* Retain pure white text exclusively on solid dark/colored buttons */
 .light button[class*="bg-indigo-"],
 .light a[class*="bg-indigo-"],
 .light button[class*="bg-emerald-"],
 .light a[class*="bg-emerald-"],
+.light button[class*="bg-teal-"],
+.light a[class*="bg-teal-"],
 .light button[class*="bg-rose-"],
 .light a[class*="bg-rose-"],
 .light button[class*="bg-blue-"],
 .light a[class*="bg-blue-"],
+.light button[class*="bg-amber-"],
+.light a[class*="bg-amber-"],
 .light [class*="!text-white"],
 .light .btn-white-text {
   color: #ffffff !important;
 }
 
 .light button[class*="bg-indigo-"] *,
-.light a[class*="bg-indigo-"] * {
+.light a[class*="bg-indigo-"] *,
+.light button[class*="bg-teal-"] *,
+.light a[class*="bg-teal-"] *,
+.light button[class*="bg-amber-"] *,
+.light a[class*="bg-amber-"] * {
   color: #ffffff !important;
 }
 
