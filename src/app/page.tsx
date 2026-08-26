@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { getCurrentUserSession } from "@/lib/supabase/auth";
 import {
   Layers,
   Shield,
@@ -28,54 +27,9 @@ import {
   Zap,
   Sparkles,
   ChevronRight,
-  GraduationCap,
-  Baby,
-  CheckCircle2,
-  Calendar,
-  DollarSign,
-  Activity,
-  Award,
-  BookOpen
+  Baby
 } from "lucide-react";
 import { formatINR, formatINRWords } from "@/lib/engine/numeric";
-
-const DAILY_WISDOM_CARDS = [
-  {
-    topic: "The 1% Expense Ratio Drag",
-    quote: "A 1% annual mutual fund fee does not take 1% of your wealth — over 25 years of compounding, it swallows over 28% of your entire final corpus.",
-    action: "Run TER Drag Analysis",
-    href: "/mutual-funds",
-    tag: "Wealth Protection"
-  },
-  {
-    topic: "Credit Card Minimum Due Trap",
-    quote: "Paying only the 5% minimum amount due compounds at 42% annualized interest, turning a ₹50,000 phone purchase into a ₹2.8 Lakh debt spiral.",
-    action: "Check Debt Trap",
-    href: "/credit-card",
-    tag: "Debt Defense"
-  },
-  {
-    topic: "The Sovereign 15-Year Rule",
-    quote: "PPF and EPF offer sovereign guaranteed, Section 80C exempt, and maturity tax-free (EEE) returns that beating inflation risk-free.",
-    action: "Calculate PPF Growth",
-    href: "/ppf",
-    tag: "Tax-Free Compounding"
-  },
-  {
-    topic: "Rent vs Buy: The Opportunity Cost",
-    quote: "Buying a home with a 20-year EMI costs 2.2x the property price in interest. Renting and investing the down-payment surplus often builds 3x more wealth.",
-    action: "Compare Rent vs Buy",
-    href: "/rent-vs-buy",
-    tag: "Real Estate Math"
-  },
-  {
-    topic: "Cost of Delaying by 3 Years",
-    quote: "Starting a ₹10,000 monthly SIP at age 25 vs age 28 costs you over ₹45 Lakhs by retirement due to the loss of your longest compounding cycles.",
-    action: "See Delay Cost",
-    href: "/cost-of-delay",
-    tag: "Compounding Law"
-  }
-];
 
 const SUITE_CATEGORIES = [
   {
@@ -106,7 +60,7 @@ const SUITE_CATEGORIES = [
     items: [
       { name: "Latte Factor Spends", href: "/latte-factor", icon: Coffee, desc: "Small daily leak compounding to wealth" },
       { name: "Emergency Fund", href: "/emergency-fund", icon: ShieldAlert, desc: "3-6 month liquid fortress requirement" },
-      { name: "Rent vs Buy Housing", href: "/rent-vs-buy", icon: HomeIcon, desc: "Opportunity cost of real estate vs equity" },
+      { name: "Rent vs Buy Housing", href: "/rent-vs-buy", icon: Landmark, desc: "Opportunity cost of real estate vs equity" },
       { name: "Inflation Calculator", href: "/inflation", icon: BarChart2, desc: "Future purchasing power erosion" },
       { name: "Credit Card Trap", href: "/credit-card", icon: CreditCard, desc: "42% annualized interest trap solver" },
       { name: "Debt Payoff Optimizer", href: "/debt-payoff", icon: Scissors, desc: "Snowball vs Avalanche debt freedom" },
@@ -152,90 +106,27 @@ const SUITE_CATEGORIES = [
   }
 ];
 
-function HomeIcon(props: any) {
-  return <Landmark {...props} />;
-}
-
 export default function HomePage() {
-  const [session, setSession] = useState<any>(null);
-  const [quickSip, setQuickSip] = useState(15000);
+  const [quickSip, setQuickSip] = useState(10000);
   const [quickTenure, setQuickTenure] = useState(15);
-  const [quickReturnRate, setQuickReturnRate] = useState(13);
-  const [dailyLeakSpend, setDailyLeakSpend] = useState(150);
-  const [dailyStreak, setDailyStreak] = useState(1);
-  const [checkedInToday, setCheckedInToday] = useState(false);
+  const [quickReturnRate, setQuickReturnRate] = useState(12);
   const [activeCategoryTab, setActiveCategoryTab] = useState("wealth");
 
-  useEffect(() => {
-    async function loadAuth() {
-      const s = await getCurrentUserSession();
-      setSession(s);
-    }
-    loadAuth();
-
-    // Load or update daily streak from encrypted localStorage
-    const lastCheckIn = localStorage.getItem("valarchix_last_checkin_date");
-    const today = new Date().toDateString();
-    const storedStreak = Number(localStorage.getItem("valarchix_streak_days") || "1");
-
-    if (lastCheckIn === today) {
-      setCheckedInToday(true);
-      setDailyStreak(storedStreak);
-    } else {
-      setCheckedInToday(false);
-      setDailyStreak(storedStreak);
-    }
-  }, []);
-
-  const handleDailyCheckIn = () => {
-    const today = new Date().toDateString();
-    const newStreak = checkedInToday ? dailyStreak : dailyStreak + 1;
-    localStorage.setItem("valarchix_last_checkin_date", today);
-    localStorage.setItem("valarchix_streak_days", newStreak.toString());
-    setDailyStreak(newStreak);
-    setCheckedInToday(true);
-  };
-
-  // Compounding Calculation
+  // Compounding Simulator Calculation
   const quickProjection = useMemo(() => {
     const monthlyRate = quickReturnRate / 100 / 12;
     const months = quickTenure * 12;
     const investedAmount = quickSip * months;
     const futureValue = quickSip * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
     const wealthGained = futureValue - investedAmount;
-    
-    // Daily & Hourly Compounding Yield in Year 10
-    const currentCorpusEstimated = quickSip * 12 * 5 * 1.4; // approx 5 yr corpus
-    const dailyYieldEstimated = Math.round((currentCorpusEstimated * (quickReturnRate / 100)) / 365);
-    const hourlyYield = Math.round(dailyYieldEstimated / 24);
 
     return {
       investedAmount: Math.round(investedAmount),
       futureValue: Math.round(futureValue),
       wealthGained: Math.round(wealthGained),
       gainRatio: (futureValue / investedAmount).toFixed(1),
-      dailyYieldEstimated,
-      hourlyYield
     };
   }, [quickSip, quickTenure, quickReturnRate]);
-
-  // Daily Leak Math (e.g. ₹150 daily coffee/delivery over 15 years @ 13%)
-  const dailyLeakMath = useMemo(() => {
-    const monthlySpend = dailyLeakSpend * 30;
-    const r = 0.13 / 12;
-    const n = 15 * 12;
-    const futureWealthLost = monthlySpend * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
-    return {
-      monthlySpend,
-      futureWealthLost: Math.round(futureWealthLost)
-    };
-  }, [dailyLeakSpend]);
-
-  // Daily Rotating Wisdom based on day of month
-  const todayWisdom = useMemo(() => {
-    const day = new Date().getDate();
-    return DAILY_WISDOM_CARDS[day % DAILY_WISDOM_CARDS.length];
-  }, []);
 
   return (
     <div className="space-y-8 sm:space-y-12 animate-fadeIn pb-12">
@@ -324,139 +215,6 @@ export default function HomePage() {
                 Full Suite
               </span>
             </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          DAILY MONEY COCKPIT (For Daily Engagement & Habit Building)
-          ========================================================================= */}
-      <section className="bg-navy-card border border-border-navy rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-6">
-        <div className="absolute -top-20 -right-20 w-60 h-60 bg-emerald/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        {/* Top Header Row with Streak & Welcome */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-navy/60 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald/15 border border-emerald/30 text-emerald flex items-center justify-center font-black">
-              <Activity size={22} />
-            </div>
-            <div>
-              <div className="text-xs font-black text-emerald uppercase tracking-wider flex items-center gap-1.5">
-                <span>Daily Financial Cockpit</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse"></span>
-              </div>
-              <h1 className="text-lg sm:text-xl font-black text-heading">
-                {session?.user ? `Welcome back, ${session.user.user_metadata?.full_name || 'Investor'}` : "Your Daily Wealth & Knowledge Radar"}
-              </h1>
-            </div>
-          </div>
-
-          {/* Daily Streak & 1-Tap Check-In */}
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-500 px-3 py-1.5 rounded-2xl font-black text-xs">
-              <Flame size={16} className="text-amber-500 fill-amber-500 animate-bounce" />
-              <span>{dailyStreak} Day Streak</span>
-            </div>
-
-            <button
-              onClick={handleDailyCheckIn}
-              disabled={checkedInToday}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl text-xs font-black transition cursor-pointer ${
-                checkedInToday
-                  ? "bg-emerald/15 text-emerald border border-emerald/30"
-                  : "bg-indigo-600 hover:bg-indigo-500 !text-white shadow-md shadow-indigo-600/30"
-              }`}
-            >
-              <CheckCircle2 size={14} />
-              <span>{checkedInToday ? "Completed Today ✅" : "1-Tap Daily Check-in"}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* 3 Interactive Daily Widgets */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          {/* Widget 1: Daily Compounding Clock */}
-          <div className="card-tile-neutral p-4 rounded-2xl border flex flex-col justify-between space-y-3">
-            <div>
-              <div className="flex items-center justify-between text-xs text-muted-grey font-bold">
-                <span>Daily Compounding Yield</span>
-                <Clock size={14} className="text-emerald" />
-              </div>
-              <div className="text-2xl font-black text-emerald mt-1 font-mono">
-                +₹{quickProjection.dailyYieldEstimated.toLocaleString('en-IN')}<span className="text-xs text-muted-grey font-normal"> / day</span>
-              </div>
-              <p className="text-[11px] text-muted-grey mt-1">
-                Your ₹{quickSip.toLocaleString('en-IN')}/mo SIP compounds at approx <strong>₹{quickProjection.hourlyYield}/hr</strong> continuously.
-              </p>
-            </div>
-            <Link
-              href="/time-machine"
-              className="text-xs font-black text-emerald hover:underline flex items-center gap-1 mt-2"
-            >
-              <span>Launch 20-Yr Time Machine</span>
-              <ChevronRight size={13} />
-            </Link>
-          </div>
-
-          {/* Widget 2: Daily Spend-to-Wealth Converter */}
-          <div className="card-tile-neutral p-4 rounded-2xl border flex flex-col justify-between space-y-3">
-            <div>
-              <div className="flex items-center justify-between text-xs text-muted-grey font-bold">
-                <span>Daily Leak vs SIP Compounding</span>
-                <Coffee size={14} className="text-amber-500" />
-              </div>
-              
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-xs text-muted-grey font-bold">Spend: ₹</span>
-                <input
-                  type="number"
-                  value={dailyLeakSpend}
-                  onChange={(e) => setDailyLeakSpend(Math.max(10, Number(e.target.value)))}
-                  className="w-20 bg-navy-bg border border-border-navy rounded-lg px-2 py-1 text-xs font-black text-heading outline-none font-mono"
-                />
-                <span className="text-[11px] text-muted-grey">/day</span>
-              </div>
-
-              <div className="text-sm font-black text-heading mt-2 font-mono">
-                = <span className="text-rose-500">{formatINRWords(dailyLeakMath.futureWealthLost)}</span> <span className="text-[11px] text-muted-grey font-normal">in 15 yrs</span>
-              </div>
-            </div>
-
-            <Link
-              href="/latte-factor"
-              className="text-xs font-black text-amber-500 hover:underline flex items-center gap-1"
-            >
-              <span>Explore Latte Factor Math</span>
-              <ChevronRight size={13} />
-            </Link>
-          </div>
-
-          {/* Widget 3: Today's Financial Wisdom Micro-Lesson */}
-          <div className="card-stat-indigo p-4 rounded-2xl border flex flex-col justify-between space-y-2">
-            <div>
-              <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider opacity-80">
-                <span>Today&apos;s Rule #{new Date().getDate()}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 font-bold">
-                  {todayWisdom.tag}
-                </span>
-              </div>
-              <h4 className="font-black text-sm text-heading mt-1">
-                {todayWisdom.topic}
-              </h4>
-              <p className="text-xs text-muted-grey leading-relaxed mt-1 line-clamp-2">
-                &ldquo;{todayWisdom.quote}&rdquo;
-              </p>
-            </div>
-
-            <Link
-              href={todayWisdom.href}
-              className="text-xs font-black text-indigo-400 hover:underline flex items-center gap-1"
-            >
-              <span>{todayWisdom.action}</span>
-              <ChevronRight size={13} />
-            </Link>
           </div>
 
         </div>
