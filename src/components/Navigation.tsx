@@ -47,7 +47,20 @@ import {
 } from "lucide-react";
 import { getCurrentUserSession, signInWithGoogle, signOutUser } from "@/lib/supabase/auth";
 
-const NAV_ITEMS = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: any;
+  desc: string;
+  badge?: string;
+}
+
+interface NavGroup {
+  category: string;
+  items: NavItem[];
+}
+
+const NAV_ITEMS: NavGroup[] = [
   {
     category: "Intelligence Engines",
     items: [
@@ -747,54 +760,204 @@ export default function Navigation() {
         </div>
       </nav>
 
-      {/* ===== MOBILE DRAWER ===== */}
+      {/* ===== MOBILE DRAWER (Dedicated Sheets for Engines & Calculators) ===== */}
       {mobileDrawer && (
         <>
           <div
             onClick={closeDrawer}
             className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md md:hidden"
           />
-          <div className="fixed bottom-16 left-0 right-0 z-50 md:hidden bg-navy-bg border-t border-border-navy rounded-t-3xl max-h-[75vh] overflow-y-auto shadow-2xl safe-area-bottom p-5 space-y-5">
+          <div className="fixed bottom-16 left-0 right-0 z-50 md:hidden bg-navy-card border-t border-border-navy rounded-t-3xl max-h-[78vh] overflow-y-auto shadow-2xl safe-area-bottom p-5 space-y-4 animate-slideDown">
+            {/* Top Sheet Drag Handle */}
+            <div className="w-12 h-1.5 bg-border-navy rounded-full mx-auto mb-1"></div>
+
             <div className="flex items-center justify-between border-b border-border-navy pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald"></div>
-                <h3 className="text-base font-extrabold text-heading">{mobileDrawer} Navigation</h3>
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald"></div>
+                <h3 className="text-base font-black text-heading">
+                  {mobileDrawer === "Engines" ? "Intelligence Engines" : "Financial Calculators"}
+                </h3>
               </div>
-              <button onClick={closeDrawer} className="p-2 bg-navy-card hover:bg-navy-light rounded-xl text-muted-grey hover:text-heading transition cursor-pointer">
+              <button 
+                onClick={closeDrawer} 
+                className="p-1.5 bg-navy-bg hover:bg-navy-light rounded-xl text-muted-grey hover:text-heading transition cursor-pointer"
+              >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-4">
-              {NAV_ITEMS.map((group) => (
-                <div key={group.category} className="space-y-2">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-indigo-400 px-1">
-                    {group.category}
-                  </h4>
+            {/* If Mobile Drawer is Engines */}
+            {mobileDrawer === "Engines" && (
+              <div className="space-y-2.5">
+                {engineItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={closeDrawer}
+                      className={`flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all ${
+                        isActive
+                          ? "bg-emerald text-slate-950 border-emerald shadow-md"
+                          : "card-tile-neutral hover:bg-navy-light"
+                      }`}
+                    >
+                      <div className={`p-2.5 rounded-xl ${isActive ? "bg-slate-950/15 text-slate-950" : "bg-indigo-500/10 text-indigo-400"} shrink-0 mt-0.5`}>
+                        <Icon size={20} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-black text-sm ${isActive ? "text-slate-950" : "text-heading"}`}>
+                            {item.name}
+                          </span>
+                          {item.badge && (
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                              isActive ? "bg-slate-950 text-emerald" : "bg-indigo-950 text-indigo-300"
+                            }`}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className={`text-xs mt-0.5 ${isActive ? "text-slate-900/80" : "text-muted-grey"}`}>
+                          {item.desc}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+
+                <Link
+                  href="/vaathi"
+                  onClick={closeDrawer}
+                  className={`flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all ${
+                    pathname === "/vaathi"
+                      ? "bg-emerald text-slate-950 border-emerald shadow-md"
+                      : "card-tile-neutral hover:bg-navy-light"
+                  }`}
+                >
+                  <div className="p-2.5 rounded-xl bg-emerald/10 text-emerald shrink-0 mt-0.5">
+                    <GraduationCap size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-black text-sm text-heading">Valarchi Vaathi 🎓</span>
+                    <p className="text-xs text-muted-grey mt-0.5">AI Financial Literacy & Planning Mentor</p>
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            {/* If Mobile Drawer is Calculators */}
+            {mobileDrawer === "Calculators" && (
+              <div className="space-y-4">
+                {/* Wealth & Compounding */}
+                <div className="space-y-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald block px-1">
+                    Wealth &amp; Compounding
+                  </span>
                   <div className="grid grid-cols-2 gap-2">
-                    {group.items.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = pathname === item.href;
-                      return (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          onClick={closeDrawer}
-                          className={`flex items-center gap-2.5 p-3 rounded-2xl text-xs font-bold transition-all border ${
-                            isActive
-                              ? "bg-indigo-600 text-white border-indigo-500 shadow-md"
-                              : "card-tile-neutral"
-                          }`}
-                        >
-                          <Icon size={16} className={isActive ? "text-white" : "text-muted-grey"} />
-                          <span className="truncate">{item.name}</span>
-                        </Link>
-                      );
-                    })}
+                    {[
+                      { name: "SIP & FD", href: "/sip", icon: Percent },
+                      { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight },
+                      { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp },
+                      { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock },
+                      { name: "Inflation", href: "/inflation", icon: BarChart2 },
+                      { name: "RD Simulator", href: "/rd", icon: Percent },
+                      { name: "ROI & CAGR", href: "/roi", icon: TrendingUp },
+                      { name: "XIRR Return", href: "/xirr", icon: Zap },
+                    ].map((c) => (
+                      <Link
+                        key={c.name}
+                        href={c.href}
+                        onClick={closeDrawer}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all ${
+                          pathname === c.href ? "bg-emerald text-slate-950 border-emerald" : "card-tile-neutral"
+                        }`}
+                      >
+                        <c.icon size={15} className={pathname === c.href ? "text-slate-950" : "text-emerald"} />
+                        <span className="truncate">{c.name}</span>
+                      </Link>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Retirement & Schemes */}
+                <div className="space-y-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-indigo-400 block px-1">
+                    Retirement &amp; Schemes
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { name: "PPF (15-Yr)", href: "/ppf", icon: Coins },
+                      { name: "NPS Scheme", href: "/nps", icon: TrendingUp },
+                      { name: "EPF Corpus", href: "/epf", icon: Coins },
+                      { name: "SSY Scheme", href: "/ssy", icon: Coins },
+                      { name: "SWP Planner", href: "/swp", icon: ArrowDownLeft },
+                      { name: "APY Pension", href: "/apy", icon: Coins },
+                      { name: "SCSS Seniors", href: "/scss", icon: Coins },
+                      { name: "Gratuity", href: "/gratuity", icon: Coins },
+                    ].map((s) => (
+                      <Link
+                        key={s.name}
+                        href={s.href}
+                        onClick={closeDrawer}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all ${
+                          pathname === s.href ? "bg-indigo-600 text-white border-indigo-500" : "card-tile-neutral"
+                        }`}
+                      >
+                        <s.icon size={15} className={pathname === s.href ? "text-white" : "text-indigo-400"} />
+                        <span className="truncate">{s.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tax, Debt & Loans */}
+                <div className="space-y-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-amber-500 block px-1">
+                    Tax, Debt &amp; Loans
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { name: "Tax Regime Hub", href: "/tax", icon: Calculator },
+                      { name: "HRA Exemption", href: "/hra", icon: Calculator },
+                      { name: "Loan EMI", href: "/emi", icon: Landmark },
+                      { name: "Debt Payoff", href: "/debt-payoff", icon: Scissors },
+                      { name: "Credit Cards", href: "/credit-card", icon: CreditCard },
+                      { name: "Rent vs Buy", href: "/rent-vs-buy", icon: Home },
+                      { name: "Income Tax", href: "/income-tax", icon: Calculator },
+                      { name: "Mutual Funds", href: "/mutual-funds", icon: Layers },
+                    ].map((t) => (
+                      <Link
+                        key={t.name}
+                        href={t.href}
+                        onClick={closeDrawer}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all ${
+                          pathname === t.href ? "bg-amber-600 text-white border-amber-500" : "card-tile-neutral"
+                        }`}
+                      >
+                        <t.icon size={15} className={pathname === t.href ? "text-white" : "text-amber-500"} />
+                        <span className="truncate">{t.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      setMobileDrawer(null);
+                      setSidebarDrawerOpen(true);
+                    }}
+                    className="w-full py-3 bg-navy-bg hover:bg-navy-light border border-border-navy rounded-2xl text-xs font-black text-emerald flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  >
+                    <span>View All 56+ Tools in Suite</span>
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+
           </div>
         </>
       )}
