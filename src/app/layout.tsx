@@ -49,14 +49,14 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-navy-bg text-light-grey" suppressHydrationWarning>
         <Navigation />
-        <div className="flex-1 md:pl-64 flex flex-col min-w-0 w-full overflow-x-hidden">
-          <main className="flex-1 px-4 sm:px-6 md:px-8 py-4 sm:py-6 pb-28 md:pb-8 max-w-7xl w-full mx-auto min-w-0 overflow-x-hidden">
+        <div className="flex-1 flex flex-col min-w-0 w-full overflow-x-hidden">
+          <main className="flex-1 px-3 sm:px-6 py-3 sm:py-5 max-w-6xl w-full mx-auto min-w-0 overflow-x-hidden">
             {children}
           </main>
           
-          {/* Universal Footer Disclaimer — hidden on mobile (bottom nav bar is there) */}
-          <footer className="hidden md:block border-t border-border-navy bg-footer-bg py-8 px-4 md:px-8 text-center text-xs text-muted-grey mt-auto">
-            <div className="max-w-4xl mx-auto space-y-3">
+          {/* Universal Footer Disclaimer */}
+          <footer className="border-t border-border-navy bg-footer-bg py-6 px-4 text-center text-xs text-muted-grey mt-auto">
+            <div className="max-w-4xl mx-auto space-y-2">
               <p className="font-semibold text-emerald">
                 💡 &ldquo;We don&apos;t tell what to pick, we tell how to pick&rdquo;
               </p>

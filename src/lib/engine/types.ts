@@ -15,6 +15,73 @@ export type DebtCategory =
   | "credit_card"
   | "other";
 
+export type EmploymentType =
+  | "Salaried"
+  | "Self-employed"
+  | "Business owner"
+  | "Freelancer"
+  | "Student"
+  | "Retired"
+  | "Other";
+
+export type InsuranceFrequency = "Monthly" | "Quarterly" | "Half-yearly" | "Yearly";
+
+export interface IncomeSourceItem {
+  id: string;
+  name: string;
+  type: "Freelance" | "Business" | "Rental" | "Interest / dividends" | "Other";
+  amount: number;
+}
+
+export interface ExpenseCategoryItem {
+  id: string;
+  name: string;
+  amount: number;
+  placeholder?: string;
+  isCustom?: boolean;
+  type: "NEED" | "WANT";
+}
+
+export interface InsuranceItemDetail {
+  hasInsurance: boolean;
+  coverageAmount: number;
+  premiumAmount: number;
+  frequency: InsuranceFrequency;
+}
+
+export interface EmergencyFundState {
+  hasEmergencyFund: boolean;
+  currentAmount: number;
+}
+
+export interface SipInvestmentDetail {
+  hasSip: boolean;
+  monthlySip: number;
+}
+
+export interface UserPersonalProfile {
+  age: number;
+  employmentType: EmploymentType;
+  employmentTypeOther?: string;
+  dependents: number;
+  earningMembers: number;
+}
+
+export interface FinancialAssessmentData {
+  profile: UserPersonalProfile;
+  income: {
+    primaryMonthlyTakeHome: number;
+    additionalSources: IncomeSourceItem[];
+  };
+  needs: ExpenseCategoryItem[];
+  wants: ExpenseCategoryItem[];
+  emergencyFund: EmergencyFundState;
+  healthInsurance: InsuranceItemDetail;
+  termInsurance: InsuranceItemDetail;
+  sip: SipInvestmentDetail;
+  completedAt?: string;
+}
+
 export interface IncomeConfig {
   monthlySalary: number;
   secondaryMonthlyIncome: number;
@@ -85,23 +152,65 @@ export interface DnaPillarScore {
   score: number; // 0 - 100
   rating: "Strong" | "Healthy" | "Needs Attention" | "Weak";
   weight: number;
+  statusText: string;
+  keyMetricLabel: string;
+  keyMetricValue: string;
   explanation: string;
   recommendation: string;
   impactOfFix: string;
 }
 
+export interface SignatureDiagnostic {
+  pillarId: string;
+  title: string;
+  score: number;
+  explanation: string;
+  whatToImprove: string;
+  whatItChanges: string;
+  improvedScoreIfFixed: number;
+}
+
+export interface ActionPlanMove {
+  id: string;
+  priority: number;
+  title: string;
+  category: string;
+  currentState: string;
+  targetState: string;
+  gap: string;
+  suggestedAction: string;
+  impact: string;
+}
+
+export interface FinancialSnapshot {
+  monthlyIncome: number;
+  monthlyNeeds: number;
+  monthlyWants: number;
+  monthlyInsurance: number;
+  monthlySip: number;
+  monthlySurplus: number;
+  emergencyFundCurrent: number;
+  emergencyFundMinTarget: number;
+  emergencyFundRecTarget: number;
+  emergencyCoverageMonths: number;
+  needsRatioPct: number;
+  wantsRatioPct: number;
+  sipRatePct: number;
+  emiTotal: number;
+  debtRatioPct: number;
+}
+
 export interface FinancialDnaScore {
   overallScore: number; // 0 - 100
-  grade: "S" | "A+" | "A" | "B" | "C";
+  grade: "S" | "A+" | "A" | "B+" | "B" | "C";
+  status: string;
   summaryText: string;
+  strongestArea: { name: string; score: number };
+  weakestArea: { name: string; score: number };
   pillars: DnaPillarScore[];
-  biggestGap: {
-    pillarId: string;
-    title: string;
-    explanation: string;
-    improvedScoreIfFixed: number;
-    recommendedAction: string;
-  };
+  snapshot: FinancialSnapshot;
+  biggestGap: SignatureDiagnostic;
+  nextMoves: ActionPlanMove[];
   liveDelta?: {
     pointsChange: number;
     direction: "up" | "down" | "unchanged";
@@ -154,6 +263,8 @@ export interface TimeMachineUniverse {
 export interface FinancialDigitalTwin {
   userId?: string;
   updatedAt: string;
+  profile?: UserPersonalProfile;
+  assessmentData?: FinancialAssessmentData;
   income: IncomeConfig;
   expenses: ExpenseConfig;
   savings: SavingsConfig;
@@ -162,7 +273,7 @@ export interface FinancialDigitalTwin {
   protection: ProtectionConfig;
   goals: GoalItem[];
   dnaScore?: FinancialDnaScore;
-  dnaHistory: { date: string; score: number; notes: string }[];
+  dnaHistory: { date: string; score: number; notes: string; pillarDeltas?: Record<string, number> }[];
   decisions: DecisionLogEntry[];
   universes: TimeMachineUniverse[];
 }

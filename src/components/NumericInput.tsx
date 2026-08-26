@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface NumericInputProps {
   value: number;
@@ -39,21 +39,28 @@ export default function NumericInput({
     return val.toString();
   };
 
+  useEffect(() => {
+    if (!isFocused) {
+      setTempValue(formatValue(value));
+    }
+  }, [value, isFocused]);
+
   const handleFocus = () => {
     setIsFocused(true);
-    setTempValue(value.toString());
+    setTempValue(value === 0 ? "" : value.toString());
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawStr = e.target.value;
     setTempValue(rawStr);
     
-    if (rawStr === "") {
+    if (rawStr.trim() === "") {
       onChange(0);
       return;
     }
     
-    const parsed = Number(rawStr);
+    const cleanStr = rawStr.replace(/[^0-9.]/g, "");
+    const parsed = Number(cleanStr);
     if (!isNaN(parsed)) {
       onChange(parsed);
     }
@@ -61,15 +68,16 @@ export default function NumericInput({
 
   const handleBlur = () => {
     setIsFocused(false);
-    let parsed = Number(tempValue);
-    if (isNaN(parsed) || tempValue === "") {
+    let parsed = Number(tempValue.replace(/,/g, ""));
+    if (isNaN(parsed) || tempValue.trim() === "") {
       parsed = 0;
     }
     
-    const validNumber = Math.max(0, parsed);
-    const finalVal = Number(validNumber.toFixed(4));
+    const validNumber = Math.max(min ?? 0, parsed);
+    const finalVal = max !== undefined ? Math.min(max, validNumber) : validNumber;
 
     onChange(finalVal);
+    setTempValue(formatValue(finalVal));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -86,14 +94,14 @@ export default function NumericInput({
         <span className="text-muted-grey/60 text-[10px] sm:text-xs select-none shrink-0">₹</span>
       )}
       <input
-        type={isFocused ? "number" : "text"}
+        type="text"
+        inputMode="decimal"
         value={displayValue}
         onChange={handleChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        step="any"
-        className="w-full bg-transparent text-emerald font-mono font-bold text-right text-xs sm:text-sm outline-none min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-full bg-transparent text-emerald font-mono font-bold text-right text-xs sm:text-sm outline-none min-w-0"
       />
       {type === "percent" && (
         <span className="text-muted-grey/60 text-[10px] sm:text-xs ml-0.5 select-none shrink-0">%</span>

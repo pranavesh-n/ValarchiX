@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/auth";
+  const next = searchParams.get("next") ?? "/";
 
   if (code) {
     const supabase = await createClient();
@@ -14,6 +14,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Return the user to an error page or back to auth page
-  return NextResponse.redirect(`${origin}/auth`);
+  // Return the user to home page on complete
+  return NextResponse.redirect(`${origin}${next}`);
 }

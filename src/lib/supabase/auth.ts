@@ -3,79 +3,60 @@ import { FinancialDigitalTwin } from "../engine/types";
 
 export async function signInWithGoogle() {
   const supabase = createClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  const origin = (typeof window !== "undefined" && window.location.origin) ? window.location.origin : (siteUrl || "https://valarchix.vercel.app");
-  
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${origin}/auth/callback`,
-      },
-    });
+  const origin = (typeof window !== "undefined" && window.location.origin) ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000");
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
 
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    console.warn("Supabase Google OAuth fallback triggered:", err);
-    // Instant session fallback for local testing / demo mode
-    return signInWithDemoUser();
-  }
-}
-
-export async function signInWithDemoUser() {
-  if (typeof window === "undefined") return null;
-
-  const demoSession = {
-    user: {
-      id: "demo_user_valarchix_2026",
-      email: "pranavesh@valarchix.com",
-      user_metadata: {
-        full_name: "Pranavesh (Demo Account)",
-        avatar_url: "https://lh3.googleusercontent.com/a/default-user=s96-c",
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(currentPath)}`,
+      queryParams: {
+        access_type: "offline",
+        prompt: "select_account",
       },
     },
-  };
+  });
 
-  localStorage.setItem("VALARCHIX_DEMO_SESSION", JSON.stringify(demoSession));
-  return demoSession;
+  if (error) {
+    console.error("Google OAuth Error:", error);
+    throw error;
+  }
+  return data;
 }
 
 export async function signOutUser() {
   const supabase = createClient();
   try {
     await supabase.auth.signOut();
-  } catch {
-    // ignore
+  } catch (err) {
+    console.warn("Sign out error:", err);
   }
   if (typeof window !== "undefined") {
     localStorage.removeItem("VALARCHIX_DEMO_SESSION");
+    localStorage.removeItem("sb-access-token");
+    localStorage.removeItem("sb-refresh-token");
   }
 }
 
 export async function getCurrentUserSession() {
-  if (typeof window !== "undefined") {
-    const demoRaw = localStorage.getItem("VALARCHIX_DEMO_SESSION");
-    if (demoRaw) {
-      try { return JSON.parse(demoRaw); } catch { }
-    }
-  }
-
   const supabase = createClient();
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session) return null;
-    return session;
-  } catch {
-    return null;
+    if (!error && session?.user) {
+      return session;
+    }
+  } catch (err) {
+    console.warn("Supabase session check:", err);
   }
+  return null;
 }
 
 /**
- * Client-Side Encrypted Digital Twin Vault using WebCrypto (AES-256-GCM)
+ * Client-Side Encrypted Digital Twin Vault using WebCrypto (AES-GCM)
  */
 async function getEncryptionKey(userId: string): Promise<CryptoKey> {
   const enc = new TextEncoder();
+  const salt = new Uint8Array(enc.encode("ValarchiX_Salt_India_Finance"));
   const keyMaterial = await window.crypto.subtle.importKey(
     "raw",
     enc.encode(userId + "_VALARCHIX_VAULT_KEY_2026"),
@@ -87,12 +68,12 @@ async function getEncryptionKey(userId: string): Promise<CryptoKey> {
   return window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: enc.encode("ValarchiX_Salt_India_Finance"),
+      salt,
       iterations: 100000,
-      hash: "SHA-256",
+      hash: "SHA-256"
     },
     keyMaterial,
-    { name: "AES-256-GCM", length: 256 },
+    { name: "AES-GCM", length: 256 },
     false,
     ["encrypt", "decrypt"]
   );
@@ -100,99 +81,80 @@ async function getEncryptionKey(userId: string): Promise<CryptoKey> {
 
 export async function saveDigitalTwinToVault(twin: FinancialDigitalTwin): Promise<boolean> {
   const session = await getCurrentUserSession();
-  const userId = session?.user?.id || "guest_user";
-
-  if (typeof window !== "undefined") {
-    localStorage.setItem(`VALARCHIX_TWIN_${userId}`, JSON.stringify(twin));
-  }
-
-  if (!session?.user?.id || userId.startsWith("guest")) {
-    return false;
-  }
+  if (!session?.user?.id) return false;
 
   try {
-    const supabase = createClient();
-    const jsonString = JSON.stringify(twin);
-    let payload = jsonString;
+    const key = await getEncryptionKey(session.user.id);
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encodedData = new TextEncoder().encode(JSON.stringify(twin));
 
-    if (typeof window !== "undefined" && window.crypto?.subtle) {
-      const key = await getEncryptionKey(userId);
-      const iv = window.crypto.getRandomValues(new Uint8Array(12));
-      const encoded = new TextEncoder().encode(jsonString);
-      const encrypted = await window.crypto.subtle.encrypt(
-        { name: "AES-256-GCM", iv },
-        key,
-        encoded
-      );
-      
-      const combined = new Uint8Array(iv.length + encrypted.byteLength);
-      combined.set(iv);
-      combined.set(new Uint8Array(encrypted), iv.length);
-      payload = btoa(String.fromCharCode(...combined));
+    const encryptedContent = await window.crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      key,
+      encodedData
+    );
+
+    const payload = {
+      iv: Array.from(iv),
+      data: Array.from(new Uint8Array(encryptedContent)),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`VALARCHIX_VAULT_${session.user.id}`, JSON.stringify(payload));
     }
 
-    await supabase
-      .from("digital_twins")
-      .upsert({
-        user_id: userId,
-        encrypted_payload: payload,
-        updated_at: new Date().toISOString(),
-      });
+    const supabase = createClient();
+    await supabase.from("user_vaults").upsert({
+      user_id: session.user.id,
+      encrypted_payload: JSON.stringify(payload),
+      updated_at: new Date().toISOString()
+    });
 
     return true;
   } catch (err) {
-    console.warn("Supabase vault sync fallback to localStorage:", err);
+    console.warn("Vault encryption error:", err);
     return false;
   }
 }
 
 export async function loadDigitalTwinFromVault(): Promise<FinancialDigitalTwin | null> {
   const session = await getCurrentUserSession();
-  const userId = session?.user?.id || "guest_user";
-
-  if (typeof window !== "undefined") {
-    const local = localStorage.getItem(`VALARCHIX_TWIN_${userId}`);
-    if (local) {
-      try { return JSON.parse(local); } catch {}
-    }
-  }
-
-  if (!session?.user?.id || userId.startsWith("guest")) {
-    return null;
-  }
+  if (!session?.user?.id) return null;
 
   try {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("digital_twins")
-      .select("encrypted_payload")
-      .eq("user_id", userId)
-      .single();
+    let payloadRaw = typeof window !== "undefined" ? localStorage.getItem(`VALARCHIX_VAULT_${session.user.id}`) : null;
 
-    if (error || !data?.encrypted_payload) return null;
-
-    const rawPayload = data.encrypted_payload;
-    if (rawPayload.startsWith("{")) {
-      return JSON.parse(rawPayload);
-    }
-
-    if (typeof window !== "undefined" && window.crypto?.subtle) {
-      const key = await getEncryptionKey(userId);
-      const bytes = Uint8Array.from(atob(rawPayload), (c) => c.charCodeAt(0));
-      const iv = bytes.slice(0, 12);
-      const cipherText = bytes.slice(12);
-
-      const decrypted = await window.crypto.subtle.decrypt(
-        { name: "AES-256-GCM", iv },
-        key,
-        cipherText
-      );
+    if (!payloadRaw) {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("user_vaults")
+        .select("encrypted_payload")
+        .eq("user_id", session.user.id)
+        .single();
       
-      const jsonString = new TextDecoder().decode(decrypted);
-      return JSON.parse(jsonString);
+      if (data?.encrypted_payload) {
+        payloadRaw = data.encrypted_payload;
+      }
     }
+
+    if (!payloadRaw) return null;
+
+    const payload = JSON.parse(payloadRaw);
+    const key = await getEncryptionKey(session.user.id);
+    const iv = new Uint8Array(payload.iv);
+    const data = new Uint8Array(payload.data);
+
+    const decrypted = await window.crypto.subtle.decrypt(
+      { name: "AES-GCM", iv },
+      key,
+      data
+    );
+
+    const decoded = new TextDecoder().decode(decrypted);
+    return JSON.parse(decoded) as FinancialDigitalTwin;
   } catch (err) {
-    console.warn("Vault load fallback:", err);
+    console.warn("Vault decryption error:", err);
+    return null;
   }
-  return null;
 }

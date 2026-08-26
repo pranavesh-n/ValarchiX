@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -12,7 +12,6 @@ import {
   Hourglass,
   PieChart,
   Calculator,
-  Menu,
   X,
   Info,
   Sun,
@@ -24,190 +23,181 @@ import {
   Landmark,
   ShieldAlert,
   Flame,
-  Wallet,
   Coffee,
   Clock,
   BarChart2,
   Scissors,
   CreditCard,
   HeartPulse,
-  TrendingDown,
   Zap,
   Download,
   Sliders,
   GraduationCap,
   LayoutGrid,
-  BarChart,
-  MoreHorizontal,
   ChevronRight,
-  RotateCcw,
-  Lock,
-  Baby
+  ChevronDown,
+  Baby,
+  Plane,
+  Building,
+  GraduationCap as BookIcon,
+  LogOut,
+  LogIn,
+  CheckCircle2,
+  Smartphone
 } from "lucide-react";
-import { getCurrentUserSession } from "@/lib/supabase/auth";
+import { getCurrentUserSession, signInWithGoogle, signOutUser } from "@/lib/supabase/auth";
 
 const NAV_ITEMS = [
   {
     category: "Intelligence Engines",
     items: [
-      { name: "Financial DNA", href: "/financial-dna", icon: HeartPulse },
-      { name: "GoalX Navigation", href: "/goalx", icon: Target },
-      { name: "Portfolio Intelligence", href: "/portfolio-intelligence", icon: PieChart },
-      { name: "Financial Time Machine", href: "/time-machine", icon: Hourglass },
-      { name: "Decision Replay", href: "/decision-replay", icon: RotateCcw },
+      { name: "Financial DNA", href: "/financial-dna", icon: HeartPulse, desc: "8-Pillar health score & cash flow allocation", badge: "Engine 1" },
+      { name: "GoalX Navigation", href: "/goalx", icon: Target, desc: "Inflation adjusted roadmaps & SIP solvers", badge: "Engine 2" },
+      { name: "Portfolio Intelligence", href: "/portfolio-intelligence", icon: PieChart, desc: "True XIRR, overlap & drag analyzer", badge: "Engine 3" },
+      { name: "Financial Time Machine", href: "/time-machine", icon: Hourglass, desc: "Parallel universes & 20-yr stress test", badge: "Engine 4" },
+      { name: "Decision Replay", href: "/decision-replay", icon: Clock, desc: "Hindsight-free decision audit", badge: "Engine 5" },
     ]
   },
   {
-    category: "Core",
+    category: "Core & Learning",
     items: [
-      { name: "Home Dashboard", href: "/", icon: Home },
-      { name: "Valarchi Vaathi 🎓", href: "/vaathi", icon: GraduationCap },
-      { name: "Beyond FDs & Learning", href: "/beyond-fds", icon: Info }
+      { name: "Home Dashboard", href: "/", icon: Home, desc: "Financial Knowledge OS Overview" },
+      { name: "Valarchi Vaathi 🎓", href: "/vaathi", icon: GraduationCap, desc: "AI financial literacy mentor" },
+      { name: "Beyond FDs & Learning", href: "/beyond-fds", icon: Info, desc: "Real returns vs inflation & compounding" }
     ]
   },
   {
     category: "Analyzers",
     items: [
-      { name: "Mutual Funds", href: "/mutual-funds", icon: Layers },
-      { name: "Debt Funds", href: "/debt-funds", icon: Shield }
+      { name: "Mutual Funds Screener", href: "/mutual-funds", icon: Layers, desc: "Direct vs Regular, TER drag & rolling returns" },
+      { name: "Debt Funds Analyzer", href: "/debt-funds", icon: Shield, desc: "Yield to maturity & Macaulay duration" }
     ]
   },
   {
     category: "Budgeting & Cash Flow",
     items: [
-      { name: "Net Worth", href: "/net-worth", icon: Wallet },
-      { name: "Emergency Fund", href: "/emergency-fund", icon: ShieldAlert },
-      { name: "Latte Factor", href: "/latte-factor", icon: Coffee },
-      { name: "Rent vs. Buy", href: "/rent-vs-buy", icon: Home }
+      { name: "Emergency Fund", href: "/emergency-fund", icon: ShieldAlert, desc: "3-6 month fortress requirement" },
+      { name: "Latte Factor", href: "/latte-factor", icon: Coffee, desc: "Small daily leak compounding" },
+      { name: "Rent vs. Buy", href: "/rent-vs-buy", icon: Home, desc: "Opportunity cost of real estate" }
     ]
   },
   {
     category: "Wealth Building",
     items: [
-      { name: "Child Legacy Engine", href: "/child-legacy", icon: Baby },
-      { name: "SIP & FD Simulator", href: "/sip", icon: Percent },
-      { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight },
-      { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp },
-      { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock },
-      { name: "Inflation Calculator", href: "/inflation", icon: BarChart2 },
-      { name: "RD Calculator", href: "/rd", icon: Percent },
-      { name: "ROI & CAGR", href: "/roi", icon: TrendingUp },
-      { name: "XIRR Calculator", href: "/xirr", icon: Zap }
+      { name: "Child Legacy Engine", href: "/child-legacy", icon: Baby, desc: "18-25 yr generational compounding" },
+      { name: "SIP & FD Simulator", href: "/sip", icon: Percent, desc: "Systematic monthly investing" },
+      { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight, desc: "Annual increment compounding" },
+      { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp, desc: "Exponential curve simulator" },
+      { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock, desc: "Wealth lost by waiting" },
+      { name: "Inflation Calculator", href: "/inflation", icon: BarChart2, desc: "Future purchasing power drop" },
+      { name: "RD Calculator", href: "/rd", icon: Percent, desc: "Recurring deposit returns" },
+      { name: "ROI & CAGR", href: "/roi", icon: TrendingUp, desc: "Annualized compounding metrics" },
+      { name: "XIRR Calculator", href: "/xirr", icon: Zap, desc: "Irregular cash flow returns" }
     ]
   },
   {
     category: "Debt Tools",
     items: [
-      { name: "Debt Snowball / Avalanche", href: "/debt-payoff", icon: Scissors },
-      { name: "Loan EMI Simulator", href: "/emi", icon: Landmark },
-      { name: "Credit Card Payoff", href: "/credit-card", icon: CreditCard }
+      { name: "Debt Snowball / Avalanche", href: "/debt-payoff", icon: Scissors, desc: "Optimal loan payoff strategy" },
+      { name: "Loan EMI Simulator", href: "/emi", icon: Landmark, desc: "Principal vs interest amortization" },
+      { name: "Credit Card Payoff", href: "/credit-card", icon: CreditCard, desc: "High-interest debt trap analyzer" }
     ]
   },
   {
     category: "Retirement & Planning",
     items: [
-      { name: "Goal Planner", href: "/goal", icon: Target },
-      { name: "FIRE Early Retirement", href: "/fire", icon: Flame },
-      { name: "Retirement", href: "/retirement", icon: Hourglass },
-      { name: "Human Life Value (HLV)", href: "/hlv", icon: HeartPulse },
-      { name: "PPF Calculator", href: "/ppf", icon: Coins },
-      { name: "NPS Calculator", href: "/nps", icon: TrendingUp },
-      { name: "SWP Calculator", href: "/swp", icon: ArrowDownLeft },
-      { name: "SSY Calculator", href: "/ssy", icon: Coins },
-      { name: "EPF Calculator", href: "/epf", icon: Coins },
-      { name: "Gratuity Calculator", href: "/gratuity", icon: Coins },
-      { name: "APY Pension Simulator", href: "/apy", icon: Coins },
-      { name: "Post Office MIS", href: "/pomis", icon: Coins },
-      { name: "SCSS Calculator", href: "/scss", icon: Coins }
+      { name: "Goal Planner", href: "/goal", icon: Target, desc: "Target amount future solver" },
+      { name: "FIRE Early Retirement", href: "/fire", icon: Flame, desc: "25x-30x corpus milestones" },
+      { name: "Retirement Planner", href: "/retirement", icon: Hourglass, desc: "Post-retirement cash drawdown" },
+      { name: "Human Life Value (HLV)", href: "/hlv", icon: HeartPulse, desc: "Income replacement term cover" },
+      { name: "PPF Calculator", href: "/ppf", icon: Coins, desc: "15-year sovereign tax-free compounding" },
+      { name: "NPS Calculator", href: "/nps", icon: TrendingUp, desc: "National Pension System tier 1" },
+      { name: "SWP Calculator", href: "/swp", icon: ArrowDownLeft, desc: "Systematic withdrawal plan" },
+      { name: "SSY Calculator", href: "/ssy", icon: Coins, desc: "Sukanya Samriddhi Yojana" },
+      { name: "EPF Calculator", href: "/epf", icon: Coins, desc: "Employee provident fund corpus" },
+      { name: "Gratuity Calculator", href: "/gratuity", icon: Coins, desc: "Service tenure gratuity math" },
+      { name: "APY Pension Simulator", href: "/apy", icon: Coins, desc: "Atal Pension Yojana" },
+      { name: "Post Office MIS", href: "/pomis", icon: Coins, desc: "Monthly income scheme" },
+      { name: "SCSS Calculator", href: "/scss", icon: Coins, desc: "Senior citizens savings scheme" }
     ]
   },
   {
     category: "Portfolio & Tax",
     items: [
-      { name: "Strategy Simulator (v2.0)", href: "/portfolio-simulator", icon: Sliders },
-      { name: "Portfolio Allocator", href: "/portfolio", icon: PieChart },
-      { name: "Tax Regime Hub", href: "/tax", icon: Calculator },
-      { name: "HRA Exemption", href: "/hra", icon: Calculator },
-      { name: "Advanced Income Tax", href: "/income-tax", icon: Calculator },
-      { name: "TDS Calculator", href: "/tds", icon: Calculator },
-      { name: "NSC Calculator", href: "/nsc", icon: Coins }
+      { name: "Strategy Simulator (v2.0)", href: "/portfolio-simulator", icon: Sliders, desc: "Custom asset allocation stress-test" },
+      { name: "Portfolio Allocator", href: "/portfolio", icon: PieChart, desc: "Risk-adjusted rebalancing" },
+      { name: "Tax Regime Hub", href: "/tax", icon: Calculator, desc: "Old vs New Regime comparative math" },
+      { name: "HRA Exemption", href: "/hra", icon: Calculator, desc: "House rent allowance tax saving" },
+      { name: "Advanced Income Tax", href: "/income-tax", icon: Calculator, desc: "Section 80C, 80D & surcharge math" },
+      { name: "TDS Calculator", href: "/tds", icon: Calculator, desc: "Tax deducted at source on income" },
+      { name: "NSC Calculator", href: "/nsc", icon: Coins, desc: "National Savings Certificate" }
     ]
   }
 ];
 
-// Bottom nav tabs for mobile
+const FUNDSINDIA_GOALS = [
+  { name: "Retirement Planning", href: "/retirement", icon: Hourglass, desc: "Corpus & drawdown" },
+  { name: "Child's Education", href: "/child-legacy", icon: BookIcon, desc: "18-25 yr compounding" },
+  { name: "Plan a Vacation", href: "/goal", icon: Plane, desc: "Travel inflation goals" },
+  { name: "Wealth Creation", href: "/sip", icon: TrendingUp, desc: "SIP & Step-Up compounding" },
+  { name: "Buying a Home", href: "/goalx", icon: Building, desc: "Real estate vs SIP math" },
+  { name: "Emergency Funds", href: "/emergency-fund", icon: ShieldAlert, desc: "3-6 month liquid fortress" },
+];
+
 const BOTTOM_TABS = [
   { name: "Home", href: "/", icon: Home, type: "link" as const },
   { name: "Calculators", href: "#", icon: Calculator, type: "drawer" as const },
   { name: "Engines", href: "#", icon: LayoutGrid, type: "drawer" as const },
   { name: "Vaathi", href: "/vaathi", icon: GraduationCap, type: "link" as const },
-  { name: "Vault", href: "/auth", icon: Lock, type: "link" as const },
 ];
 
 export default function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<string | null>(null);
+  const [sidebarDrawerOpen, setSidebarDrawerOpen] = useState<boolean>(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState<boolean>(false);
+  const [isPwaInstalled, setIsPwaInstalled] = useState<boolean>(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [isInstalled, setIsInstalled] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const profileDropdownRef = useRef<HTMLDivElement | null>(null);
 
+  // Check PWA Installation Status & Supabase Session
   useEffect(() => {
-    async function fetchSession() {
+    async function loadAuth() {
       const s = await getCurrentUserSession();
       setSession(s);
     }
-    fetchSession();
+    loadAuth();
+
+    const checkPwa = () => {
+      if (typeof window === "undefined") return;
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as any).standalone === true ||
+        localStorage.getItem("valarchix_is_installed") === "true";
+      setIsPwaInstalled(isStandalone);
+    };
+
+    checkPwa();
+    window.addEventListener("valarchix_pwa_status_change", checkPwa);
+    return () => window.removeEventListener("valarchix_pwa_status_change", checkPwa);
   }, [pathname]);
 
-  // Check PWA installation state
+  // Click outside to close profile dropdown
   useEffect(() => {
-    const checkIsInstalled = () => {
-      if (typeof window === "undefined") return false;
-      return (
-        window.matchMedia("(display-mode: standalone)").matches ||
-        window.matchMedia("(display-mode: window-controls-overlay)").matches ||
-        window.matchMedia("(display-mode: fullscreen)").matches ||
-        (navigator as any).standalone === true ||
-        localStorage.getItem("valarchix_is_installed") === "true"
-      );
-    };
-
-    setIsInstalled(checkIsInstalled());
-
-    if (typeof window !== "undefined" && "navigator" in window && "getInstalledRelatedApps" in navigator) {
-      (navigator as any).getInstalledRelatedApps().then((relatedApps: any[]) => {
-        if (relatedApps && relatedApps.length > 0) {
-          setIsInstalled(true);
-          localStorage.setItem("valarchix_is_installed", "true");
-        }
-      }).catch(() => {});
-    }
-
-    const handlePwaStatusChange = () => {
-      setIsInstalled(checkIsInstalled());
-    };
-
-    window.addEventListener("valarchix_pwa_status_change", handlePwaStatusChange);
-    window.addEventListener("appinstalled", () => {
-      localStorage.setItem("valarchix_is_installed", "true");
-      setIsInstalled(true);
-    });
-    window.addEventListener("beforeinstallprompt", () => {
-      // beforeinstallprompt firing proves app is NOT installed currently
-      if (!window.matchMedia("(display-mode: standalone)").matches) {
-        localStorage.removeItem("valarchix_is_installed");
-        setIsInstalled(false);
+    function handleClickOutside(event: MouseEvent) {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
       }
-    });
-
-    return () => {
-      window.removeEventListener("valarchix_pwa_status_change", handlePwaStatusChange);
-    };
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Load and apply theme on mount
+  // Theme on mount
   useEffect(() => {
     const savedTheme = (localStorage.getItem("theme") as "dark" | "light") || "dark";
     setTheme(savedTheme);
@@ -233,149 +223,496 @@ export default function Navigation() {
     }
   };
 
-  // Get items for mobile drawers
-  const getDrawerItems = (drawerName: string) => {
-    if (drawerName === "Engines") {
-      return NAV_ITEMS.filter(g => ["Intelligence Engines", "Core", "Budgeting & Cash Flow", "Wealth Building"].includes(g.category));
-    }
-    if (drawerName === "Tools") {
-      return NAV_ITEMS.filter(g => ["Budgeting & Cash Flow", "Wealth Building", "Debt Tools", "Retirement & Planning"].includes(g.category));
-    }
-    if (drawerName === "Analyze") {
-      return NAV_ITEMS.filter(g => ["Analyzers", "Portfolio & Tax"].includes(g.category));
-    }
-    if (drawerName === "More") {
-      return [
-        ...NAV_ITEMS.filter(g => ["Debt Tools", "Retirement & Planning", "Portfolio & Tax"].includes(g.category)),
-        { category: "System & Learning", items: [
-          { name: "Beyond FDs & Learning", href: "/beyond-fds", icon: Info },
-          { name: "Disclaimer", href: "/disclaimer", icon: Info }
-        ]},
-      ];
-    }
-    return NAV_ITEMS;
+  const handleDropdownHover = (name: string) => {
+    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
+    setOpenDropdown(name);
   };
 
-  const closeDrawer = () => setMobileDrawer(null);
+  const handleDropdownLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null);
+    }, 150);
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      console.error("Google sign in trigger error:", err);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOutUser();
+    setSession(null);
+    setProfileDropdownOpen(false);
+  };
+
+  const handleInstallPwa = () => {
+    window.dispatchEvent(new Event("valarchix_open_pwa_modal"));
+  };
+
+  const closeDrawer = () => {
+    setMobileDrawer(null);
+    setSidebarDrawerOpen(false);
+  };
+
+  const engineItems = NAV_ITEMS.find(g => g.category === "Intelligence Engines")?.items || [];
+
+  const userName = session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "User";
+  const userEmail = session?.user?.email || "";
+  const userAvatar = session?.user?.user_metadata?.avatar_url;
+  const userInitial = userName.charAt(0).toUpperCase() || "U";
 
   return (
     <>
-      {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 w-full border-b border-border-navy bg-navy-bg/90 backdrop-blur-md">
-        <div className="flex h-14 md:h-16 items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-3">
-            {/* Desktop hamburger only — mobile uses bottom nav */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-muted-grey hover:text-white hidden"
-              aria-label="Toggle Menu"
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-            <Link href="/" className="flex items-center gap-2">
-              <img src="/logo.svg" alt="ValarchiX" className="h-7 w-7 md:h-8 md:w-8 rounded-lg" />
-              <span className="text-lg md:text-xl font-bold tracking-wider text-light-grey">
-                Valarchi<span className="text-emerald font-extrabold">X</span>
+      {/* ===== MAIN NAVBAR ===== */}
+      <header className="sticky top-0 z-40 w-full border-b border-border-navy bg-navy-bg/95 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6 md:px-8">
+          
+          {/* Logo that doubles as the Sidebar Drawer Trigger */}
+          <button
+            onClick={() => setSidebarDrawerOpen(true)}
+            className="flex items-center gap-3 group cursor-pointer text-left focus:outline-none"
+            title="Click to open full ValarchiX Suite Directory"
+          >
+            <div className="relative">
+              <img src="/logo.svg" alt="ValarchiX" className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl shadow-sm group-hover:scale-105 transition-transform" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald border-2 border-navy-bg"></span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-heading flex items-center gap-1 group-hover:text-emerald transition-colors">
+                Valarchi<span className="text-emerald font-black">X</span>
+                <ChevronDown size={16} className="text-muted-grey group-hover:text-emerald group-hover:translate-y-0.5 transition" />
               </span>
+            </div>
+          </button>
+
+          {/* Center Navigation Links */}
+          <nav className="hidden lg:flex items-center space-x-2 font-bold text-sm text-muted-grey">
+            
+            {/* 1. Plan your goals dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => handleDropdownHover("goals")}
+              onMouseLeave={handleDropdownLeave}
+            >
+              <button 
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl transition hover:text-heading cursor-pointer ${
+                  openDropdown === "goals" ? "text-heading font-black" : ""
+                }`}
+              >
+                <span>Plan your goals</span>
+                <ChevronDown size={15} className={`transition-transform duration-200 ${openDropdown === "goals" ? "rotate-180 text-heading" : ""}`} />
+              </button>
+
+              {openDropdown === "goals" && (
+                <div className="absolute top-full left-0 mt-1.5 w-[440px] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50">
+                  <div className="grid grid-cols-2 gap-2">
+                    {FUNDSINDIA_GOALS.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setOpenDropdown(null)}
+                          className="flex items-center gap-3 p-3 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
+                        >
+                          <div className="p-2 rounded-xl bg-emerald/10 text-emerald group-hover:bg-emerald group-hover:text-slate-950 transition shrink-0">
+                            <Icon size={18} />
+                          </div>
+                          <div>
+                            <div className="text-xs sm:text-sm font-black text-heading group-hover:text-emerald transition">
+                              {item.name}
+                            </div>
+                            <div className="text-[11px] text-muted-grey leading-tight mt-0.5">{item.desc}</div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Our Engines Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => handleDropdownHover("engines")}
+              onMouseLeave={handleDropdownLeave}
+            >
+              <button 
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl transition hover:text-heading cursor-pointer ${
+                  openDropdown === "engines" ? "text-heading font-black" : ""
+                }`}
+              >
+                <span>Our engines</span>
+                <ChevronDown size={15} className={`transition-transform duration-200 ${openDropdown === "engines" ? "rotate-180 text-heading" : ""}`} />
+              </button>
+
+              {openDropdown === "engines" && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[480px] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {engineItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setOpenDropdown(null)}
+                          className="flex items-start gap-3 p-3 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
+                        >
+                          <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition shrink-0 mt-0.5">
+                            <Icon size={18} />
+                          </div>
+                          <div>
+                            <div className="text-xs sm:text-sm font-black text-heading group-hover:text-emerald transition flex items-center gap-1.5">
+                              {item.name}
+                            </div>
+                            <div className="text-[11px] text-muted-grey leading-tight mt-0.5">{item.desc}</div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                    
+                    <Link
+                      href="/vaathi"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-start gap-3 p-3 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
+                    >
+                      <div className="p-2 rounded-xl bg-emerald/10 text-emerald group-hover:bg-emerald group-hover:text-slate-950 transition shrink-0 mt-0.5">
+                        <GraduationCap size={18} />
+                      </div>
+                      <div>
+                        <div className="text-xs sm:text-sm font-black text-heading group-hover:text-emerald transition">
+                          Valarchi Vaathi 🎓
+                        </div>
+                        <div className="text-[11px] text-muted-grey leading-tight mt-0.5">AI Financial Mentor</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 3. Calculators Comprehensive Mega-Menu */}
+            <div 
+              className="relative"
+              onMouseEnter={() => handleDropdownHover("calculators")}
+              onMouseLeave={handleDropdownLeave}
+            >
+              <button 
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl transition hover:text-heading cursor-pointer ${
+                  openDropdown === "calculators" ? "text-heading font-black" : ""
+                }`}
+              >
+                <span>Calculators</span>
+                <ChevronDown size={15} className={`transition-transform duration-200 ${openDropdown === "calculators" ? "rotate-180 text-heading" : ""}`} />
+              </button>
+
+              {openDropdown === "calculators" && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[760px] rounded-3xl mega-menu-dropdown p-6 shadow-2xl animate-slideDown z-50">
+                  <div className="grid grid-cols-3 gap-6">
+                    
+                    {/* Column 1: Wealth & Compounding */}
+                    <div className="space-y-2">
+                      <div className="text-xs font-black uppercase tracking-wider text-emerald px-2 pb-1 border-b border-border-navy/60">
+                        Wealth &amp; Compounding
+                      </div>
+                      <div className="space-y-0.5">
+                        {[
+                          { name: "SIP & FD Simulator", href: "/sip", icon: Percent },
+                          { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight },
+                          { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp },
+                          { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock },
+                          { name: "Inflation Calculator", href: "/inflation", icon: BarChart2 },
+                          { name: "Recurring Deposit (RD)", href: "/rd", icon: Percent },
+                          { name: "ROI & CAGR Metric", href: "/roi", icon: TrendingUp },
+                          { name: "XIRR Irregular Return", href: "/xirr", icon: Zap },
+                        ].map((c) => (
+                          <Link
+                            key={c.name}
+                            href={c.href}
+                            onClick={() => setOpenDropdown(null)}
+                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-navy-light text-xs sm:text-sm font-bold text-heading hover:text-emerald transition group"
+                          >
+                            <c.icon size={15} className="text-emerald shrink-0" />
+                            <span className="truncate">{c.name}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Column 2: Retirement & Sovereign Schemes */}
+                    <div className="space-y-2 border-l border-border-navy/50 pl-5">
+                      <div className="text-xs font-black uppercase tracking-wider text-indigo-400 px-2 pb-1 border-b border-border-navy/60">
+                        Retirement &amp; Schemes
+                      </div>
+                      <div className="space-y-0.5">
+                        {[
+                          { name: "PPF (15-Yr Sovereign)", href: "/ppf", icon: Coins },
+                          { name: "NPS Pension Scheme", href: "/nps", icon: TrendingUp },
+                          { name: "EPF Corpus Calculator", href: "/epf", icon: Coins },
+                          { name: "Sukanya Samriddhi (SSY)", href: "/ssy", icon: Coins },
+                          { name: "SWP Drawdown Planner", href: "/swp", icon: ArrowDownLeft },
+                          { name: "APY Pension Simulator", href: "/apy", icon: Coins },
+                          { name: "Senior Citizens (SCSS)", href: "/scss", icon: Coins },
+                          { name: "Gratuity Math", href: "/gratuity", icon: Coins },
+                        ].map((s) => (
+                          <Link
+                            key={s.name}
+                            href={s.href}
+                            onClick={() => setOpenDropdown(null)}
+                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-navy-light text-xs sm:text-sm font-bold text-heading hover:text-indigo-400 transition group"
+                          >
+                            <s.icon size={15} className="text-indigo-400 shrink-0" />
+                            <span className="truncate">{s.name}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Column 3: Tax, Debt & Real Estate */}
+                    <div className="space-y-2 border-l border-border-navy/50 pl-5">
+                      <div className="text-xs font-black uppercase tracking-wider text-amber-500 px-2 pb-1 border-b border-border-navy/60">
+                        Tax, Debt &amp; Loans
+                      </div>
+                      <div className="space-y-0.5">
+                        {[
+                          { name: "Tax Regime Hub (Old/New)", href: "/tax", icon: Calculator },
+                          { name: "HRA Exemption Math", href: "/hra", icon: Calculator },
+                          { name: "Loan EMI Simulator", href: "/emi", icon: Landmark },
+                          { name: "Debt Payoff Optimizer", href: "/debt-payoff", icon: Scissors },
+                          { name: "Credit Card Trap", href: "/credit-card", icon: CreditCard },
+                          { name: "Rent vs Buy Housing", href: "/rent-vs-buy", icon: Home },
+                          { name: "Income Tax & TDS", href: "/income-tax", icon: Calculator },
+                          { name: "Mutual Funds Screener", href: "/mutual-funds", icon: Layers },
+                        ].map((t) => (
+                          <Link
+                            key={t.name}
+                            href={t.href}
+                            onClick={() => setOpenDropdown(null)}
+                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-navy-light text-xs sm:text-sm font-bold text-heading hover:text-amber-500 transition group"
+                          >
+                            <t.icon size={15} className="text-amber-500 shrink-0" />
+                            <span className="truncate">{t.name}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <div className="mt-5 pt-3.5 border-t border-border-navy flex items-center justify-between text-xs">
+                    <span className="text-muted-grey text-xs">Looking for all calculators &amp; simulators?</span>
+                    <button
+                      onClick={() => {
+                        setOpenDropdown(null);
+                        setSidebarDrawerOpen(true);
+                      }}
+                      className="font-black text-emerald hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Open Complete Suite Directory</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Direct Link: Vaathi AI */}
+            <Link 
+              href="/vaathi" 
+              className={`px-4 py-2.5 rounded-xl transition hover:text-heading ${pathname === "/vaathi" ? "text-emerald font-black" : ""}`}
+            >
+              Vaathi 🎓
             </Link>
-          </div>
 
-          {/* Core Motto — desktop only */}
-          <div className="hidden text-sm font-medium text-emerald bg-emerald/5 border border-emerald/20 px-4 py-1.5 rounded-full md:block">
-            💡 &ldquo;We don&apos;t tell what to pick, we tell how to pick&rdquo;
-          </div>
+            {/* Direct Link: About Us */}
+            <Link 
+              href="/beyond-fds" 
+              className={`px-4 py-2.5 rounded-xl transition hover:text-heading ${pathname === "/beyond-fds" ? "text-emerald font-black" : ""}`}
+            >
+              About Us
+            </Link>
+          </nav>
 
-          {/* Theme Switch & Actions */}
-          <div className="flex items-center gap-2 md:gap-3">
-
+          {/* Right Action Buttons: PDF, Theme Toggle & Google Profile Dropdown */}
+          <div className="flex items-center gap-3">
             {pathname !== "/" && (
               <button
                 onClick={() => window.print()}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald/30 bg-emerald/10 text-emerald hover:bg-emerald hover:text-navy-bg transition-all text-xs font-bold cursor-pointer"
+                className="hidden xl:flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-border-navy bg-navy-card/50 text-muted-grey hover:text-heading transition-all text-xs font-bold cursor-pointer shadow-sm"
                 title="Download PDF Report"
               >
-                <Download size={14} />
-                <span>Download PDF</span>
+                <Download size={14} className="text-emerald" />
+                <span>PDF</span>
               </button>
             )}
             
+            {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2 md:p-2.5 rounded-xl border border-border-navy bg-navy-card/30 text-emerald hover:text-white hover:border-emerald/40 transition-all cursor-pointer"
+              className="p-2.5 rounded-full border border-border-navy bg-navy-card/50 text-emerald hover:text-heading hover:border-emerald/40 transition-all cursor-pointer shadow-sm"
               title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+              {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
             </button>
 
-            <Link
-              href="/auth"
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                session?.user
-                  ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/80"
-                  : "bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-600/20"
-              }`}
-            >
-              <Lock size={14} />
+            {/* ===== GOOGLE AUTH PROFILE / SIGN IN BUTTON ===== */}
+            <div className="relative" ref={profileDropdownRef}>
               {session?.user ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="truncate max-w-[70px] sm:max-w-[110px]">
-                    {session.user.user_metadata?.full_name?.split(" ")[0] || "Live Vault"}
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center gap-2.5 px-3.5 py-2 rounded-full border border-border-navy bg-navy-card hover:bg-navy-light text-heading transition shadow-sm cursor-pointer"
+                >
+                  {userAvatar ? (
+                    <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full object-cover border border-emerald/50" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-emerald to-indigo-500 text-slate-950 flex items-center justify-center font-black text-xs shadow-inner">
+                      {userInitial}
+                    </div>
+                  )}
+                  <span className="font-extrabold text-xs sm:text-sm hidden sm:inline max-w-[130px] truncate">
+                    {userName}
                   </span>
-                </span>
+                  <ChevronDown size={14} className={`text-muted-grey transition-transform ${profileDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
               ) : (
-                <span>Sign In</span>
+                <button
+                  onClick={handleGoogleSignIn}
+                  className="bg-indigo-600 hover:bg-indigo-500 !text-white text-xs sm:text-sm font-black px-5 py-2.5 rounded-full transition shadow-md shadow-indigo-600/30 flex items-center gap-2 cursor-pointer"
+                >
+                  <LogIn size={15} />
+                  <span>Sign In</span>
+                </button>
               )}
-            </Link>
+
+              {/* Floating Sikkanam Profile Card Dropdown */}
+              {profileDropdownOpen && session?.user && (
+                <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-3xl bg-navy-card border border-border-navy p-5 shadow-2xl animate-slideDown z-50 space-y-4">
+                  
+                  {/* User Details */}
+                  <div className="space-y-1">
+                    <div className="font-black text-base text-heading">
+                      {userName}
+                    </div>
+                    {userEmail && (
+                      <div className="text-xs text-muted-grey font-mono truncate">
+                        {userEmail}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-border-navy pt-3 space-y-2.5">
+                    {/* PWA App Installation Status */}
+                    {isPwaInstalled ? (
+                      <div className="flex items-center justify-between p-2.5 bg-emerald/10 border border-emerald/30 rounded-xl text-emerald font-bold text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <Smartphone size={15} /> ValarchiX App
+                        </span>
+                        <span className="flex items-center gap-1 font-black">
+                          Installed ✅
+                        </span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          handleInstallPwa();
+                        }}
+                        className="flex items-center justify-between p-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-xl text-xs font-bold transition cursor-pointer w-full text-left"
+                      >
+                        <span className="flex items-center gap-1.5 text-heading">
+                          <Smartphone size={15} className="text-rose-500" /> Install ValarchiX
+                        </span>
+                        <span className="font-black text-rose-500">
+                          Not Installed 📲
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Sign Out Button (Minimalist like Sikkanam) */}
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2 p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl font-bold text-xs transition cursor-pointer w-full text-left"
+                    >
+                      <LogOut size={15} />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       </header>
 
-      {/* Desktop Sidebar Navigation — hidden on mobile */}
-      <aside className="fixed bottom-0 top-14 md:top-16 z-30 hidden md:flex w-64 flex-col border-r border-border-navy bg-navy-bg">
-        <div className="flex-1 overflow-y-auto py-6 px-4">
-          <nav className="space-y-6">
-            {NAV_ITEMS.map((group) => (
-              <div key={group.category} className="space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-grey px-3">
-                  {group.category}
-                </h3>
-                <ul className="space-y-1">
-                  {group.items.map((item) => {
-                    const isActive = pathname === item.href;
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.name}>
+      {/* ===== SLIDE-OVER SIDEBAR DRAWER ===== */}
+      {sidebarDrawerOpen && (
+        <>
+          <div
+            onClick={closeDrawer}
+            className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+          />
+
+          <aside className="fixed top-0 left-0 bottom-0 z-50 w-80 sm:w-96 bg-navy-card border-r border-border-navy shadow-2xl flex flex-col animate-slideDown overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-border-navy bg-navy-bg/50">
+              <div className="flex items-center gap-2.5">
+                <img src="/logo.svg" alt="ValarchiX" className="h-8 w-8 rounded-xl" />
+                <span className="text-base font-black text-heading">
+                  Valarchi<span className="text-emerald">X</span> Complete Suite
+                </span>
+              </div>
+              <button 
+                onClick={closeDrawer}
+                className="p-2 rounded-xl bg-navy-bg hover:bg-navy-light text-muted-grey hover:text-heading transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+              {NAV_ITEMS.map((group) => (
+                <div key={group.category} className="space-y-1">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-emerald px-2 py-1">
+                    {group.category}
+                  </h4>
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = pathname === item.href;
+                      return (
                         <Link
+                          key={item.name}
                           href={item.href}
-                          className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                          onClick={closeDrawer}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                             isActive
-                              ? "bg-navy-light text-emerald border-l-2 border-emerald font-bold"
-                              : "text-muted-grey hover:bg-navy-light hover:text-light-grey"
+                              ? "bg-emerald text-slate-950 shadow-sm"
+                              : "text-muted-grey hover:bg-navy-light hover:text-heading"
                           }`}
                         >
-                          <Icon size={18} className={isActive ? "text-emerald" : ""} />
-                          <span>{item.name}</span>
+                          <Icon size={16} className={isActive ? "text-slate-950" : "text-muted-grey"} />
+                          <span className="truncate">{item.name}</span>
                         </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </nav>
-        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-        {/* Sidebar Footer Disclaimer */}
-        <div className="border-t border-border-navy p-4 bg-navy-bg">
-          <div className="flex items-start gap-2 text-[10px] text-muted-grey">
-            <Info size={14} className="text-emerald shrink-0 mt-0.5" />
-            <p className="leading-tight">
-              <strong>Disclaimer:</strong> Educational purposes only. We do not provide personalized financial advice.
-            </p>
-          </div>
-        </div>
-      </aside>
+            <div className="p-4 border-t border-border-navy bg-navy-bg text-center text-xs text-muted-grey font-semibold">
+              💡 «We don't tell what to pick, we tell how to pick»
+            </div>
+          </aside>
+        </>
+      )}
 
       {/* ===== MOBILE BOTTOM NAVIGATION BAR ===== */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border-navy bg-navy-bg/95 backdrop-blur-md safe-area-bottom">
@@ -396,81 +733,68 @@ export default function Navigation() {
                     setMobileDrawer(mobileDrawer === tab.name ? null : tab.name);
                   }
                 }}
-                className={`flex flex-col items-center justify-center gap-0.5 w-16 py-1.5 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center gap-1 w-16 py-1.5 rounded-2xl transition-all ${
                   isActive || isDrawerOpen
-                    ? "text-emerald-400 font-extrabold"
-                    : "text-slate-400 hover:text-slate-200"
+                    ? "text-emerald font-black"
+                    : "text-muted-grey hover:text-heading"
                 }`}
               >
                 <Icon size={20} strokeWidth={isActive || isDrawerOpen ? 2.5 : 1.8} />
-                <span className="text-[10px] font-semibold">{tab.name}</span>
+                <span className="text-[11px] font-bold">{tab.name}</span>
               </button>
             );
           })}
         </div>
       </nav>
 
-      {/* ===== MOBILE DRAWER (slides up from bottom nav) ===== */}
+      {/* ===== MOBILE DRAWER ===== */}
       {mobileDrawer && (
         <>
-          {/* Backdrop */}
           <div
             onClick={closeDrawer}
             className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md md:hidden"
           />
-          {/* Drawer */}
           <div className="fixed bottom-16 left-0 right-0 z-50 md:hidden bg-navy-bg border-t border-border-navy rounded-t-3xl max-h-[75vh] overflow-y-auto shadow-2xl safe-area-bottom p-5 space-y-5">
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center justify-between border-b border-border-navy pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                <h3 className="text-base font-extrabold text-white">{mobileDrawer} Navigation</h3>
+                <div className="w-2 h-2 rounded-full bg-emerald"></div>
+                <h3 className="text-base font-extrabold text-heading">{mobileDrawer} Navigation</h3>
               </div>
-              <button onClick={closeDrawer} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-400 hover:text-white transition">
+              <button onClick={closeDrawer} className="p-2 bg-navy-card hover:bg-navy-light rounded-xl text-muted-grey hover:text-heading transition cursor-pointer">
                 <X size={18} />
               </button>
             </div>
 
-            {/* Theme toggle in More drawer */}
-            {mobileDrawer === "More" && (
-              <button
-                onClick={toggleTheme}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl border border-slate-800 bg-slate-950 text-sm font-semibold text-slate-200"
-              >
-                {theme === "dark" ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-indigo-400" />}
-                <span>{theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
-              </button>
-            )}
-
-            {/* Nav items grid */}
-            {getDrawerItems(mobileDrawer).map((group) => (
-              <div key={group.category} className="space-y-2">
-                <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-400 px-1">
-                  {group.category}
-                </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        onClick={closeDrawer}
-                        className={`flex items-center gap-2.5 p-3 rounded-2xl text-xs font-bold transition-all border ${
-                          isActive
-                            ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20"
-                            : "bg-slate-950 text-slate-200 border-slate-800 hover:border-slate-700"
-                        }`}
-                      >
-                        <Icon size={16} className={isActive ? "text-white" : "text-slate-400"} />
-                        <span className="truncate">{item.name}</span>
-                      </Link>
-                    );
-                  })}
+            <div className="space-y-4">
+              {NAV_ITEMS.map((group) => (
+                <div key={group.category} className="space-y-2">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-indigo-400 px-1">
+                    {group.category}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={closeDrawer}
+                          className={`flex items-center gap-2.5 p-3 rounded-2xl text-xs font-bold transition-all border ${
+                            isActive
+                              ? "bg-indigo-600 text-white border-indigo-500 shadow-md"
+                              : "card-tile-neutral"
+                          }`}
+                        >
+                          <Icon size={16} className={isActive ? "text-white" : "text-muted-grey"} />
+                          <span className="truncate">{item.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </>
       )}
