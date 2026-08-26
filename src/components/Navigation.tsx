@@ -43,7 +43,8 @@ import {
   LogOut,
   LogIn,
   CheckCircle2,
-  Smartphone
+  Smartphone,
+  BookOpen
 } from "lucide-react";
 import { getCurrentUserSession, signInWithGoogle, signOutUser } from "@/lib/supabase/auth";
 
@@ -69,6 +70,7 @@ const NAV_ITEMS: NavGroup[] = [
       { name: "Portfolio Intelligence", href: "/portfolio-intelligence", icon: PieChart, desc: "True XIRR, overlap & drag analyzer", badge: "Engine 3" },
       { name: "Financial Time Machine", href: "/time-machine", icon: Hourglass, desc: "Parallel universes & 20-yr stress test", badge: "Engine 4" },
       { name: "Decision Replay", href: "/decision-replay", icon: Clock, desc: "Hindsight-free decision audit", badge: "Engine 5" },
+      { name: "Beyond FDs Masterclass", href: "/beyond-fds", icon: BookOpen, desc: "Real returns vs inflation & compounding math", badge: "Engine 6" },
     ]
   },
   {
@@ -284,11 +286,11 @@ export default function Navigation() {
       <header className="sticky top-0 z-40 w-full border-b border-border-navy bg-navy-bg/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6 md:px-8">
           
-          {/* Logo that doubles as the Sidebar Drawer Trigger */}
-          <button
-            onClick={() => setSidebarDrawerOpen(true)}
+          {/* Logo that navigates directly to Home Page */}
+          <Link
+            href="/"
             className="flex items-center gap-3 group cursor-pointer text-left focus:outline-none"
-            title="Click to open full ValarchiX Suite Directory"
+            title="ValarchiX Home"
           >
             <div className="relative">
               <img src="/logo.svg" alt="ValarchiX" className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl shadow-sm group-hover:scale-105 transition-transform" />
@@ -297,10 +299,9 @@ export default function Navigation() {
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-black tracking-tight text-heading flex items-center gap-1 group-hover:text-emerald transition-colors">
                 Valarchi<span className="text-emerald font-black">X</span>
-                <ChevronDown size={16} className="text-muted-grey group-hover:text-emerald group-hover:translate-y-0.5 transition" />
               </span>
             </div>
-          </button>
+          </Link>
 
           {/* Center Navigation Links */}
           <nav className="hidden lg:flex items-center space-x-2 font-bold text-sm text-muted-grey">
@@ -365,8 +366,8 @@ export default function Navigation() {
               </button>
 
               {openDropdown === "engines" && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[480px] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50">
-                  <div className="grid grid-cols-2 gap-2.5">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[520px] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50 space-y-2.5">
+                  <div className="grid grid-cols-2 gap-2">
                     {engineItems.map((item) => {
                       const Icon = item.icon;
                       return (
@@ -374,10 +375,10 @@ export default function Navigation() {
                           key={item.name}
                           href={item.href}
                           onClick={() => setOpenDropdown(null)}
-                          className="flex items-start gap-3 p-3 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
+                          className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
                         >
                           <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition shrink-0 mt-0.5">
-                            <Icon size={18} />
+                            <Icon size={17} />
                           </div>
                           <div>
                             <div className="text-xs sm:text-sm font-black text-heading group-hover:text-emerald transition flex items-center gap-1.5">
@@ -388,23 +389,25 @@ export default function Navigation() {
                         </Link>
                       );
                     })}
-                    
-                    <Link
-                      href="/vaathi"
-                      onClick={() => setOpenDropdown(null)}
-                      className="flex items-start gap-3 p-3 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
-                    >
-                      <div className="p-2 rounded-xl bg-emerald/10 text-emerald group-hover:bg-emerald group-hover:text-slate-950 transition shrink-0 mt-0.5">
-                        <GraduationCap size={18} />
-                      </div>
-                      <div>
-                        <div className="text-xs sm:text-sm font-black text-heading group-hover:text-emerald transition">
-                          Valarchi Vaathi 🎓
-                        </div>
-                        <div className="text-[11px] text-muted-grey leading-tight mt-0.5">AI Financial Mentor</div>
-                      </div>
-                    </Link>
                   </div>
+                  
+                  <Link
+                    href="/vaathi"
+                    onClick={() => setOpenDropdown(null)}
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-emerald/10 border border-emerald/20 hover:bg-emerald/15 transition group cursor-pointer"
+                  >
+                    <div className="p-2 rounded-xl bg-emerald text-slate-950 transition shrink-0">
+                      <GraduationCap size={18} />
+                    </div>
+                    <div>
+                      <div className="text-xs sm:text-sm font-black text-emerald transition">
+                        Valarchi Vaathi 🎓 — AI Financial Mentor
+                      </div>
+                      <div className="text-[11px] text-muted-grey leading-tight mt-0.5">
+                        Ask any real-world Indian tax, compounding, and investment question
+                      </div>
+                    </div>
+                  </Link>
                 </div>
               )}
             </div>

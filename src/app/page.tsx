@@ -241,6 +241,95 @@ export default function HomePage() {
     <div className="space-y-8 sm:space-y-12 animate-fadeIn pb-12">
       
       {/* =========================================================================
+          HERO PRESENTATION SECTION
+          ========================================================================= */}
+      <section className="bg-navy-card border border-border-navy rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl relative overflow-hidden space-y-6">
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-emerald/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          {/* Left Column: Headline & CTAs */}
+          <div className="lg:col-span-7 space-y-5">
+            <div className="inline-flex items-center gap-2 bg-emerald/10 border border-emerald/30 text-emerald px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
+              <Sparkles size={14} />
+              <span>Next-Gen Financial Knowledge OS</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-heading tracking-tight leading-tight">
+              Invest with clarity.<br />
+              Plan for your <span className="text-emerald">Financial DNA</span> &amp; Goals.
+            </h1>
+
+            <p className="text-sm sm:text-base text-muted-grey leading-relaxed">
+              &laquo;We don&apos;t tell what to pick, we tell how to pick&raquo; &mdash; deterministic intelligence, inflation-proof roadmaps, and zero-knowledge client-side encryption.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Link
+                href="/financial-dna"
+                className="bg-indigo-600 hover:bg-indigo-500 !text-white font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl transition shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer"
+              >
+                <span>Start Financial DNA</span>
+                <ArrowRight size={16} />
+              </Link>
+              <Link
+                href="/goalx"
+                className="bg-navy-bg hover:bg-navy-light text-heading border border-border-navy font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl transition flex items-center gap-2 cursor-pointer"
+              >
+                <Target size={16} className="text-emerald" />
+                <span>Explore GoalX</span>
+              </Link>
+              <Link
+                href="/vaathi"
+                className="text-xs sm:text-sm font-bold text-muted-grey hover:text-heading px-3 py-2 transition flex items-center gap-1.5"
+              >
+                <span>Ask Vaathi AI 🎓</span>
+                <ChevronRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Column: 3 Live Proof Pillars */}
+          <div className="lg:col-span-5 space-y-3">
+            <div className="card-tile-neutral p-4 rounded-2xl border flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-muted-grey uppercase font-bold block">100% Client-Side Vault</span>
+                <h4 className="text-sm font-black text-emerald">₹0 Data Leakage Risk</h4>
+                <p className="text-[11px] text-muted-grey mt-0.5">AES-GCM 256-bit encrypted before storage</p>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-1 bg-emerald/10 text-emerald rounded-full border border-emerald/30">
+                Zero-Knowledge
+              </span>
+            </div>
+
+            <div className="card-tile-neutral p-4 rounded-2xl border flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-muted-grey uppercase font-bold block">8 Deterministic Pillars</span>
+                <h4 className="text-sm font-black text-indigo-400">Scientific DNA Scoring</h4>
+                <p className="text-[11px] text-muted-grey mt-0.5">Emergency, needs, wants, term &amp; equity velocity</p>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-1 bg-indigo-500/10 text-indigo-400 rounded-full border border-indigo-500/30">
+                Objective Math
+              </span>
+            </div>
+
+            <div className="card-tile-neutral p-4 rounded-2xl border flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-muted-grey uppercase font-bold block">56+ Calculators &amp; Engines</span>
+                <h4 className="text-sm font-black text-amber-500">Instant Financial Clarity</h4>
+                <p className="text-[11px] text-muted-grey mt-0.5">Category inflation, step-up roadmaps &amp; tax hubs</p>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-1 bg-amber-500/10 text-amber-500 rounded-full border border-amber-500/30">
+                Full Suite
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
           DAILY MONEY COCKPIT (For Daily Engagement & Habit Building)
           ========================================================================= */}
       <section className="bg-navy-card border border-border-navy rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-6">
