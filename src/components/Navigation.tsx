@@ -75,6 +75,7 @@ const NAV_ITEMS: NavGroup[] = [
     category: "Core & Learning",
     items: [
       { name: "Home Dashboard", href: "/", icon: Home, desc: "Financial Knowledge OS Overview" },
+      { name: "About ValarchiX", href: "/about", icon: Info, desc: "Mission, philosophy & zero-knowledge architecture" },
       { name: "Valarchi Vaathi 🎓", href: "/vaathi", icon: GraduationCap, desc: "AI financial literacy mentor" },
       { name: "Beyond FDs & Learning", href: "/beyond-fds", icon: Info, desc: "Real returns vs inflation & compounding" }
     ]
@@ -572,8 +573,8 @@ export default function Navigation() {
 
             {/* Direct Link: About Us */}
             <Link 
-              href="/beyond-fds" 
-              className={`px-4 py-2.5 rounded-xl transition hover:text-heading ${pathname === "/beyond-fds" ? "text-emerald font-black" : ""}`}
+              href="/about" 
+              className={`px-4 py-2.5 rounded-xl transition hover:text-heading ${pathname === "/about" ? "text-emerald font-black" : ""}`}
             >
               About Us
             </Link>
