@@ -424,8 +424,8 @@ export default function Navigation() {
               </button>
 
               {openDropdown === "calculators" && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[760px] rounded-3xl mega-menu-dropdown p-6 shadow-2xl animate-slideDown z-50">
-                  <div className="grid grid-cols-3 gap-6">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[940px] max-w-[95vw] rounded-3xl mega-menu-dropdown p-5 shadow-2xl animate-slideDown z-50">
+                  <div className="grid grid-cols-4 gap-4">
                     
                     {/* Column 1: Wealth & Compounding */}
                     <div className="space-y-2">
@@ -438,7 +438,7 @@ export default function Navigation() {
                           { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight },
                           { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp },
                           { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock },
-                          { name: "Inflation Calculator", href: "/inflation", icon: BarChart2 },
+                          { name: "Child Legacy Engine", href: "/child-legacy", icon: Baby },
                           { name: "Recurring Deposit (RD)", href: "/rd", icon: Percent },
                           { name: "ROI & CAGR Metric", href: "/roi", icon: TrendingUp },
                           { name: "XIRR Irregular Return", href: "/xirr", icon: Zap },
@@ -447,17 +447,46 @@ export default function Navigation() {
                             key={c.name}
                             href={c.href}
                             onClick={() => setOpenDropdown(null)}
-                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-navy-light text-xs sm:text-sm font-bold text-heading hover:text-emerald transition group"
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-navy-light text-xs font-bold text-heading hover:text-emerald transition group"
                           >
-                            <c.icon size={15} className="text-emerald shrink-0" />
+                            <c.icon size={14} className="text-emerald shrink-0" />
                             <span className="truncate">{c.name}</span>
                           </Link>
                         ))}
                       </div>
                     </div>
 
-                    {/* Column 2: Retirement & Sovereign Schemes */}
-                    <div className="space-y-2 border-l border-border-navy/50 pl-5">
+                    {/* Column 2: Budgeting & Cash Flow */}
+                    <div className="space-y-2 border-l border-border-navy/50 pl-3.5">
+                      <div className="text-xs font-black uppercase tracking-wider text-teal-400 px-2 pb-1 border-b border-border-navy/60">
+                        Budgeting &amp; Cash Flow
+                      </div>
+                      <div className="space-y-0.5">
+                        {[
+                          { name: "Latte Factor Spends", href: "/latte-factor", icon: Coffee },
+                          { name: "Emergency Fund", href: "/emergency-fund", icon: ShieldAlert },
+                          { name: "Rent vs Buy Housing", href: "/rent-vs-buy", icon: Home },
+                          { name: "Inflation Calculator", href: "/inflation", icon: BarChart2 },
+                          { name: "Credit Card Trap", href: "/credit-card", icon: CreditCard },
+                          { name: "Debt Payoff Optimizer", href: "/debt-payoff", icon: Scissors },
+                          { name: "Human Life Value (HLV)", href: "/hlv", icon: HeartPulse },
+                          { name: "FIRE Early Retirement", href: "/fire", icon: Flame },
+                        ].map((b) => (
+                          <Link
+                            key={b.name}
+                            href={b.href}
+                            onClick={() => setOpenDropdown(null)}
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-navy-light text-xs font-bold text-heading hover:text-teal-400 transition group"
+                          >
+                            <b.icon size={14} className="text-teal-400 shrink-0" />
+                            <span className="truncate">{b.name}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Column 3: Retirement & Sovereign Schemes */}
+                    <div className="space-y-2 border-l border-border-navy/50 pl-3.5">
                       <div className="text-xs font-black uppercase tracking-wider text-indigo-400 px-2 pb-1 border-b border-border-navy/60">
                         Retirement &amp; Schemes
                       </div>
@@ -476,17 +505,17 @@ export default function Navigation() {
                             key={s.name}
                             href={s.href}
                             onClick={() => setOpenDropdown(null)}
-                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-navy-light text-xs sm:text-sm font-bold text-heading hover:text-indigo-400 transition group"
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-navy-light text-xs font-bold text-heading hover:text-indigo-400 transition group"
                           >
-                            <s.icon size={15} className="text-indigo-400 shrink-0" />
+                            <s.icon size={14} className="text-indigo-400 shrink-0" />
                             <span className="truncate">{s.name}</span>
                           </Link>
                         ))}
                       </div>
                     </div>
 
-                    {/* Column 3: Tax, Debt & Real Estate */}
-                    <div className="space-y-2 border-l border-border-navy/50 pl-5">
+                    {/* Column 4: Tax, Debt & Analyzers */}
+                    <div className="space-y-2 border-l border-border-navy/50 pl-3.5">
                       <div className="text-xs font-black uppercase tracking-wider text-amber-500 px-2 pb-1 border-b border-border-navy/60">
                         Tax, Debt &amp; Loans
                       </div>
@@ -495,19 +524,19 @@ export default function Navigation() {
                           { name: "Tax Regime Hub (Old/New)", href: "/tax", icon: Calculator },
                           { name: "HRA Exemption Math", href: "/hra", icon: Calculator },
                           { name: "Loan EMI Simulator", href: "/emi", icon: Landmark },
-                          { name: "Debt Payoff Optimizer", href: "/debt-payoff", icon: Scissors },
-                          { name: "Credit Card Trap", href: "/credit-card", icon: CreditCard },
-                          { name: "Rent vs Buy Housing", href: "/rent-vs-buy", icon: Home },
-                          { name: "Income Tax & TDS", href: "/income-tax", icon: Calculator },
+                          { name: "Advanced Income Tax", href: "/income-tax", icon: Calculator },
+                          { name: "TDS Deductor Math", href: "/tds", icon: Calculator },
+                          { name: "NSC Certificate", href: "/nsc", icon: Coins },
                           { name: "Mutual Funds Screener", href: "/mutual-funds", icon: Layers },
+                          { name: "Debt Funds Analyzer", href: "/debt-funds", icon: Shield },
                         ].map((t) => (
                           <Link
                             key={t.name}
                             href={t.href}
                             onClick={() => setOpenDropdown(null)}
-                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-navy-light text-xs sm:text-sm font-bold text-heading hover:text-amber-500 transition group"
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-navy-light text-xs font-bold text-heading hover:text-amber-500 transition group"
                           >
-                            <t.icon size={15} className="text-amber-500 shrink-0" />
+                            <t.icon size={14} className="text-amber-500 shrink-0" />
                             <span className="truncate">{t.name}</span>
                           </Link>
                         ))}
@@ -516,7 +545,7 @@ export default function Navigation() {
 
                   </div>
 
-                  <div className="mt-5 pt-3.5 border-t border-border-navy flex items-center justify-between text-xs">
+                  <div className="mt-4 pt-3 border-t border-border-navy flex items-center justify-between text-xs">
                     <span className="text-muted-grey text-xs">Looking for all calculators &amp; simulators?</span>
                     <button
                       onClick={() => {
@@ -861,7 +890,7 @@ export default function Navigation() {
                       { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight },
                       { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp },
                       { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock },
-                      { name: "Inflation", href: "/inflation", icon: BarChart2 },
+                      { name: "Child Legacy", href: "/child-legacy", icon: Baby },
                       { name: "RD Simulator", href: "/rd", icon: Percent },
                       { name: "ROI & CAGR", href: "/roi", icon: TrendingUp },
                       { name: "XIRR Return", href: "/xirr", icon: Zap },
@@ -876,6 +905,37 @@ export default function Navigation() {
                       >
                         <c.icon size={15} className={pathname === c.href ? "text-slate-950" : "text-emerald"} />
                         <span className="truncate">{c.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Budgeting & Cash Flow */}
+                <div className="space-y-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-teal-400 block px-1">
+                    Budgeting &amp; Cash Flow
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { name: "Latte Factor", href: "/latte-factor", icon: Coffee },
+                      { name: "Emergency Fund", href: "/emergency-fund", icon: ShieldAlert },
+                      { name: "Rent vs Buy", href: "/rent-vs-buy", icon: Home },
+                      { name: "Inflation Calculator", href: "/inflation", icon: BarChart2 },
+                      { name: "Credit Card Trap", href: "/credit-card", icon: CreditCard },
+                      { name: "Debt Payoff", href: "/debt-payoff", icon: Scissors },
+                      { name: "Human Life (HLV)", href: "/hlv", icon: HeartPulse },
+                      { name: "FIRE Retirement", href: "/fire", icon: Flame },
+                    ].map((b) => (
+                      <Link
+                        key={b.name}
+                        href={b.href}
+                        onClick={closeDrawer}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all ${
+                          pathname === b.href ? "bg-teal-600 text-white border-teal-500" : "card-tile-neutral"
+                        }`}
+                      >
+                        <b.icon size={15} className={pathname === b.href ? "text-white" : "text-teal-400"} />
+                        <span className="truncate">{b.name}</span>
                       </Link>
                     ))}
                   </div>
@@ -922,11 +982,11 @@ export default function Navigation() {
                       { name: "Tax Regime Hub", href: "/tax", icon: Calculator },
                       { name: "HRA Exemption", href: "/hra", icon: Calculator },
                       { name: "Loan EMI", href: "/emi", icon: Landmark },
-                      { name: "Debt Payoff", href: "/debt-payoff", icon: Scissors },
-                      { name: "Credit Cards", href: "/credit-card", icon: CreditCard },
-                      { name: "Rent vs Buy", href: "/rent-vs-buy", icon: Home },
-                      { name: "Income Tax", href: "/income-tax", icon: Calculator },
+                      { name: "Advanced Income Tax", href: "/income-tax", icon: Calculator },
+                      { name: "TDS Deductor", href: "/tds", icon: Calculator },
+                      { name: "NSC Certificate", href: "/nsc", icon: Coins },
                       { name: "Mutual Funds", href: "/mutual-funds", icon: Layers },
+                      { name: "Debt Funds", href: "/debt-funds", icon: Shield },
                     ].map((t) => (
                       <Link
                         key={t.name}
