@@ -1,51 +1,23 @@
 import { createClient } from "./client";
 import { FinancialDigitalTwin } from "../engine/types";
 
-export async function signInWithGoogle() {
-  const supabase = createClient();
+export function signInWithGoogle() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://aadevubgvpjvzwpdzory.supabase.co";
   const origin = (typeof window !== "undefined" && window.location.origin)
     ? window.location.origin
     : (process.env.NEXT_PUBLIC_SITE_URL || "https://valarchix.vercel.app");
-  const currentPath = typeof window !== "undefined" ? (window.location.pathname || "/profile") : "/profile";
+  
+  // Instant direct authorize URL - zero latency hop, returns directly with tokens
+  const redirectTo = `${origin}/profile`;
+  const targetUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
 
-  const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(currentPath)}`;
-
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo,
-        skipBrowserRedirect: true,
-        queryParams: {
-          access_type: "offline",
-          prompt: "select_account",
-        },
-      },
-    });
-
-    if (error) {
-      console.error("Sign in error:", error);
-      alert("Sign in error: " + error.message);
-      throw error;
-    }
-
-    if (data?.url && typeof window !== "undefined") {
-      window.location.assign(data.url);
-    }
-  } catch (err: any) {
-    console.error("Sign in exception:", err);
-    throw err;
+  if (typeof window !== "undefined") {
+    window.location.href = targetUrl;
   }
 }
 
 export async function signOutUser() {
-  const supabase = createClient();
-  try {
-    await supabase.auth.signOut({ scope: "local" });
-    await supabase.auth.signOut();
-  } catch (err) {
-    console.warn("Sign out error:", err);
-  }
+  // 1. Synchronous storage cleanup first
   if (typeof window !== "undefined") {
     Object.keys(localStorage).forEach((key) => {
       if (key.startsWith("sb-") || key.includes("supabase") || key.includes("VALARCHIX_VAULT_")) {
@@ -57,6 +29,15 @@ export async function signOutUser() {
     localStorage.removeItem("sb-access-token");
     localStorage.removeItem("sb-refresh-token");
     sessionStorage.clear();
+  }
+
+  // 2. Supabase SDK sign out
+  const supabase = createClient();
+  try {
+    await supabase.auth.signOut({ scope: "local" });
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.warn("Sign out error:", err);
   }
 }
 

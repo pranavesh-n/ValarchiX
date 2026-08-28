@@ -265,28 +265,16 @@ export default function ProfilePage() {
   };
 
   const executeSignOut = async () => {
-    try {
-      if (session?.user) {
-        sessionStorage.removeItem(getUserSessionUnlockedKey(session.user.id));
-      }
-      sessionStorage.removeItem("valarchix_session_unlocked");
-      sessionStorage.removeItem("valarchix_login_toast_shown");
-      setConfirmSignOutOpen(false);
-      await signOutUser();
-      setSession(null);
-      setPasscodeEnabled(false);
-      setDnaScore(null);
-      setGoalsCount(0);
-      showToast("Signed out successfully");
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
-      } else {
-        router.push("/");
-      }
-    } catch (e) {
-      console.error("Sign out error:", e);
-      setConfirmSignOutOpen(false);
-    }
+    // 1. Instant 0ms UI reset
+    setConfirmSignOutOpen(false);
+    setSession(null);
+    setPasscodeEnabled(false);
+    setDnaScore(null);
+    setGoalsCount(0);
+    showToast("Signed out successfully");
+
+    // 2. Complete storage & SDK purge
+    await signOutUser();
   };
 
   const userName = session?.user
@@ -309,83 +297,76 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* =========================================================================
-          PROFILE HEADER CARD (Sikkanam Clean Style)
-          ========================================================================= */}
-      <section className="bg-navy-card border border-border-navy rounded-3xl p-6 sm:p-8 shadow-sm text-center space-y-5">
-        <div className="flex flex-col items-center justify-center space-y-3">
-          
-          {/* Avatar with Verified Status */}
-          <div className="relative">
-            {userAvatar ? (
-              <img
-                src={userAvatar}
-                alt={userName}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-emerald shadow-sm"
-              />
-            ) : session?.user ? (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald text-slate-950 flex items-center justify-center font-black text-2xl shadow-sm border-2 border-emerald">
-                {userInitial}
-              </div>
-            ) : (
-              <img
-                src="/logo.svg"
-                alt="ValarchiX"
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-2 bg-[#030a16] border-2 border-emerald shadow-lg shadow-emerald/20 object-contain"
-              />
-            )}
-            {session?.user && (
-              <div className="absolute -bottom-1 -right-1 bg-emerald text-slate-950 rounded-full p-1 border-2 border-navy-card shadow-sm" title="Verified Member">
-                <CheckCircle2 size={15} strokeWidth={3} />
-              </div>
-            )}
-          </div>
-
-          {/* User Full Name & Email */}
-          <div className="space-y-1">
-            <h1 className="text-xl sm:text-2xl font-black text-heading tracking-tight">
-              {userName}
-            </h1>
-            <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-              <span className="text-muted-grey font-mono">{userEmail}</span>
-              {session?.user && (
-                <span className="bg-emerald/15 text-emerald border border-emerald/30 px-2.5 py-0.5 rounded-full font-black text-[10px] uppercase tracking-wider">
-                  Verified Investor
-                </span>
-              )}
+      {/* Main Profile Identity Card (Sikkanam Layout) */}
+      <div className="card-tile-neutral rounded-3xl p-6 sm:p-8 text-center space-y-4 border relative overflow-hidden shadow-xl">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald/10 rounded-full blur-3xl -z-10" />
+        
+        {/* User Avatar Circle */}
+        <div className="relative inline-block mx-auto">
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt={userName}
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-emerald shadow-lg shadow-emerald/20 object-cover"
+            />
+          ) : session?.user ? (
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald/20 border-2 border-emerald flex items-center justify-center text-emerald font-black text-2xl sm:text-3xl shadow-lg shadow-emerald/20">
+              {userInitial}
             </div>
-          </div>
-
-          {!session?.user && (
-            <div className="pt-1">
-              <button
-                onClick={async () => {
-                  try {
-                    setIsSigningIn(true);
-                    await signInWithGoogle();
-                  } catch (e) {
-                    setIsSigningIn(false);
-                  }
-                  setTimeout(() => setIsSigningIn(false), 5000);
-                }}
-                disabled={isSigningIn}
-                className="bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 dark:border-white/15 text-xs sm:text-sm font-black px-6 py-2.5 rounded-full transition shadow-md flex items-center gap-2.5 mx-auto cursor-pointer disabled:opacity-80"
-              >
-                {isSigningIn ? (
-                  <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin shrink-0" />
-                ) : (
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                  </svg>
-                )}
-                <span>{isSigningIn ? "Opening Google..." : "Sign In with Google"}</span>
-              </button>
+          ) : (
+            <img
+              src="/logo.svg"
+              alt="ValarchiX"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-2 bg-[#030a16] border-2 border-emerald shadow-lg shadow-emerald/20 object-contain"
+            />
+          )}
+          {session?.user && (
+            <div className="absolute -bottom-1 -right-1 bg-emerald text-slate-950 rounded-full p-1 border-2 border-navy-card shadow-sm" title="Verified Member">
+              <CheckCircle2 size={15} strokeWidth={3} />
             </div>
           )}
         </div>
+
+        {/* User Full Name & Email */}
+        <div className="space-y-1">
+          <h1 className="text-xl sm:text-2xl font-black text-heading tracking-tight">
+            {userName}
+          </h1>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+            <span className="text-muted-grey font-mono">{userEmail}</span>
+            {session?.user && (
+              <span className="bg-emerald/15 text-emerald border border-emerald/30 px-2.5 py-0.5 rounded-full font-black text-[10px] uppercase tracking-wider">
+                Verified Investor
+              </span>
+            )}
+          </div>
+        </div>
+
+        {!session?.user && (
+          <div className="pt-1">
+            <button
+              onClick={() => {
+                setIsSigningIn(true);
+                signInWithGoogle();
+              }}
+              disabled={isSigningIn}
+              className="bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 dark:border-white/15 text-xs sm:text-sm font-black px-6 py-2.5 rounded-full transition shadow-md flex items-center gap-2.5 mx-auto cursor-pointer disabled:opacity-80 active:scale-95"
+            >
+              {isSigningIn ? (
+                <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin shrink-0" />
+              ) : (
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+              )}
+              <span>{isSigningIn ? "Connecting..." : "Sign In with Google"}</span>
+            </button>
+          </div>
+        )}
+      </div>
 
         {/* 2 Quick Summary Tiles (Sikkanam Style) */}
         <div className="grid grid-cols-2 gap-3 pt-1">
@@ -423,7 +404,6 @@ export default function ProfilePage() {
             </div>
           </Link>
         </div>
-      </section>
 
       {/* =========================================================================
           SECTION 1: SECURITY & PRIVACY
