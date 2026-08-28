@@ -672,6 +672,10 @@ export default function Navigation() {
               ) : (
                 <a
                   href={getGoogleAuthUrl("/profile")}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    signInWithGoogle("/profile");
+                  }}
                   className="bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 dark:border-white/15 text-xs sm:text-sm font-black px-4 py-2 sm:px-5 sm:py-2.5 rounded-full transition shadow-md flex items-center gap-2.5 cursor-pointer inline-flex"
                 >
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">

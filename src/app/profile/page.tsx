@@ -347,6 +347,10 @@ export default function ProfilePage() {
           <div className="pt-1">
             <a
               href={getGoogleAuthUrl("/profile")}
+              onClick={(e) => {
+                e.preventDefault();
+                signInWithGoogle("/profile");
+              }}
               className="bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 dark:border-white/15 text-xs sm:text-sm font-black px-6 py-2.5 rounded-full transition shadow-md flex items-center gap-2.5 mx-auto cursor-pointer active:scale-95 inline-flex"
             >
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
