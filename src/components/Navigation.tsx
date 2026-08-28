@@ -115,7 +115,7 @@ const NAV_ITEMS: NavGroup[] = [
       { name: "Child Legacy Engine", href: "/child-legacy", icon: Baby, desc: "18-25 yr generational compounding" },
       { name: "Recurring Deposit (RD)", href: "/rd", icon: Percent, desc: "Bank & Post Office RD growth" },
       { name: "ROI & CAGR Metric", href: "/roi", icon: TrendingUp, desc: "Annualized point-to-point returns" },
-      { name: "XIRR Irregular Return", href: "/xirr", icon: Zap, desc: "Accurate realized cash flow XIRR" }
+      { name: "XIRR Calculator", href: "/xirr", icon: Zap, desc: "Accurate realized cash flow XIRR" }
     ]
   },
   {
@@ -448,7 +448,7 @@ export default function Navigation() {
                           { name: "Child Legacy Engine", href: "/child-legacy", icon: Baby },
                           { name: "Recurring Deposit (RD)", href: "/rd", icon: Percent },
                           { name: "ROI & CAGR Metric", href: "/roi", icon: TrendingUp },
-                          { name: "XIRR Irregular Return", href: "/xirr", icon: Zap },
+                          { name: "XIRR Calculator", href: "/xirr", icon: Zap },
                         ].map((c) => (
                           <Link
                             key={c.name}

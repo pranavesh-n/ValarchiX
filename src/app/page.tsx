@@ -47,7 +47,7 @@ const SUITE_CATEGORIES = [
       { name: "Child Legacy Engine", href: "/child-legacy", icon: Baby, desc: "18-25 yr generational compounding" },
       { name: "Recurring Deposit (RD)", href: "/rd", icon: Percent, desc: "Bank & Post Office RD math" },
       { name: "ROI & CAGR Metric", href: "/roi", icon: TrendingUp, desc: "Annualized point-to-point returns" },
-      { name: "XIRR Irregular Return", href: "/xirr", icon: Zap, desc: "Accurate realized cash flow XIRR" }
+      { name: "XIRR Calculator", href: "/xirr", icon: Zap, desc: "Accurate realized cash flow XIRR" }
     ]
   },
   {
