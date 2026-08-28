@@ -87,8 +87,12 @@ export default function ProfilePage() {
     }
     loadData();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
+      if (event === "SIGNED_IN" && newSession?.user) {
+        const name = newSession.user.user_metadata?.full_name || newSession.user.email?.split("@")[0] || "Investor";
+        showToast(`Logged in successfully as ${name} ✅`);
+      }
       loadData();
     });
 
@@ -132,8 +136,9 @@ export default function ProfilePage() {
       sessionStorage.setItem("valarchix_session_unlocked", "true");
       setPasscodeEnabled(true);
       setPasscodeModalOpen(false);
+      const isUpdate = passcodeEnabled;
       setCurrentPin("");
-      showToast("4-digit Passcode enabled successfully ✅");
+      showToast(isUpdate ? "4-digit PIN updated successfully ✅" : "4-digit PIN enabled successfully ✅");
     } else {
       alert("Please enter a 4-digit PIN");
     }
@@ -150,6 +155,7 @@ export default function ProfilePage() {
     if (confirm("Are you sure you want to sign out of ValarchiX?")) {
       await signOutUser();
       setSession(null);
+      showToast("Signed out successfully");
       router.push("/");
     }
   };
@@ -166,11 +172,11 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn pb-16 pt-2">
       
-      {/* Toast Notification */}
+      {/* Toast Notification (High Contrast Floating Pill) */}
       {toastMessage && (
-        <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-border-navy px-5 py-3.5 rounded-2xl shadow-2xl z-50 flex items-center gap-3 animate-slideDown">
+        <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 bg-white dark:bg-slate-900 border border-slate-300 dark:border-border-navy px-5 py-3.5 rounded-2xl shadow-2xl z-50 flex items-center gap-3 animate-slideDown max-w-sm">
           <CheckCircle2 size={19} className="text-emerald shrink-0" />
-          <span className="text-xs sm:text-sm font-black !text-slate-900 dark:!text-white">{toastMessage}</span>
+          <span className="text-xs sm:text-sm font-black !text-slate-900 dark:!text-white leading-tight">{toastMessage}</span>
         </div>
       )}
 
@@ -286,8 +292,12 @@ export default function ProfilePage() {
         </h2>
         <div className="bg-navy-card border border-border-navy rounded-3xl divide-y divide-border-navy/60 overflow-hidden shadow-sm">
           
-          {/* App Passcode Lock */}
-          <div className="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-navy-light/40 transition">
+          {/* App Passcode Lock (Entire Row Clickable) */}
+          <button
+            type="button"
+            onClick={handleTogglePasscode}
+            className="w-full p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-navy-light/40 transition text-left cursor-pointer"
+          >
             <div className="flex items-center gap-3.5">
               <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 shrink-0">
                 <Lock size={18} />
@@ -295,21 +305,20 @@ export default function ProfilePage() {
               <div>
                 <div className="text-sm font-bold text-heading">App Passcode Lock</div>
                 <div className="text-xs text-muted-grey">
-                  {passcodeEnabled ? "4-digit PIN lock enabled (Tap to disable)" : "Require 4-digit PIN to open ValarchiX"}
+                  {passcodeEnabled ? "4-digit PIN lock enabled (Tap anywhere to disable)" : "Require 4-digit PIN to open ValarchiX"}
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleTogglePasscode}
-              className={`px-3.5 py-1 rounded-full text-xs font-black transition cursor-pointer border ${
+            <div
+              className={`px-3.5 py-1 rounded-full text-xs font-black transition border shrink-0 ${
                 passcodeEnabled
                   ? "bg-emerald/15 text-emerald border-emerald/30"
-                  : "bg-navy-bg text-muted-grey border-border-navy hover:text-heading"
+                  : "bg-navy-bg text-muted-grey border-border-navy"
               }`}
             >
               {passcodeEnabled ? "ON" : "OFF"}
-            </button>
-          </div>
+            </div>
+          </button>
 
           {/* Change Passcode */}
           {passcodeEnabled && (
@@ -359,8 +368,18 @@ export default function ProfilePage() {
         </h2>
         <div className="bg-navy-card border border-border-navy rounded-3xl divide-y divide-border-navy/60 overflow-hidden shadow-sm">
           
-          {/* ValarchiX App PWA */}
-          <div className="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-navy-light/40 transition">
+          {/* ValarchiX App PWA (Whole Row Clickable) */}
+          <div
+            onClick={() => {
+              if (isPwaInstalled) {
+                showToast("ValarchiX standalone app is active ✅");
+              } else {
+                window.dispatchEvent(new Event("valarchix_install_prompt"));
+                showToast("Opening app install prompt...");
+              }
+            }}
+            className="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-navy-light/40 transition cursor-pointer"
+          >
             <div className="flex items-center gap-3.5">
               <div className="p-2.5 rounded-2xl bg-emerald/10 text-emerald shrink-0">
                 <Smartphone size={18} />
@@ -378,15 +397,9 @@ export default function ProfilePage() {
                 <span>INSTALLED</span>
               </span>
             ) : (
-              <button
-                onClick={() => {
-                  window.dispatchEvent(new Event("valarchix_install_prompt"));
-                  showToast("Opening install prompt...");
-                }}
-                className="bg-indigo-600 hover:bg-indigo-500 !text-white px-3.5 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm"
-              >
+              <span className="bg-indigo-600 hover:bg-indigo-500 !text-white px-3.5 py-1.5 rounded-full text-xs font-black transition shadow-sm">
                 Install App
-              </button>
+              </span>
             )}
           </div>
 
@@ -583,12 +596,13 @@ export default function ProfilePage() {
                 <button
                   key={num}
                   type="button"
-                  onClick={() => {
+                  onPointerDown={(e) => {
+                    e.preventDefault();
                     if (currentPin.length < 4) {
                       setCurrentPin((prev) => prev + num);
                     }
                   }}
-                  className="h-14 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-95 text-white font-black text-lg flex items-center justify-center border border-white/5 transition cursor-pointer"
+                  className="h-14 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-lg flex items-center justify-center border border-white/5 transition cursor-pointer touch-manipulation"
                 >
                   {num}
                 </button>
@@ -598,19 +612,23 @@ export default function ProfilePage() {
               </div>
               <button
                 type="button"
-                onClick={() => {
+                onPointerDown={(e) => {
+                  e.preventDefault();
                   if (currentPin.length < 4) {
                     setCurrentPin((prev) => prev + "0");
                   }
                 }}
-                className="h-14 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-95 text-white font-black text-lg flex items-center justify-center border border-white/5 transition cursor-pointer"
+                className="h-14 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-lg flex items-center justify-center border border-white/5 transition cursor-pointer touch-manipulation"
               >
                 0
               </button>
               <button
                 type="button"
-                onClick={() => setCurrentPin((prev) => prev.slice(0, -1))}
-                className="h-14 rounded-2xl bg-[#172033] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 active:scale-95 flex items-center justify-center border border-white/5 transition cursor-pointer"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  setCurrentPin((prev) => prev.slice(0, -1));
+                }}
+                className="h-14 rounded-2xl bg-[#172033] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 active:scale-90 flex items-center justify-center border border-white/5 transition cursor-pointer touch-manipulation"
                 title="Delete digit"
               >
                 <Delete size={20} />

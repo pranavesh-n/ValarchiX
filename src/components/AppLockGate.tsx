@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Lock, Delete, LogOut } from "lucide-react";
 import { signOutUser } from "@/lib/supabase/auth";
 import { useRouter } from "next/navigation";
@@ -15,12 +15,53 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
   const [shake, setShake] = useState(false);
   const hiddenStartTimeRef = useRef<number | null>(null);
 
+  const handleKeyPress = useCallback((num: string) => {
+    setPinInput((prev) => {
+      if (prev.length >= 4) return prev;
+      const nextPin = prev + num;
+      setErrorMsg("");
+
+      if (nextPin.length === 4) {
+        const savedPin = localStorage.getItem("valarchix_app_pin");
+        if (nextPin === savedPin) {
+          sessionStorage.setItem("valarchix_session_unlocked", "true");
+          setFailedAttempts(0);
+          setTimeout(() => {
+            setIsLocked(false);
+            setPinInput("");
+          }, 120);
+        } else {
+          setFailedAttempts((prevAttempts) => {
+            const nextAttempts = prevAttempts + 1;
+            setShake(true);
+            setTimeout(() => setShake(false), 500);
+
+            setTimeout(() => {
+              if (nextAttempts >= 2) {
+                setErrorMsg("Incorrect PIN entered 2 times.");
+              } else {
+                setErrorMsg("Incorrect PIN. Please try again.");
+              }
+              setPinInput("");
+            }, 200);
+            return nextAttempts;
+          });
+        }
+      }
+      return nextPin;
+    });
+  }, []);
+
+  const handleDelete = useCallback(() => {
+    setPinInput((prev) => prev.slice(0, -1));
+    setErrorMsg("");
+  }, []);
+
   useEffect(() => {
     // Check if passcode is enabled
     const savedPin = localStorage.getItem("valarchix_app_pin");
     const isUnlockedInSession = sessionStorage.getItem("valarchix_session_unlocked");
 
-    // On page load/refresh, require PIN if passcode is enabled
     if (savedPin) {
       if (isUnlockedInSession !== "true") {
         setIsLocked(true);
@@ -28,7 +69,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     }
     setHasChecked(true);
 
-    // Event listener for manual lock trigger (e.g. Lock Now button in profile)
+    // Event listener for manual lock trigger
     const handleLockEvent = () => {
       const pin = localStorage.getItem("valarchix_app_pin");
       if (pin) {
@@ -40,16 +81,14 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       }
     };
 
-    // 25-Second Background Inactivity Listener (ONLY triggers when tab is genuinely hidden/switched away for >25s)
+    // 25-Second Background Inactivity Listener
     const handleVisibilityChange = () => {
       const pin = localStorage.getItem("valarchix_app_pin");
       if (!pin) return;
 
       if (document.hidden) {
-        // Tab was hidden / placed in background
         hiddenStartTimeRef.current = Date.now();
       } else {
-        // User came back to the tab
         if (hiddenStartTimeRef.current) {
           const timeInBackground = Date.now() - hiddenStartTimeRef.current;
           if (timeInBackground >= 25000) {
@@ -73,44 +112,23 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     };
   }, []);
 
-  const handleKeyPress = (num: string) => {
-    if (pinInput.length < 4) {
-      const nextPin = pinInput + num;
-      setPinInput(nextPin);
-      setErrorMsg("");
+  // Physical Keyboard listener for numpad / digits when locked
+  useEffect(() => {
+    if (!isLocked) return;
 
-      if (nextPin.length === 4) {
-        const savedPin = localStorage.getItem("valarchix_app_pin");
-        if (nextPin === savedPin) {
-          sessionStorage.setItem("valarchix_session_unlocked", "true");
-          setFailedAttempts(0);
-          setTimeout(() => {
-            setIsLocked(false);
-            setPinInput("");
-          }, 120);
-        } else {
-          const nextAttempts = failedAttempts + 1;
-          setFailedAttempts(nextAttempts);
-          setShake(true);
-          setTimeout(() => setShake(false), 500);
-
-          setTimeout(() => {
-            if (nextAttempts >= 2) {
-              setErrorMsg("Incorrect PIN entered 2 times.");
-            } else {
-              setErrorMsg("Incorrect PIN. Please try again.");
-            }
-            setPinInput("");
-          }, 200);
-        }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        handleKeyPress(e.key);
+      } else if (e.key === "Backspace" || e.key === "Delete") {
+        e.preventDefault();
+        handleDelete();
       }
-    }
-  };
+    };
 
-  const handleDelete = () => {
-    setPinInput((prev) => prev.slice(0, -1));
-    setErrorMsg("");
-  };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLocked, handleKeyPress, handleDelete]);
 
   const handleResetAndSignOut = async () => {
     localStorage.removeItem("valarchix_app_pin");
@@ -178,8 +196,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
               <button
                 key={num}
                 type="button"
-                onClick={() => handleKeyPress(num)}
-                className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-95 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  handleKeyPress(num);
+                }}
+                className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm touch-manipulation"
               >
                 {num}
               </button>
@@ -193,8 +214,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             {/* Row 4: Digit 0 */}
             <button
               type="button"
-              onClick={() => handleKeyPress("0")}
-              className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-95 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                handleKeyPress("0");
+              }}
+              className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm touch-manipulation"
             >
               0
             </button>
@@ -202,8 +226,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             {/* Row 4: Backspace Button */}
             <button
               type="button"
-              onClick={handleDelete}
-              className="h-16 rounded-2xl bg-[#172033] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 active:scale-95 flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              className="h-16 rounded-2xl bg-[#172033] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 active:scale-90 flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm touch-manipulation"
               title="Delete digit"
             >
               <Delete size={22} />
