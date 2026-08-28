@@ -170,12 +170,18 @@ export default function ProfilePage() {
               <img
                 src={userAvatar}
                 alt={userName}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border border-border-navy shadow-sm"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-emerald shadow-sm"
               />
-            ) : (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald text-slate-950 flex items-center justify-center font-black text-2xl shadow-sm border border-emerald">
+            ) : session?.user ? (
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald text-slate-950 flex items-center justify-center font-black text-2xl shadow-sm border-2 border-emerald">
                 {userInitial}
               </div>
+            ) : (
+              <img
+                src="/logo.svg"
+                alt="ValarchiX"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-2 bg-[#030a16] border-2 border-emerald shadow-lg shadow-emerald/20 object-contain"
+              />
             )}
             {session?.user && (
               <div className="absolute -bottom-1 -right-1 bg-emerald text-slate-950 rounded-full p-1 border-2 border-navy-card shadow-sm" title="Verified Member">

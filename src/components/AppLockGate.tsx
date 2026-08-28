@@ -96,9 +96,14 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       <div className="fixed inset-0 z-[9999] bg-[#0c121e] text-white flex flex-col items-center justify-center p-4 select-none animate-fadeIn">
         <div className="flex flex-col items-center justify-center max-w-sm w-full space-y-4 text-center">
           
-          {/* ValarchiX Emblem Logo (Sikkanam Style with Emerald Glow) */}
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald via-teal-400 to-emerald text-slate-950 flex items-center justify-center font-black text-3xl shadow-xl shadow-emerald/30 border border-emerald/50">
-            V
+          {/* Original ValarchiX Official Logo */}
+          <div className="relative">
+            <img
+              src="/logo.svg"
+              alt="ValarchiX"
+              className="w-16 h-16 rounded-2xl shadow-xl shadow-emerald/30 border border-emerald/50 object-contain bg-[#030a16]"
+            />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald border-2 border-[#0c121e]"></span>
           </div>
 
           {/* Heading & Subtitle */}
