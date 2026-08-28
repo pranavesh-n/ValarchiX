@@ -1,21 +1,28 @@
 import { createClient } from "./client";
 import { FinancialDigitalTwin } from "../engine/types";
 
-export function getGoogleAuthUrl(nextPath = "/profile"): string {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://aadevubgvpjvzwpdzory.supabase.co";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZGV2dWJndnBqdnp3cGR6b3J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NTM1NTcsImV4cCI6MjEwMjAyOTU1N30._Gptq2IxOa4DAAyCGS_8sTICG2VV4eIfxIuhlBPdNYc";
-  const origin = typeof window !== "undefined" && window.location.origin
-    ? window.location.origin
-    : (process.env.NEXT_PUBLIC_SITE_URL || "https://valarchix.vercel.app");
-  
+export async function signInWithGoogle(nextPath = "/profile") {
+  if (typeof window === "undefined") return;
+  const supabase = createClient();
+  const origin = window.location.origin || process.env.NEXT_PUBLIC_SITE_URL || "https://valarchix.vercel.app";
   const redirectTo = `${origin}${nextPath}`;
-  return `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}&apikey=${supabaseAnonKey}&prompt=select_account`;
-}
 
-export function signInWithGoogle(nextPath = "/profile") {
-  if (typeof window !== "undefined") {
-    const url = getGoogleAuthUrl(nextPath);
-    window.location.assign(url);
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        queryParams: {
+          prompt: "select_account",
+        },
+      },
+    });
+
+    if (error) {
+      console.error("Google Sign-In Error:", error);
+    }
+  } catch (err) {
+    console.error("Unexpected Sign-In Error:", err);
   }
 }
 

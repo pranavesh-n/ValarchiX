@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import {
   getCurrentUserSession,
-  getGoogleAuthUrl,
   signInWithGoogle,
   signOutUser,
   loadDigitalTwinFromVault

@@ -49,7 +49,6 @@ import {
 } from "lucide-react";
 import {
   getCurrentUserSession,
-  getGoogleAuthUrl,
   signInWithGoogle,
   signOutUser
 } from "@/lib/supabase/auth";
