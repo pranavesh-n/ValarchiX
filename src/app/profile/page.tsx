@@ -265,17 +265,28 @@ export default function ProfilePage() {
   };
 
   const executeSignOut = async () => {
-    if (session?.user) {
-      sessionStorage.removeItem(getUserSessionUnlockedKey(session.user.id));
+    try {
+      if (session?.user) {
+        sessionStorage.removeItem(getUserSessionUnlockedKey(session.user.id));
+      }
+      sessionStorage.removeItem("valarchix_session_unlocked");
+      sessionStorage.removeItem("valarchix_login_toast_shown");
+      setConfirmSignOutOpen(false);
+      await signOutUser();
+      setSession(null);
+      setPasscodeEnabled(false);
+      setDnaScore(null);
+      setGoalsCount(0);
+      showToast("Signed out successfully");
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      } else {
+        router.push("/");
+      }
+    } catch (e) {
+      console.error("Sign out error:", e);
+      setConfirmSignOutOpen(false);
     }
-    sessionStorage.removeItem("valarchix_session_unlocked");
-    sessionStorage.removeItem("valarchix_login_toast_shown");
-    await signOutUser();
-    setSession(null);
-    setPasscodeEnabled(false);
-    setConfirmSignOutOpen(false);
-    showToast("Signed out successfully");
-    router.push("/");
   };
 
   const userName = session?.user

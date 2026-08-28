@@ -40,14 +40,22 @@ export async function signInWithGoogle() {
 export async function signOutUser() {
   const supabase = createClient();
   try {
+    await supabase.auth.signOut({ scope: "local" });
     await supabase.auth.signOut();
   } catch (err) {
     console.warn("Sign out error:", err);
   }
   if (typeof window !== "undefined") {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("sb-") || key.includes("supabase") || key.includes("VALARCHIX_VAULT_")) {
+        localStorage.removeItem(key);
+      }
+    });
     localStorage.removeItem("VALARCHIX_DEMO_SESSION");
+    localStorage.removeItem("VALARCHIX_DIGITAL_TWIN");
     localStorage.removeItem("sb-access-token");
     localStorage.removeItem("sb-refresh-token");
+    sessionStorage.clear();
   }
 }
 
