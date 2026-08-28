@@ -320,9 +320,14 @@ export default function ProfilePage() {
           {!session?.user && (
             <div className="pt-1">
               <button
-                onClick={() => {
-                  setIsSigningIn(true);
-                  signInWithGoogle();
+                onClick={async () => {
+                  try {
+                    setIsSigningIn(true);
+                    await signInWithGoogle();
+                  } catch (e) {
+                    setIsSigningIn(false);
+                  }
+                  setTimeout(() => setIsSigningIn(false), 5000);
                 }}
                 disabled={isSigningIn}
                 className="bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 dark:border-white/15 text-xs sm:text-sm font-black px-6 py-2.5 rounded-full transition shadow-md flex items-center gap-2.5 mx-auto cursor-pointer disabled:opacity-80"

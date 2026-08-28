@@ -1,18 +1,39 @@
 import { createClient } from "./client";
 import { FinancialDigitalTwin } from "../engine/types";
 
-export function signInWithGoogle() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://aadevubgvpjvzwpdzory.supabase.co";
+export async function signInWithGoogle() {
+  const supabase = createClient();
   const origin = (typeof window !== "undefined" && window.location.origin)
     ? window.location.origin
     : (process.env.NEXT_PUBLIC_SITE_URL || "https://valarchix.vercel.app");
   const currentPath = typeof window !== "undefined" ? (window.location.pathname || "/profile") : "/profile";
 
   const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(currentPath)}`;
-  const targetUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
 
-  if (typeof window !== "undefined") {
-    window.location.href = targetUrl;
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        queryParams: {
+          access_type: "offline",
+          prompt: "select_account",
+        },
+      },
+    });
+
+    if (error) {
+      console.error("Sign in error:", error);
+      alert("Sign in error: " + error.message);
+      throw error;
+    }
+
+    if (data?.url && typeof window !== "undefined") {
+      window.location.href = data.url;
+    }
+  } catch (err: any) {
+    console.error("Sign in exception:", err);
+    throw err;
   }
 }
 
