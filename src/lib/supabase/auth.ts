@@ -15,6 +15,7 @@ export async function signInWithGoogle() {
       provider: "google",
       options: {
         redirectTo,
+        skipBrowserRedirect: true,
         queryParams: {
           access_type: "offline",
           prompt: "select_account",
@@ -29,7 +30,7 @@ export async function signInWithGoogle() {
     }
 
     if (data?.url && typeof window !== "undefined") {
-      window.location.href = data.url;
+      window.location.assign(data.url);
     }
   } catch (err: any) {
     console.error("Sign in exception:", err);
