@@ -3,25 +3,38 @@ import { FinancialDigitalTwin } from "../engine/types";
 
 export async function signInWithGoogle() {
   const supabase = createClient();
-  const origin = (typeof window !== "undefined" && window.location.origin) ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000");
-  const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
+  const origin = (typeof window !== "undefined" && window.location.origin)
+    ? window.location.origin
+    : (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000");
+  const currentPath = typeof window !== "undefined" ? (window.location.pathname || "/profile") : "/profile";
 
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(currentPath)}`,
-      queryParams: {
-        access_type: "offline",
-        prompt: "select_account",
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(currentPath)}`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "select_account",
+        },
       },
-    },
-  });
+    });
 
-  if (error) {
-    console.error("Google OAuth Error:", error);
-    throw error;
+    if (error) {
+      console.error("Google OAuth Error:", error);
+      alert("Sign in error: " + (error.message || "Failed to connect to Google"));
+      return null;
+    }
+
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+    return data;
+  } catch (err: any) {
+    console.error("Sign in exception:", err);
+    alert("Sign in error: " + (err?.message || "Failed to initialize login"));
+    return null;
   }
-  return data;
 }
 
 export async function signOutUser() {
