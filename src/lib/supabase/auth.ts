@@ -1,40 +1,18 @@
 import { createClient } from "./client";
 import { FinancialDigitalTwin } from "../engine/types";
 
-export async function signInWithGoogle() {
-  const supabase = createClient();
+export function signInWithGoogle() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://aadevubgvpjvzwpdzory.supabase.co";
   const origin = (typeof window !== "undefined" && window.location.origin)
     ? window.location.origin
-    : (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000");
+    : (process.env.NEXT_PUBLIC_SITE_URL || "https://valarchix.vercel.app");
   const currentPath = typeof window !== "undefined" ? (window.location.pathname || "/profile") : "/profile";
 
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(currentPath)}`,
-        skipBrowserRedirect: true,
-        queryParams: {
-          access_type: "offline",
-          prompt: "select_account",
-        },
-      },
-    });
+  const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(currentPath)}`;
+  const targetUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
 
-    if (error) {
-      console.error("Google OAuth Error:", error);
-      alert("Sign in error: " + (error.message || "Failed to connect to Google"));
-      return null;
-    }
-
-    if (data?.url) {
-      window.location.assign(data.url);
-    }
-    return data;
-  } catch (err: any) {
-    console.error("Sign in exception:", err);
-    alert("Sign in error: " + (err?.message || "Failed to initialize login"));
-    return null;
+  if (typeof window !== "undefined") {
+    window.location.href = targetUrl;
   }
 }
 
