@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Lock, Delete, LogOut } from "lucide-react";
 import { signOutUser } from "@/lib/supabase/auth";
 import { useRouter } from "next/navigation";
@@ -13,16 +13,22 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [hasChecked, setHasChecked] = useState(false);
   const [shake, setShake] = useState(false);
+  const hiddenStartTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // Check if passcode is enabled
     const savedPin = localStorage.getItem("valarchix_app_pin");
-    const isUnlocked = sessionStorage.getItem("valarchix_session_unlocked");
+    const isUnlockedInSession = sessionStorage.getItem("valarchix_session_unlocked");
 
-    if (savedPin && isUnlocked !== "true") {
-      setIsLocked(true);
+    // On page load/refresh, require PIN if passcode is enabled
+    if (savedPin) {
+      if (isUnlockedInSession !== "true") {
+        setIsLocked(true);
+      }
     }
     setHasChecked(true);
 
+    // Event listener for manual lock trigger (e.g. Lock Now button in profile)
     const handleLockEvent = () => {
       const pin = localStorage.getItem("valarchix_app_pin");
       if (pin) {
@@ -34,8 +40,37 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       }
     };
 
+    // 25-Second Background Inactivity Listener (ONLY triggers when tab is genuinely hidden/switched away for >25s)
+    const handleVisibilityChange = () => {
+      const pin = localStorage.getItem("valarchix_app_pin");
+      if (!pin) return;
+
+      if (document.hidden) {
+        // Tab was hidden / placed in background
+        hiddenStartTimeRef.current = Date.now();
+      } else {
+        // User came back to the tab
+        if (hiddenStartTimeRef.current) {
+          const timeInBackground = Date.now() - hiddenStartTimeRef.current;
+          if (timeInBackground >= 25000) {
+            sessionStorage.removeItem("valarchix_session_unlocked");
+            setIsLocked(true);
+            setPinInput("");
+            setErrorMsg("");
+            setFailedAttempts(0);
+          }
+        }
+        hiddenStartTimeRef.current = null;
+      }
+    };
+
     window.addEventListener("valarchix_lock_app", handleLockEvent);
-    return () => window.removeEventListener("valarchix_lock_app", handleLockEvent);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("valarchix_lock_app", handleLockEvent);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const handleKeyPress = (num: string) => {
