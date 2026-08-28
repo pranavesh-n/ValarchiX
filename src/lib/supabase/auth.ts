@@ -3,13 +3,14 @@ import { FinancialDigitalTwin } from "../engine/types";
 
 export function signInWithGoogle() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://aadevubgvpjvzwpdzory.supabase.co";
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZGV2dWJndnBqdnp3cGR6b3J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NTM1NTcsImV4cCI6MjEwMjAyOTU1N30._Gptq2IxOa4DAAyCGS_8sTICG2VV4eIfxIuhlBPdNYc";
   const origin = (typeof window !== "undefined" && window.location.origin)
     ? window.location.origin
     : (process.env.NEXT_PUBLIC_SITE_URL || "https://valarchix.vercel.app");
   
-  // Instant direct authorize URL - zero latency hop, returns directly with tokens
+  // Instant direct authorize URL with anon apikey - 0ms latency, returns directly with tokens
   const redirectTo = `${origin}/profile`;
-  const targetUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+  const targetUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}&apikey=${supabaseAnonKey}&prompt=select_account`;
 
   if (typeof window !== "undefined") {
     window.location.href = targetUrl;
