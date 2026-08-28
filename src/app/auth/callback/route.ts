@@ -18,6 +18,8 @@ export async function GET(request: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://aadevubgvpjvzwpdzory.supabase.co";
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZGV2dWJndnBqdnp3cGR6b3J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NTM1NTcsImV4cCI6MjEwMjAyOTU1N30._Gptq2IxOa4DAAyCGS_8sTICG2VV4eIfxIuhlBPdNYc";
 
+    let response = NextResponse.redirect(`${origin}${next}`);
+
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
@@ -25,9 +27,10 @@ export async function GET(request: Request) {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+              response.cookies.set(name, value, options);
+            });
           } catch {
             // Ignored if called from Server Component
           }
@@ -35,14 +38,19 @@ export async function GET(request: Request) {
       },
     });
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
-    } else {
-      console.error("Auth callback code exchange error:", error);
+    try {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (!error) {
+        return response;
+      }
+    } catch (err) {
+      console.warn("Server auth code exchange exception:", err);
     }
+
+    // Resilient fallback for mobile PKCE browsers: pass code to client to exchange locally
+    const sep = next.includes("?") ? "&" : "?";
+    return NextResponse.redirect(`${origin}${next}${sep}code=${encodeURIComponent(code)}`);
   }
 
-  // Return the user to next page (e.g. /profile)
   return NextResponse.redirect(`${origin}${next}`);
 }

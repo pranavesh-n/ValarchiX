@@ -52,6 +52,19 @@ export default function ProfilePage() {
     const supabase = createClient();
 
     async function loadData() {
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get("code");
+        if (code) {
+          try {
+            await supabase.auth.exchangeCodeForSession(code);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (e) {
+            console.warn("Client exchangeCodeForSession:", e);
+          }
+        }
+      }
+
       const s = await getCurrentUserSession();
       setSession(s);
 
@@ -91,7 +104,7 @@ export default function ProfilePage() {
     }
     loadData();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, newSession: any) => {
       setSession(newSession);
       if (event === "SIGNED_IN" && newSession?.user) {
         const alreadyNotified = sessionStorage.getItem("valarchix_login_toast_shown");

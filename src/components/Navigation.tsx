@@ -179,12 +179,24 @@ export default function Navigation() {
     const supabase = createClient();
 
     async function loadAuth() {
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get("code");
+        if (code) {
+          try {
+            await supabase.auth.exchangeCodeForSession(code);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (e) {
+            console.warn("Navigation exchangeCodeForSession:", e);
+          }
+        }
+      }
       const s = await getCurrentUserSession();
       setSession(s);
     }
     loadAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, newSession: any) => {
       setSession(newSession);
     });
 

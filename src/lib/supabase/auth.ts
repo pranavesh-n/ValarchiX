@@ -13,6 +13,7 @@ export async function signInWithGoogle() {
       provider: "google",
       options: {
         redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(currentPath)}`,
+        skipBrowserRedirect: true,
         queryParams: {
           access_type: "offline",
           prompt: "select_account",
@@ -27,7 +28,7 @@ export async function signInWithGoogle() {
     }
 
     if (data?.url) {
-      window.location.href = data.url;
+      window.location.assign(data.url);
     }
     return data;
   } catch (err: any) {
