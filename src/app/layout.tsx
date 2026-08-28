@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
 import InstallPwaModal from "@/components/InstallPwaModal";
+import AppLockGate from "@/components/AppLockGate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,9 +51,11 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-navy-bg text-light-grey" suppressHydrationWarning>
         <Navigation />
         <div className="flex-1 flex flex-col min-w-0 w-full overflow-x-hidden">
-          <main className="flex-1 px-3 sm:px-6 pt-3 sm:pt-5 pb-24 md:pb-8 max-w-6xl w-full mx-auto min-w-0 overflow-x-hidden">
-            {children}
-          </main>
+          <AppLockGate>
+            <main className="flex-1 px-3 sm:px-6 pt-3 sm:pt-5 pb-24 md:pb-8 max-w-6xl w-full mx-auto min-w-0 overflow-x-hidden">
+              {children}
+            </main>
+          </AppLockGate>
           
           {/* Universal Footer Disclaimer */}
           <footer className="border-t border-border-navy bg-footer-bg py-6 pb-28 md:pb-8 px-4 text-center text-xs text-muted-grey mt-auto">

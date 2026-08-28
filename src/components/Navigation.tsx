@@ -44,7 +44,8 @@ import {
   LogIn,
   CheckCircle2,
   Smartphone,
-  BookOpen
+  BookOpen,
+  ShieldCheck
 } from "lucide-react";
 import { getCurrentUserSession, signInWithGoogle, signOutUser } from "@/lib/supabase/auth";
 
@@ -77,6 +78,7 @@ const NAV_ITEMS: NavGroup[] = [
     category: "Core & Learning",
     items: [
       { name: "Home Dashboard", href: "/", icon: Home, desc: "Financial Knowledge OS Overview" },
+      { name: "Profile & Settings", href: "/profile", icon: ShieldCheck, desc: "Passcode lock, vault backup & account" },
       { name: "About ValarchiX", href: "/about", icon: Info, desc: "Mission, philosophy & zero-knowledge architecture" },
       { name: "Valarchi Vaathi 🎓", href: "/vaathi", icon: GraduationCap, desc: "AI financial literacy mentor" },
       { name: "Beyond FDs & Learning", href: "/beyond-fds", icon: Info, desc: "Real returns vs inflation & compounding" }
@@ -92,61 +94,51 @@ const NAV_ITEMS: NavGroup[] = [
   {
     category: "Budgeting & Cash Flow",
     items: [
-      { name: "Emergency Fund", href: "/emergency-fund", icon: ShieldAlert, desc: "3-6 month fortress requirement" },
-      { name: "Latte Factor", href: "/latte-factor", icon: Coffee, desc: "Small daily leak compounding" },
-      { name: "Rent vs. Buy", href: "/rent-vs-buy", icon: Home, desc: "Opportunity cost of real estate" }
+      { name: "Latte Factor Spends", href: "/latte-factor", icon: Coffee, desc: "Small daily leak compounding to wealth" },
+      { name: "Emergency Fund Fortress", href: "/emergency-fund", icon: ShieldAlert, desc: "3-6 month liquid emergency buffer" },
+      { name: "Rent vs Buy Decision", href: "/rent-vs-buy", icon: Landmark, desc: "Opportunity cost of real estate vs equity" },
+      { name: "Inflation & Purchasing Power", href: "/inflation", icon: BarChart2, desc: "Future cost & purchasing power erosion" },
+      { name: "Credit Card Debt Trap", href: "/credit-card", icon: CreditCard, desc: "42% annualized APR debt trap solver" },
+      { name: "Debt Payoff Optimizer", href: "/debt-payoff", icon: Scissors, desc: "Snowball vs Avalanche debt freedom" },
+      { name: "Human Life Value (HLV)", href: "/hlv", icon: HeartPulse, desc: "Income replacement pure term cover" },
+      { name: "FIRE Early Retirement", href: "/fire", icon: Flame, desc: "25x-30x annual spend corpus milestones" }
     ]
   },
   {
-    category: "Wealth Building",
+    category: "Wealth & Compounding",
     items: [
+      { name: "SIP & FD Simulator", href: "/sip", icon: Percent, desc: "Systematic investment plan compounding" },
+      { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight, desc: "Annual income increment compounding" },
+      { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp, desc: "Exponential curve time simulator" },
+      { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock, desc: "Wealth permanently lost by waiting" },
       { name: "Child Legacy Engine", href: "/child-legacy", icon: Baby, desc: "18-25 yr generational compounding" },
-      { name: "SIP & FD Simulator", href: "/sip", icon: Percent, desc: "Systematic monthly investing" },
-      { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight, desc: "Annual increment compounding" },
-      { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp, desc: "Exponential curve simulator" },
-      { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock, desc: "Wealth lost by waiting" },
-      { name: "Inflation Calculator", href: "/inflation", icon: BarChart2, desc: "Future purchasing power drop" },
-      { name: "RD Calculator", href: "/rd", icon: Percent, desc: "Recurring deposit returns" },
-      { name: "ROI & CAGR", href: "/roi", icon: TrendingUp, desc: "Annualized compounding metrics" },
-      { name: "XIRR Calculator", href: "/xirr", icon: Zap, desc: "Irregular cash flow returns" }
+      { name: "Recurring Deposit (RD)", href: "/rd", icon: Percent, desc: "Bank & Post Office RD growth" },
+      { name: "ROI & CAGR Metric", href: "/roi", icon: TrendingUp, desc: "Annualized point-to-point returns" },
+      { name: "XIRR Irregular Return", href: "/xirr", icon: Zap, desc: "Accurate realized cash flow XIRR" }
     ]
   },
   {
-    category: "Debt Tools",
+    category: "Retirement & Sovereign Schemes",
     items: [
-      { name: "Debt Snowball / Avalanche", href: "/debt-payoff", icon: Scissors, desc: "Optimal loan payoff strategy" },
-      { name: "Loan EMI Simulator", href: "/emi", icon: Landmark, desc: "Principal vs interest amortization" },
-      { name: "Credit Card Payoff", href: "/credit-card", icon: CreditCard, desc: "High-interest debt trap analyzer" }
+      { name: "PPF (15-Yr Sovereign)", href: "/ppf", icon: Coins, desc: "15-year tax-free government compounding" },
+      { name: "NPS Pension Scheme", href: "/nps", icon: TrendingUp, desc: "National Pension System Tier-1 corpus" },
+      { name: "EPF Corpus Calculator", href: "/epf", icon: Coins, desc: "Employee provident fund retirement math" },
+      { name: "Sukanya Samriddhi (SSY)", href: "/ssy", icon: Coins, desc: "Girl child 8.2% sovereign compounding" },
+      { name: "SWP Drawdown Planner", href: "/swp", icon: ArrowDownLeft, desc: "Systematic monthly tax-efficient cash flow" },
+      { name: "APY Pension Simulator", href: "/apy", icon: Coins, desc: "Guaranteed monthly lifelong pension" },
+      { name: "Senior Citizens (SCSS)", href: "/scss", icon: Coins, desc: "Quarterly interest payout scheme" },
+      { name: "Gratuity Mathematics", href: "/gratuity", icon: Coins, desc: "15/26 service tenure statutory math" }
     ]
   },
   {
-    category: "Retirement & Planning",
+    category: "Tax, Debt & Loans",
     items: [
-      { name: "Goal Planner", href: "/goal", icon: Target, desc: "Target amount future solver" },
-      { name: "FIRE Early Retirement", href: "/fire", icon: Flame, desc: "25x-30x corpus milestones" },
-      { name: "Retirement Planner", href: "/retirement", icon: Hourglass, desc: "Post-retirement cash drawdown" },
-      { name: "Human Life Value (HLV)", href: "/hlv", icon: HeartPulse, desc: "Income replacement term cover" },
-      { name: "PPF Calculator", href: "/ppf", icon: Coins, desc: "15-year sovereign tax-free compounding" },
-      { name: "NPS Calculator", href: "/nps", icon: TrendingUp, desc: "National Pension System tier 1" },
-      { name: "SWP Calculator", href: "/swp", icon: ArrowDownLeft, desc: "Systematic withdrawal plan" },
-      { name: "SSY Calculator", href: "/ssy", icon: Coins, desc: "Sukanya Samriddhi Yojana" },
-      { name: "EPF Calculator", href: "/epf", icon: Coins, desc: "Employee provident fund corpus" },
-      { name: "Gratuity Calculator", href: "/gratuity", icon: Coins, desc: "Service tenure gratuity math" },
-      { name: "APY Pension Simulator", href: "/apy", icon: Coins, desc: "Atal Pension Yojana" },
-      { name: "Post Office MIS", href: "/pomis", icon: Coins, desc: "Monthly income scheme" },
-      { name: "SCSS Calculator", href: "/scss", icon: Coins, desc: "Senior citizens savings scheme" }
-    ]
-  },
-  {
-    category: "Portfolio & Tax",
-    items: [
-      { name: "Strategy Simulator (v2.0)", href: "/portfolio-simulator", icon: Sliders, desc: "Custom asset allocation stress-test" },
-      { name: "Portfolio Allocator", href: "/portfolio", icon: PieChart, desc: "Risk-adjusted rebalancing" },
-      { name: "Tax Regime Hub", href: "/tax", icon: Calculator, desc: "Old vs New Regime comparative math" },
-      { name: "HRA Exemption", href: "/hra", icon: Calculator, desc: "House rent allowance tax saving" },
-      { name: "Advanced Income Tax", href: "/income-tax", icon: Calculator, desc: "Section 80C, 80D & surcharge math" },
-      { name: "TDS Calculator", href: "/tds", icon: Calculator, desc: "Tax deducted at source on income" },
-      { name: "NSC Calculator", href: "/nsc", icon: Coins, desc: "National Savings Certificate" }
+      { name: "Tax Regime Hub (Old vs New)", href: "/tax", icon: Calculator, desc: "Comparative deduction & surcharge math" },
+      { name: "HRA Exemption Math", href: "/hra", icon: Calculator, desc: "House rent allowance tax saving optimization" },
+      { name: "Loan EMI Simulator", href: "/emi", icon: Landmark, desc: "Principal vs interest amortization split" },
+      { name: "Advanced Income Tax", href: "/income-tax", icon: Calculator, desc: "Section 80C, 80D, 87A rebate & cess" },
+      { name: "TDS Deductor Math", href: "/tds", icon: Calculator, desc: "Tax deducted at source on payments" },
+      { name: "NSC Certificate", href: "/nsc", icon: Coins, desc: "5-year national savings post office" }
     ]
   }
 ];
@@ -162,9 +154,10 @@ const FUNDSINDIA_GOALS = [
 
 const BOTTOM_TABS = [
   { name: "Home", href: "/", icon: Home, type: "link" as const },
-  { name: "Calculators", href: "#", icon: Calculator, type: "drawer" as const },
   { name: "Engines", href: "#", icon: LayoutGrid, type: "drawer" as const },
+  { name: "Calculators", href: "#", icon: Calculator, type: "drawer" as const },
   { name: "Vaathi", href: "/vaathi", icon: GraduationCap, type: "link" as const },
+  { name: "Profile", href: "/profile", icon: ShieldCheck, type: "link" as const },
 ];
 
 export default function Navigation() {
@@ -574,18 +567,18 @@ export default function Navigation() {
               Vaathi 🎓
             </Link>
 
-            {/* Direct Link: About Us */}
+            {/* Direct Link: Profile */}
             <Link 
-              href="/about" 
-              className={`px-4 py-2.5 rounded-xl transition hover:text-heading ${pathname === "/about" ? "text-emerald font-black" : ""}`}
+              href="/profile" 
+              className={`px-4 py-2.5 rounded-xl transition hover:text-heading ${pathname === "/profile" ? "text-emerald font-black" : ""}`}
             >
-              About Us
+              Profile
             </Link>
           </nav>
 
           {/* Right Action Buttons: PDF, Theme Toggle & Google Profile Dropdown */}
           <div className="flex items-center gap-3">
-            {pathname !== "/" && (
+            {pathname && !["/", "/profile", "/about", "/disclaimer", "/auth", "/vaathi"].includes(pathname) && !pathname.startsWith("/auth") && (
               <button
                 onClick={() => window.print()}
                 className="hidden xl:flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-border-navy bg-navy-card/50 text-muted-grey hover:text-heading transition-all text-xs font-bold cursor-pointer shadow-sm"
@@ -651,6 +644,18 @@ export default function Navigation() {
                   </div>
 
                   <div className="border-t border-border-navy pt-3 space-y-2.5">
+                    {/* Link to Full Profile Page */}
+                    <Link
+                      href="/profile"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center justify-between p-2.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-xs font-black text-indigo-400 transition cursor-pointer w-full text-left"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <ShieldCheck size={15} /> Open Profile &amp; Security OS
+                      </span>
+                      <ChevronRight size={14} />
+                    </Link>
+
                     {/* PWA App Installation Status */}
                     {isPwaInstalled ? (
                       <div className="flex items-center justify-between p-2.5 bg-emerald/10 border border-emerald/30 rounded-xl text-emerald font-bold text-xs">
@@ -679,7 +684,7 @@ export default function Navigation() {
                       </button>
                     )}
 
-                    {/* Sign Out Button (Minimalist like Sikkanam) */}
+                    {/* Sign Out Button */}
                     <button
                       type="button"
                       onClick={handleSignOut}
