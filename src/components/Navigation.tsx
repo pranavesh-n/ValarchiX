@@ -184,15 +184,40 @@ export default function Navigation() {
         const code = urlParams.get("code");
         if (code) {
           try {
-            await supabase.auth.exchangeCodeForSession(code);
+            const { data } = await supabase.auth.exchangeCodeForSession(code);
+            if (data?.session) {
+              setSession(data.session);
+            }
             window.history.replaceState({}, document.title, window.location.pathname);
           } catch (e) {
             console.warn("Navigation exchangeCodeForSession:", e);
           }
         }
+
+        if (window.location.hash) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const accessToken = hashParams.get("access_token");
+          const refreshToken = hashParams.get("refresh_token");
+          if (accessToken && refreshToken) {
+            try {
+              const { data } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              if (data?.session) {
+                setSession(data.session);
+              }
+              window.history.replaceState({}, document.title, window.location.pathname);
+            } catch (e) {
+              console.warn("Navigation setSession from hash:", e);
+            }
+          }
+        }
       }
       const s = await getCurrentUserSession();
-      setSession(s);
+      if (s?.user) {
+        setSession(s);
+      }
     }
     loadAuth();
 

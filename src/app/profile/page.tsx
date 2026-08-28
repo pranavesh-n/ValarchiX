@@ -54,20 +54,47 @@ export default function ProfilePage() {
 
     async function loadData() {
       if (typeof window !== "undefined") {
+        // 1. Check query param code (?code=...)
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get("code");
         if (code) {
           try {
-            await supabase.auth.exchangeCodeForSession(code);
+            const { data } = await supabase.auth.exchangeCodeForSession(code);
+            if (data?.session) {
+              setSession(data.session);
+            }
             window.history.replaceState({}, document.title, window.location.pathname);
           } catch (e) {
             console.warn("Client exchangeCodeForSession:", e);
           }
         }
+
+        // 2. Check URL hash fragment (#access_token=...)
+        if (window.location.hash) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const accessToken = hashParams.get("access_token");
+          const refreshToken = hashParams.get("refresh_token");
+          if (accessToken && refreshToken) {
+            try {
+              const { data } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              if (data?.session) {
+                setSession(data.session);
+              }
+              window.history.replaceState({}, document.title, window.location.pathname);
+            } catch (e) {
+              console.warn("Client setSession from hash:", e);
+            }
+          }
+        }
       }
 
       const s = await getCurrentUserSession();
-      setSession(s);
+      if (s?.user) {
+        setSession(s);
+      }
 
       // Load saved DNA & Goals in real time
       try {
