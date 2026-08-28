@@ -29,6 +29,12 @@ import {
   loadDigitalTwinFromVault
 } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
+import {
+  hashPin,
+  getUserPasscodeKey,
+  getUserLockEnabledKey,
+  getUserSessionUnlockedKey
+} from "@/lib/passcode";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -92,8 +98,14 @@ export default function ProfilePage() {
       }
 
       const s = await getCurrentUserSession();
+      setSession(s);
+
+      // Check Passcode State strictly for this authenticated user
       if (s?.user) {
-        setSession(s);
+        const userPin = localStorage.getItem(getUserPasscodeKey(s.user.id)) || localStorage.getItem("valarchix_app_pin");
+        setPasscodeEnabled(!!userPin);
+      } else {
+        setPasscodeEnabled(false);
       }
 
       // Load saved DNA & Goals in real time
@@ -118,10 +130,6 @@ export default function ProfilePage() {
       } catch (err) {
         console.warn("Failed to load DNA record:", err);
       }
-
-      // Check Passcode State
-      const savedPin = localStorage.getItem("valarchix_app_pin");
-      setPasscodeEnabled(!!savedPin);
 
       // Check PWA Installation
       const isStandalone =
@@ -152,13 +160,23 @@ export default function ProfilePage() {
     };
   }, []);
 
-  const handlePinKeyPress = (digit: string) => {
-    setCurrentPin((prev) => {
-      if (prev.length >= 4) return prev;
-      const nextPin = prev + digit;
-      if (nextPin.length === 4) {
-        localStorage.setItem("valarchix_app_pin", nextPin);
+  const handlePinKeyPress = async (digit: string) => {
+    if (currentPin.length >= 4) return;
+    const nextPin = currentPin + digit;
+    setCurrentPin(nextPin);
+
+    if (nextPin.length === 4) {
+      if (session?.user) {
+        const userId = session.user.id;
+        const hashed = await hashPin(nextPin);
+        localStorage.setItem(getUserPasscodeKey(userId), hashed);
+        localStorage.setItem(getUserLockEnabledKey(userId), "true");
+        sessionStorage.setItem(getUserSessionUnlockedKey(userId), "true");
+
+        // Backwards compatibility keys
+        localStorage.setItem("valarchix_app_pin", hashed);
         sessionStorage.setItem("valarchix_session_unlocked", "true");
+
         setPasscodeEnabled(true);
         const isUpdate = passcodeEnabled;
         setTimeout(() => {
@@ -167,8 +185,7 @@ export default function ProfilePage() {
           showToast(isUpdate ? "4-digit PIN updated successfully ✅" : "4-digit PIN enabled successfully ✅");
         }, 120);
       }
-      return nextPin;
-    });
+    }
   };
 
   const handlePinDelete = () => {
@@ -195,7 +212,7 @@ export default function ProfilePage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [passcodeModalOpen]);
+  }, [passcodeModalOpen, currentPin]);
 
   const showToast = (msg: string) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -217,6 +234,12 @@ export default function ProfilePage() {
   const handleTogglePasscode = () => {
     requireAuthForAction("App Passcode Lock", () => {
       if (passcodeEnabled) {
+        if (session?.user) {
+          const userId = session.user.id;
+          localStorage.removeItem(getUserPasscodeKey(userId));
+          localStorage.removeItem(getUserLockEnabledKey(userId));
+          sessionStorage.removeItem(getUserSessionUnlockedKey(userId));
+        }
         localStorage.removeItem("valarchix_app_pin");
         sessionStorage.removeItem("valarchix_session_unlocked");
         setPasscodeEnabled(false);
@@ -242,9 +265,14 @@ export default function ProfilePage() {
   };
 
   const executeSignOut = async () => {
+    if (session?.user) {
+      sessionStorage.removeItem(getUserSessionUnlockedKey(session.user.id));
+    }
+    sessionStorage.removeItem("valarchix_session_unlocked");
     sessionStorage.removeItem("valarchix_login_toast_shown");
     await signOutUser();
     setSession(null);
+    setPasscodeEnabled(false);
     setConfirmSignOutOpen(false);
     showToast("Signed out successfully");
     router.push("/");
@@ -701,10 +729,6 @@ export default function ProfilePage() {
                   key={num}
                   type="button"
                   onClick={() => handlePinKeyPress(num)}
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    handlePinKeyPress(num);
-                  }}
                   className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm select-none touch-manipulation"
                 >
                   {num}
@@ -720,10 +744,6 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => handlePinKeyPress("0")}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  handlePinKeyPress("0");
-                }}
                 className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm select-none touch-manipulation"
               >
                 0
@@ -733,10 +753,6 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={handlePinDelete}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  handlePinDelete();
-                }}
                 className="h-16 rounded-2xl bg-[#172033] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 active:scale-90 flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm select-none touch-manipulation"
                 title="Delete digit"
               >
