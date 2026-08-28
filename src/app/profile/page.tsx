@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -19,7 +19,8 @@ import {
   X,
   FileText,
   ShieldCheck,
-  Delete
+  Delete,
+  AlertTriangle
 } from "lucide-react";
 import {
   getCurrentUserSession,
@@ -42,7 +43,10 @@ export default function ProfilePage() {
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
   const [loginPromptModalOpen, setLoginPromptModalOpen] = useState(false);
   const [loginPromptFeature, setLoginPromptFeature] = useState("");
+  const [confirmSignOutOpen, setConfirmSignOutOpen] = useState(false);
+  const [confirmClearCacheOpen, setConfirmClearCacheOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -90,8 +94,14 @@ export default function ProfilePage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
       if (event === "SIGNED_IN" && newSession?.user) {
-        const name = newSession.user.user_metadata?.full_name || newSession.user.email?.split("@")[0] || "Investor";
-        showToast(`Logged in successfully as ${name} ✅`);
+        const alreadyNotified = sessionStorage.getItem("valarchix_login_toast_shown");
+        if (!alreadyNotified) {
+          sessionStorage.setItem("valarchix_login_toast_shown", "true");
+          const name = newSession.user.user_metadata?.full_name || newSession.user.email?.split("@")[0] || "Investor";
+          showToast(`Logged in successfully as ${name} ✅`);
+        }
+      } else if (event === "SIGNED_OUT") {
+        sessionStorage.removeItem("valarchix_login_toast_shown");
       }
       loadData();
     });
@@ -101,9 +111,55 @@ export default function ProfilePage() {
     };
   }, []);
 
+  const handlePinKeyPress = (digit: string) => {
+    setCurrentPin((prev) => {
+      if (prev.length >= 4) return prev;
+      const nextPin = prev + digit;
+      if (nextPin.length === 4) {
+        localStorage.setItem("valarchix_app_pin", nextPin);
+        sessionStorage.setItem("valarchix_session_unlocked", "true");
+        setPasscodeEnabled(true);
+        const isUpdate = passcodeEnabled;
+        setTimeout(() => {
+          setPasscodeModalOpen(false);
+          setCurrentPin("");
+          showToast(isUpdate ? "4-digit PIN updated successfully ✅" : "4-digit PIN enabled successfully ✅");
+        }, 120);
+      }
+      return nextPin;
+    });
+  };
+
+  const handlePinDelete = () => {
+    setCurrentPin((prev) => prev.slice(0, -1));
+  };
+
+  // Keyboard support for Passcode modal
+  useEffect(() => {
+    if (!passcodeModalOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        handlePinKeyPress(e.key);
+      } else if (e.key === "Backspace" || e.key === "Delete") {
+        e.preventDefault();
+        handlePinDelete();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setPasscodeModalOpen(false);
+        setCurrentPin("");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [passcodeModalOpen]);
+
   const showToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
-    setTimeout(() => {
+    toastTimerRef.current = setTimeout(() => {
       setToastMessage(null);
     }, 3500);
   };
@@ -130,34 +186,27 @@ export default function ProfilePage() {
     });
   };
 
-  const handleSavePin = () => {
-    if (currentPin.length === 4) {
-      localStorage.setItem("valarchix_app_pin", currentPin);
-      sessionStorage.setItem("valarchix_session_unlocked", "true");
-      setPasscodeEnabled(true);
-      setPasscodeModalOpen(false);
-      const isUpdate = passcodeEnabled;
-      setCurrentPin("");
-      showToast(isUpdate ? "4-digit PIN updated successfully ✅" : "4-digit PIN enabled successfully ✅");
-    } else {
-      alert("Please enter a 4-digit PIN");
-    }
-  };
-
   const handleClearCache = () => {
-    if (confirm("Reset local temporary session state? (Your saved financial records remain safe)")) {
-      sessionStorage.clear();
-      showToast("Temporary session cache reset successfully ✅");
-    }
+    setConfirmClearCacheOpen(true);
   };
 
-  const handleSignOut = async () => {
-    if (confirm("Are you sure you want to sign out of ValarchiX?")) {
-      await signOutUser();
-      setSession(null);
-      showToast("Signed out successfully");
-      router.push("/");
-    }
+  const executeClearCache = () => {
+    sessionStorage.clear();
+    setConfirmClearCacheOpen(false);
+    showToast("Temporary session cache reset successfully ✅");
+  };
+
+  const handleSignOut = () => {
+    setConfirmSignOutOpen(true);
+  };
+
+  const executeSignOut = async () => {
+    sessionStorage.removeItem("valarchix_login_toast_shown");
+    await signOutUser();
+    setSession(null);
+    setConfirmSignOutOpen(false);
+    showToast("Signed out successfully");
+    router.push("/");
   };
 
   const userName = session?.user
@@ -552,100 +601,109 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Passcode Set Modal (Sikkanam Keypad Style) */}
+      {/* Full-Screen Set/Change Passcode Screen (Matches App Lock Gate UI) */}
       {passcodeModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0c121e] border border-white/10 text-white rounded-3xl p-6 sm:p-7 max-w-xs w-full space-y-4 shadow-2xl animate-slideDown text-center">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="font-black text-sm text-white flex items-center gap-2">
-                <Lock size={16} className="text-emerald" />
-                <span>{passcodeEnabled ? "Change Passcode PIN" : "Set 4-Digit Passcode"}</span>
-              </h3>
-              <button
-                onClick={() => {
-                  setPasscodeModalOpen(false);
-                  setCurrentPin("");
-                }}
-                className="text-neutral-400 hover:text-white cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+        <div className="fixed inset-0 z-[9999] bg-[#0c121e] text-white flex flex-col items-center justify-center p-4 select-none animate-fadeIn">
+          <div className="flex flex-col items-center justify-center max-w-sm w-full space-y-4 text-center">
+            
+            {/* Original ValarchiX Official Logo */}
+            <div className="relative">
+              <img
+                src="/logo.svg"
+                alt="ValarchiX"
+                className="w-16 h-16 rounded-2xl shadow-xl shadow-emerald/30 border border-emerald/50 object-contain bg-[#030a16]"
+              />
+              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald border-2 border-[#0c121e]"></span>
             </div>
 
-            <p className="text-xs text-neutral-400">
-              Enter 4 digits to secure ValarchiX
-            </p>
+            {/* Heading & Subtitle */}
+            <div className="space-y-1 pt-1">
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                {passcodeEnabled ? "Change Passcode PIN 🔐" : "Set 4-Digit Passcode 🔐"}
+              </h1>
+              <p className="text-xs text-neutral-400 font-medium">
+                Enter 4 digits to secure ValarchiX on this device
+              </p>
+            </div>
 
             {/* 4 Circular PIN Dots */}
-            <div className="flex items-center justify-center gap-3.5 py-1">
+            <div className="flex items-center justify-center gap-3.5 py-3">
               {[0, 1, 2, 3].map((index) => (
                 <div
                   key={index}
                   className={`w-3.5 h-3.5 rounded-full transition-all duration-150 border ${
                     currentPin.length > index
-                      ? "bg-white border-white scale-110"
+                      ? "bg-white border-white scale-110 shadow-sm"
                       : "border-neutral-600 bg-transparent"
                   }`}
                 />
               ))}
             </div>
 
-            {/* Keypad */}
-            <div className="grid grid-cols-3 gap-2.5 pt-2">
+            {/* Keypad Grid (Same large 3x4 layout as unlock gate) */}
+            <div className="grid grid-cols-3 gap-3 pt-2 w-full max-w-[280px]">
               {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
                 <button
                   key={num}
                   type="button"
+                  onClick={() => handlePinKeyPress(num)}
                   onPointerDown={(e) => {
                     e.preventDefault();
-                    if (currentPin.length < 4) {
-                      setCurrentPin((prev) => prev + num);
-                    }
+                    handlePinKeyPress(num);
                   }}
-                  className="h-14 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-lg flex items-center justify-center border border-white/5 transition cursor-pointer touch-manipulation"
+                  className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm select-none touch-manipulation"
                 >
                   {num}
                 </button>
               ))}
-              <div className="h-14 flex items-center justify-center text-neutral-600">
-                <Lock size={18} />
+              
+              {/* Row 4: Lock Icon */}
+              <div className="h-16 flex items-center justify-center text-neutral-600">
+                <Lock size={20} />
               </div>
+
+              {/* Row 4: Digit 0 */}
               <button
                 type="button"
+                onClick={() => handlePinKeyPress("0")}
                 onPointerDown={(e) => {
                   e.preventDefault();
-                  if (currentPin.length < 4) {
-                    setCurrentPin((prev) => prev + "0");
-                  }
+                  handlePinKeyPress("0");
                 }}
-                className="h-14 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-lg flex items-center justify-center border border-white/5 transition cursor-pointer touch-manipulation"
+                className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm select-none touch-manipulation"
               >
                 0
               </button>
+
+              {/* Row 4: Backspace Button */}
               <button
                 type="button"
+                onClick={handlePinDelete}
                 onPointerDown={(e) => {
                   e.preventDefault();
-                  setCurrentPin((prev) => prev.slice(0, -1));
+                  handlePinDelete();
                 }}
-                className="h-14 rounded-2xl bg-[#172033] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 active:scale-90 flex items-center justify-center border border-white/5 transition cursor-pointer touch-manipulation"
+                className="h-16 rounded-2xl bg-[#172033] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 active:scale-90 flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm select-none touch-manipulation"
                 title="Delete digit"
               >
-                <Delete size={20} />
+                <Delete size={22} />
               </button>
             </div>
 
-            <button
-              onClick={handleSavePin}
-              disabled={currentPin.length !== 4}
-              className={`w-full py-3 rounded-2xl text-xs font-black transition cursor-pointer ${
-                currentPin.length === 4
-                  ? "bg-emerald hover:bg-emerald/90 text-slate-950 shadow-md shadow-emerald/20"
-                  : "bg-white/10 text-neutral-500 cursor-not-allowed"
-              }`}
-            >
-              Save 4-Digit Passcode
-            </button>
+            {/* Cancel Button */}
+            <div className="pt-3 min-h-[48px] flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setPasscodeModalOpen(false);
+                  setCurrentPin("");
+                }}
+                className="text-xs font-bold text-neutral-400 hover:text-white px-5 py-2.5 rounded-full border border-white/10 hover:border-white/20 transition cursor-pointer"
+              >
+                Cancel &amp; Return to Profile
+              </button>
+            </div>
+
           </div>
         </div>
       )}
@@ -710,6 +768,76 @@ export default function ProfilePage() {
                   View Full About &amp; Architecture Page ➔
                 </Link>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal: Sign Out */}
+      {confirmSignOutOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-navy-card border border-border-navy rounded-3xl p-6 sm:p-7 max-w-sm w-full space-y-5 shadow-2xl animate-slideDown text-center">
+            <div className="flex justify-center">
+              <div className="p-3.5 rounded-full bg-emerald/10 text-emerald border border-emerald/20">
+                <LogOut size={26} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-heading">Sign Out of ValarchiX?</h3>
+              <p className="text-xs text-muted-grey">
+                Your encrypted data and financial records are securely synced in the cloud.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmSignOutOpen(false)}
+                className="flex-1 py-3 rounded-2xl border border-border-navy bg-navy-bg hover:bg-navy-light text-heading text-xs font-black transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeSignOut}
+                className="flex-1 py-3 rounded-2xl bg-emerald hover:bg-emerald/90 text-slate-950 text-xs font-black transition shadow-md shadow-emerald/20 cursor-pointer border border-emerald"
+              >
+                Yes, Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal: Clear Temporary Cache */}
+      {confirmClearCacheOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-navy-card border border-border-navy rounded-3xl p-6 sm:p-7 max-w-sm w-full space-y-5 shadow-2xl animate-slideDown text-center">
+            <div className="flex justify-center">
+              <div className="p-3.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                <Trash2 size={26} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-heading">Reset Session Cache?</h3>
+              <p className="text-xs text-muted-grey">
+                This clears temporary session variables. Your saved cloud records, DNA scores, and goals remain 100% safe.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmClearCacheOpen(false)}
+                className="flex-1 py-3 rounded-2xl border border-border-navy bg-navy-bg hover:bg-navy-light text-heading text-xs font-black transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeClearCache}
+                className="flex-1 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-black transition shadow-md shadow-rose-500/20 cursor-pointer"
+              >
+                Reset Cache
+              </button>
             </div>
           </div>
         </div>
