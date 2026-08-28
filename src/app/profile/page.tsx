@@ -18,7 +18,8 @@ import {
   ChevronRight,
   X,
   FileText,
-  ShieldCheck
+  ShieldCheck,
+  Delete
 } from "lucide-react";
 import {
   getCurrentUserSession,
@@ -506,35 +507,94 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Passcode Set Modal */}
+      {/* Passcode Set Modal (Sikkanam Keypad Style) */}
       {passcodeModalOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-navy-card border border-border-navy rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl animate-slideDown">
-            <div className="flex items-center justify-between border-b border-border-navy pb-3">
-              <h3 className="font-black text-base text-heading flex items-center gap-2">
-                <Lock size={18} className="text-emerald" />
-                <span>Set 4-Digit Passcode</span>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0c121e] border border-white/10 text-white rounded-3xl p-6 sm:p-7 max-w-xs w-full space-y-4 shadow-2xl animate-slideDown text-center">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <h3 className="font-black text-sm text-white flex items-center gap-2">
+                <Lock size={16} className="text-emerald" />
+                <span>{passcodeEnabled ? "Change Passcode PIN" : "Set 4-Digit Passcode"}</span>
               </h3>
-              <button onClick={() => setPasscodeModalOpen(false)} className="text-muted-grey hover:text-heading cursor-pointer">
+              <button
+                onClick={() => {
+                  setPasscodeModalOpen(false);
+                  setCurrentPin("");
+                }}
+                className="text-neutral-400 hover:text-white cursor-pointer"
+              >
                 <X size={18} />
               </button>
             </div>
-            <p className="text-xs text-muted-grey">
-              Enter a 4-digit PIN to secure your local financial vault on this device.
+
+            <p className="text-xs text-neutral-400">
+              Enter 4 digits to secure ValarchiX
             </p>
-            <input
-              type="password"
-              maxLength={4}
-              value={currentPin}
-              onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, ""))}
-              placeholder="••••"
-              className="w-full text-center text-2xl tracking-[0.5em] font-mono py-3 rounded-2xl bg-navy-bg border border-border-navy text-heading outline-none focus:border-emerald"
-            />
+
+            {/* 4 Circular PIN Dots */}
+            <div className="flex items-center justify-center gap-3.5 py-1">
+              {[0, 1, 2, 3].map((index) => (
+                <div
+                  key={index}
+                  className={`w-3.5 h-3.5 rounded-full transition-all duration-150 border ${
+                    currentPin.length > index
+                      ? "bg-white border-white scale-110"
+                      : "border-neutral-600 bg-transparent"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Keypad */}
+            <div className="grid grid-cols-3 gap-2.5 pt-2">
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => {
+                    if (currentPin.length < 4) {
+                      setCurrentPin((prev) => prev + num);
+                    }
+                  }}
+                  className="h-14 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-95 text-white font-black text-lg flex items-center justify-center border border-white/5 transition cursor-pointer"
+                >
+                  {num}
+                </button>
+              ))}
+              <div className="h-14 flex items-center justify-center text-neutral-600">
+                <Lock size={18} />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentPin.length < 4) {
+                    setCurrentPin((prev) => prev + "0");
+                  }
+                }}
+                className="h-14 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-95 text-white font-black text-lg flex items-center justify-center border border-white/5 transition cursor-pointer"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPin((prev) => prev.slice(0, -1))}
+                className="h-14 rounded-2xl bg-[#172033] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 active:scale-95 flex items-center justify-center border border-white/5 transition cursor-pointer"
+                title="Delete digit"
+              >
+                <Delete size={20} />
+              </button>
+            </div>
+
             <button
               onClick={handleSavePin}
-              className="w-full bg-emerald hover:bg-emerald/90 text-slate-950 font-black py-3 rounded-2xl text-xs transition cursor-pointer"
+              disabled={currentPin.length !== 4}
+              className={`w-full py-3 rounded-2xl text-xs font-black transition cursor-pointer ${
+                currentPin.length === 4
+                  ? "bg-emerald hover:bg-emerald/90 text-slate-950 shadow-md shadow-emerald/20"
+                  : "bg-white/10 text-neutral-500 cursor-not-allowed"
+              }`}
             >
-              Save &amp; Enable Passcode
+              Save 4-Digit Passcode
             </button>
           </div>
         </div>
