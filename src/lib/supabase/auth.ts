@@ -66,6 +66,10 @@ export async function getCurrentUserSession() {
     if (!error && session?.user) {
       return session;
     }
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (!userError && user) {
+      return { user } as any;
+    }
   } catch (err) {
     console.warn("Supabase session check:", err);
   }
