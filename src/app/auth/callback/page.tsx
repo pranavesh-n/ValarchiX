@@ -15,14 +15,22 @@ function AuthCallbackContent() {
     const supabase = createClient();
 
     async function handleAuth() {
+      const finish = (dest: string) => {
+        if (typeof window !== "undefined") {
+          window.location.replace(dest);
+        } else {
+          router.replace(dest);
+        }
+      };
+
       try {
         // 1. Check if PKCE code is in the query params
         const code = searchParams.get("code");
         if (code) {
-          setStatus("Exchanging authorization code...");
+          setStatus("Connecting account...");
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           if (!error && data?.session) {
-            router.replace(next);
+            finish(next);
             return;
           }
         }
@@ -41,7 +49,7 @@ function AuthCallbackContent() {
               refresh_token: refreshToken,
             });
             if (!error && data?.session) {
-              router.replace(next);
+              finish(next);
               return;
             }
           }
@@ -50,7 +58,7 @@ function AuthCallbackContent() {
         // 3. Fallback check: get current session
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          router.replace(next);
+          finish(next);
           return;
         }
 
@@ -58,15 +66,15 @@ function AuthCallbackContent() {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, newSession: any) => {
           if (newSession?.user) {
             subscription.unsubscribe();
-            router.replace(next);
+            finish(next);
           }
         });
 
-        // Safe fallback timeout (3s) to prevent being stuck
+        // Safe fallback timeout (1.5s) to prevent lingering
         const timeout = setTimeout(() => {
           subscription.unsubscribe();
-          router.replace(next);
-        }, 3000);
+          finish(next);
+        }, 1500);
 
         return () => {
           subscription.unsubscribe();
@@ -74,7 +82,7 @@ function AuthCallbackContent() {
         };
       } catch (err) {
         console.error("Auth callback error:", err);
-        router.replace(next);
+        finish(next);
       }
     }
 
