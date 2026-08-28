@@ -345,12 +345,9 @@ export default function ProfilePage() {
 
         {!session?.user && (
           <div className="pt-1">
-            <a
-              href={getGoogleAuthUrl("/profile")}
-              onClick={(e) => {
-                e.preventDefault();
-                signInWithGoogle("/profile");
-              }}
+            <button
+              type="button"
+              onClick={() => signInWithGoogle("/profile")}
               className="bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 dark:border-white/15 text-xs sm:text-sm font-black px-6 py-2.5 rounded-full transition shadow-md flex items-center gap-2.5 mx-auto cursor-pointer active:scale-95 inline-flex"
             >
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -360,7 +357,7 @@ export default function ProfilePage() {
                 <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
               </svg>
               <span>Sign In with Google</span>
-            </a>
+            </button>
           </div>
         )}
       </div>
@@ -655,8 +652,9 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <a
-              href={getGoogleAuthUrl("/profile")}
+            <button
+              type="button"
+              onClick={() => signInWithGoogle("/profile")}
               className="w-full bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 dark:border-white/15 font-black py-3.5 rounded-2xl text-xs sm:text-sm transition flex items-center justify-center gap-2.5 shadow-lg cursor-pointer"
             >
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -666,7 +664,7 @@ export default function ProfilePage() {
                 <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
               </svg>
               <span>Continue with Google</span>
-            </a>
+            </button>
           </div>
         </div>
       )}
