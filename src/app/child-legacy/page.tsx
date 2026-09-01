@@ -178,19 +178,27 @@ export default function ChildLegacyEngine() {
               />
             </div>
             {adjustEducationInflation && (
-              <div className="space-y-2 bg-navy-bg p-3 rounded-2xl border border-border-navy">
+              <div className="space-y-2 bg-navy-bg p-3 rounded-2xl border border-border-navy animate-fadeIn">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-grey">Education Inflation Rate</span>
-                  <span className="text-emerald font-bold">{educationInflationRate}%</span>
+                  <NumericInput
+                    value={educationInflationRate}
+                    onChange={setEducationInflationRate}
+                    min={0}
+                    max={25}
+                    step={0.5}
+                    type="percent"
+                    className="text-emerald font-bold"
+                  />
                 </div>
                 <input
                   type="range"
-                  min={4}
-                  max={15}
+                  min={2}
+                  max={18}
                   step={0.5}
                   value={educationInflationRate}
                   onChange={(e) => setEducationInflationRate(Number(e.target.value))}
-                  className="w-full accent-emerald bg-navy-card h-1 rounded-lg cursor-pointer"
+                  className="w-full accent-emerald bg-navy-card h-1.5 rounded-lg cursor-pointer"
                 />
               </div>
             )}

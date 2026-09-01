@@ -4,11 +4,13 @@ import React, { useState, useMemo, useEffect } from "react";
 import {
   Calculator,
   Info,
+  HelpCircle,
   Plus,
   Trash2,
   Calendar,
   Layers,
-  ChevronDown
+  ChevronDown,
+  Sparkles
 } from "lucide-react";
 import NumericInput from "@/components/NumericInput";
 import {
@@ -38,6 +40,7 @@ export default function XirrCalculator() {
     { id: "2", type: "withdrawn", amount: 135000, date: "2026-09-01", frequency: "one-off", count: 1 }
   ]);
 
+  // --- Inflation Adjustment State (User Configurable) ---
   const [adjustInflation, setAdjustInflation] = useState(false);
   const [inflation, setInflation] = useState(5.09);
 
@@ -209,33 +212,18 @@ export default function XirrCalculator() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border-navy/60 pb-4">
             <h2 className="text-sm sm:text-base font-bold text-white">Your investments</h2>
 
-            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
-              <div className="flex items-center gap-2 text-xs font-semibold">
-                <span className="text-muted-grey">Currency</span>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="bg-navy-bg border border-border-navy/80 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none cursor-pointer focus:border-emerald transition-all"
-                >
-                  <option value="INR">INR (₹)</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                </select>
-              </div>
-
-              {/* Inflation Adjustment Toggle */}
-              <button
-                onClick={() => setAdjustInflation(!adjustInflation)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
-                  adjustInflation
-                    ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
-                    : "bg-navy-bg border-border-navy/80 text-muted-grey hover:text-white"
-                }`}
-                title="Toggle Real vs Nominal XIRR"
+            <div className="flex items-center gap-2 text-xs font-semibold self-end sm:self-auto">
+              <span className="text-muted-grey">Currency</span>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="bg-navy-bg border border-border-navy/80 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none cursor-pointer focus:border-emerald transition-all"
               >
-                Inflation: {adjustInflation ? `${inflation}% (Real)` : "Off"}
-              </button>
+                <option value="INR">INR (₹)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
             </div>
           </div>
 
@@ -558,6 +546,97 @@ export default function XirrCalculator() {
           </div>
         )}
 
+        {/* --- INFLATION ADJUSTMENT SECTION (User Adjustable with Slider & Number Input) --- */}
+        <div className="border-t border-border-navy/60 pt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold text-muted-grey flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={adjustInflation}
+                onChange={(e) => setAdjustInflation(e.target.checked)}
+                className="rounded border-border-navy text-emerald focus:ring-emerald accent-emerald h-4 w-4 cursor-pointer"
+              />
+              <span className="text-white font-bold">Adjust for Inflation</span>
+              <span
+                className="text-muted-grey/60 cursor-help inline-flex"
+                title="Discounts nominal returns by expected inflation rate to calculate real purchasing power annualized growth."
+              >
+                <HelpCircle size={14} />
+              </span>
+            </label>
+
+            {adjustInflation && (
+              <span className="text-[11px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                Real XIRR Active
+              </span>
+            )}
+          </div>
+
+          {adjustInflation && (
+            <div className="p-4 rounded-2xl bg-navy-bg/80 border border-amber-500/30 space-y-3 animate-fadeIn">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs font-semibold">
+                <div>
+                  <span className="text-white font-bold block">Expected Annual Inflation Rate</span>
+                  <span className="text-[11px] text-muted-grey">Adjust rate to test nominal vs real purchasing power</span>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <NumericInput
+                    value={inflation}
+                    onChange={setInflation}
+                    min={0}
+                    max={25}
+                    step={0.1}
+                    type="percent"
+                    className="text-amber-400 focus-within:border-amber-500/50 bg-navy-card w-28 text-right"
+                  />
+                </div>
+              </div>
+
+              {/* Slider */}
+              <div className="space-y-1">
+                <input
+                  type="range"
+                  min={0}
+                  max={20}
+                  step={0.1}
+                  value={inflation}
+                  onChange={(e) => setInflation(Number(e.target.value))}
+                  className="w-full accent-amber-500 bg-navy-card h-1.5 rounded-lg cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-muted-grey font-mono">
+                  <span>0% (No Inflation)</span>
+                  <span>5.09% (Current CPI)</span>
+                  <span>10% (High)</span>
+                  <span>20% (Severe)</span>
+                </div>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="text-[10px] text-muted-grey font-bold uppercase tracking-wider">Presets:</span>
+                {[
+                  { label: "CPI Baseline (5.09%)", rate: 5.09 },
+                  { label: "Moderate (6.0%)", rate: 6.0 },
+                  { label: "Conservative (7.0%)", rate: 7.0 },
+                  { label: "High Inflation (8.5%)", rate: 8.5 }
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    onClick={() => setInflation(preset.rate)}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer border ${
+                      Math.abs(inflation - preset.rate) < 0.05
+                        ? "bg-amber-500/20 border-amber-500/60 text-amber-300"
+                        : "bg-navy-card/60 border-border-navy/60 text-muted-grey hover:text-white"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* --- HERO RESULTS DISPLAY BOX --- */}
         <div className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-navy-bg/95 border border-border-navy/90 space-y-5 sm:space-y-6 shadow-xl">
           {xirrResult.success ? (
@@ -566,9 +645,13 @@ export default function XirrCalculator() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 border-b border-border-navy/60 pb-4">
                 <div>
                   <span className="text-xs font-bold text-muted-grey block">Annualized return (XIRR)</span>
-                  {adjustInflation && (
+                  {adjustInflation ? (
                     <span className="text-[11px] text-amber-400 font-semibold flex items-center gap-1 mt-0.5">
                       Real (Inflation Adjusted @ {inflation}%)
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-muted-grey/70 font-semibold block mt-0.5">
+                      Nominal Return
                     </span>
                   )}
                 </div>

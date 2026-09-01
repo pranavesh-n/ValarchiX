@@ -161,7 +161,7 @@ export default function HLVCalculator() {
             <div className="space-y-1">
               <div className="flex justify-between items-center text-xs font-semibold">
                 <span className="text-muted-grey">Inflation Rate (%)</span>
-                <NumericInput value={inflation} onChange={setInflation} min={3} max={12} step={0.5} type="number" />
+                <NumericInput value={inflation} onChange={setInflation} min={1} max={25} step={0.5} type="percent" />
               </div>
               <input
                 type="range"

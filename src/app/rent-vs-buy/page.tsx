@@ -9,6 +9,7 @@ import {
   Award, ShieldAlert, Sparkles, Sliders, ChevronRight, Zap, RefreshCw
 } from "lucide-react";
 import { formatINR, formatINRWords } from "@/lib/engine/numeric";
+import NumericInput from "@/components/NumericInput";
 
 type PropertyType = "ready" | "under_construction" | "affordable";
 
@@ -542,14 +543,22 @@ export default function RentVsBuyPage() {
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs font-semibold mb-1">
+                  <div className="flex justify-between items-center text-xs font-semibold mb-1">
                     <span className="text-slate-400 uppercase">Property Appreciation %</span>
-                    <span className="text-emerald-400 font-bold">{propertyAppreciation}%</span>
+                    <NumericInput
+                      value={propertyAppreciation}
+                      onChange={setPropertyAppreciation}
+                      min={0}
+                      max={25}
+                      step={0.5}
+                      type="percent"
+                      className="text-emerald-400 font-bold bg-slate-900 border-slate-700"
+                    />
                   </div>
                   <input
                     type="range"
                     min={2}
-                    max={12}
+                    max={15}
                     step={0.5}
                     value={propertyAppreciation}
                     onChange={(e) => setPropertyAppreciation(Number(e.target.value))}
@@ -558,14 +567,22 @@ export default function RentVsBuyPage() {
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs font-semibold mb-1">
+                  <div className="flex justify-between items-center text-xs font-semibold mb-1">
                     <span className="text-slate-400 uppercase">Rent Inflation %</span>
-                    <span className="text-emerald-400 font-bold">{rentInflation}%</span>
+                    <NumericInput
+                      value={rentInflation}
+                      onChange={setRentInflation}
+                      min={0}
+                      max={25}
+                      step={0.5}
+                      type="percent"
+                      className="text-emerald-400 font-bold bg-slate-900 border-slate-700"
+                    />
                   </div>
                   <input
                     type="range"
-                    min={3}
-                    max={12}
+                    min={2}
+                    max={15}
                     step={0.5}
                     value={rentInflation}
                     onChange={(e) => setRentInflation(Number(e.target.value))}
