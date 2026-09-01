@@ -84,40 +84,15 @@ export interface SimulationOutput {
   };
 }
 
+import { calculateXirrDetailed } from "../engine/xirr";
+
 /**
- * Solves XIRR numerically using Newton-Raphson method
+ * Solves XIRR numerically using robust Brent-Dekker engine
  */
 export function calculateXIRR(cashFlows: { date: Date; amount: number }[]): number {
   if (cashFlows.length < 2) return 0;
-  
-  let rate = 0.1; // initial guess 10%
-  const maxIter = 100;
-  const tol = 1e-6;
-
-  const t0 = cashFlows[0].date.getTime() / (1000 * 60 * 60 * 24 * 365.25);
-
-  for (let i = 0; i < maxIter; i++) {
-    let fValue = 0;
-    let fDerivative = 0;
-
-    for (const cf of cashFlows) {
-      const t = cf.date.getTime() / (1000 * 60 * 60 * 24 * 365.25) - t0;
-      const expTerm = Math.pow(1 + rate, t);
-      if (expTerm === 0) continue;
-
-      fValue += cf.amount / expTerm;
-      fDerivative -= (t * cf.amount) / (expTerm * (1 + rate));
-    }
-
-    if (Math.abs(fValue) < tol) return rate * 100;
-    if (Math.abs(fDerivative) < tol) break;
-
-    const nextRate = rate - fValue / fDerivative;
-    if (isNaN(nextRate) || !isFinite(nextRate)) break;
-    rate = nextRate;
-  }
-
-  return Math.max(-99, Math.min(500, rate * 100));
+  const res = calculateXirrDetailed(cashFlows);
+  return res.success ? Math.round(res.rate * 10000) / 100 : 0;
 }
 
 /**

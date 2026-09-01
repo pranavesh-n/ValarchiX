@@ -1,40 +1,45 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
-import { Calculator, Info, HelpCircle, Plus, Trash2, Calendar, TrendingUp, Download, Upload, AlertCircle, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import {
+  Calculator,
+  Info,
+  Plus,
+  Trash2,
+  Calendar,
+  Layers,
+  ChevronDown
+} from "lucide-react";
 import NumericInput from "@/components/NumericInput";
-
-type FlowType = "invested" | "withdrawn";
-type Frequency = "one-off" | "monthly" | "quarterly" | "yearly";
-
-interface CustomFlow {
-  id: string;
-  type: FlowType;
-  amount: number;
-  date: string;
-  frequency: Frequency;
-  count?: number; // for recurring series
-}
+import {
+  calculateXirrDetailed,
+  addMonths,
+  parseLocalDate,
+  FlowType,
+  Frequency,
+  CustomFlowItem,
+  CashFlow,
+  XirrResult
+} from "@/lib/engine/xirr";
 
 export default function XirrCalculator() {
-  const [activeTab, setActiveTab] = useState<"sip" | "custom">("custom");
+  const [activeTab, setActiveTab] = useState<"sip" | "custom">("sip");
   const [currency, setCurrency] = useState("INR");
 
   // --- Quick SIP Mode State ---
-  const [sipMonthly, setSipMonthly] = useState(5000);
+  const [sipMonthly, setSipMonthly] = useState(10000);
   const [sipDuration, setSipDuration] = useState(3);
   const [sipDurationUnit, setSipDurationUnit] = useState<"years" | "months">("years");
-  const [sipCurrentValue, setSipCurrentValue] = useState(220000);
+  const [sipCurrentValue, setSipCurrentValue] = useState(450000);
 
-  // --- Custom Cash Flows Mode State ---
-  const [customFlows, setCustomFlows] = useState<CustomFlow[]>([
-    { id: "1", type: "invested", amount: 100000, date: "2025-07-24", frequency: "one-off" },
-    { id: "2", type: "withdrawn", amount: 135000, date: "2026-07-24", frequency: "one-off" }
+  // --- Custom Cash Flows Mode State (Default matching 1-year ₹1L to ₹1.35L 35% benchmark) ---
+  const [customFlows, setCustomFlows] = useState<CustomFlowItem[]>([
+    { id: "1", type: "invested", amount: 100000, date: "2025-09-01", frequency: "monthly", count: 1 },
+    { id: "2", type: "withdrawn", amount: 135000, date: "2026-09-01", frequency: "one-off", count: 1 }
   ]);
 
   const [adjustInflation, setAdjustInflation] = useState(false);
   const [inflation, setInflation] = useState(5.09);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/rates")
@@ -46,244 +51,226 @@ export default function XirrCalculator() {
   // --- Helper to add a custom flow ---
   const addFlow = (type: FlowType) => {
     const today = new Date().toISOString().split("T")[0];
-    setCustomFlows([
-      ...customFlows,
+    const newId = Math.random().toString(36).substring(2, 9);
+    setCustomFlows((prev) => [
+      ...prev,
       {
-        id: Math.random().toString(),
+        id: newId,
         type,
-        amount: 10000,
+        amount: type === "invested" ? 10000 : 50000,
         date: today,
-        frequency: "one-off"
+        frequency: "one-off",
+        count: 1
       }
     ]);
   };
 
   const removeFlow = (id: string) => {
     if (customFlows.length <= 1) {
-      alert("At least 1 flow row is required.");
+      alert("At least 1 cash flow entry is required.");
       return;
     }
-    setCustomFlows(customFlows.filter((f) => f.id !== id));
+    setCustomFlows((prev) => prev.filter((f) => f.id !== id));
   };
 
-  const updateFlow = (id: string, field: keyof CustomFlow, val: any) => {
-    setCustomFlows(
-      customFlows.map((f) => (f.id === id ? { ...f, [field]: val } : f))
+  const updateFlow = <K extends keyof CustomFlowItem>(id: string, field: K, val: CustomFlowItem[K]) => {
+    setCustomFlows((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, [field]: val } : f))
     );
   };
 
+  // --- Currency Formatting Helpers ---
+  const fmtCurrency = (v: number) => {
+    try {
+      return new Intl.NumberFormat(currency === "INR" ? "en-IN" : "en-US", {
+        style: "currency",
+        currency: currency,
+        maximumFractionDigits: 0
+      }).format(v);
+    } catch {
+      return `₹${Math.round(v).toLocaleString("en-IN")}`;
+    }
+  };
+
+  const fmtCompact = (v: number) => {
+    const sym = currency === "INR" ? "₹" : currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : "";
+    const abs = Math.abs(v);
+    const sign = v < 0 ? "-" : "";
+
+    if (currency === "INR") {
+      if (abs >= 10000000) return `${sign}${sym}${(abs / 10000000).toFixed(2).replace(/\.00$/, "")}Cr`;
+      if (abs >= 100000) return `${sign}${sym}${(abs / 100000).toFixed(1).replace(/\.0$/, "")}L`;
+      if (abs >= 1000) return `${sign}${sym}${(abs / 1000).toFixed(0)}K`;
+      return `${sign}${sym}${abs}`;
+    } else {
+      if (abs >= 1000000) return `${sign}${sym}${(abs / 1000000).toFixed(2).replace(/\.00$/, "")}M`;
+      if (abs >= 1000) return `${sign}${sym}${(abs / 1000).toFixed(1).replace(/\.0$/, "")}K`;
+      return `${sign}${sym}${abs}`;
+    }
+  };
+
+  // --- Helper for individual card subtext description ---
+  const getFlowSummary = (flow: CustomFlowItem) => {
+    const count = Math.max(1, flow.count || 1);
+    const totalAmount = flow.amount * (flow.frequency === "one-off" ? 1 : count);
+    const startDate = parseLocalDate(flow.date);
+    const typeLabel = flow.type === "invested" ? "Invested" : "Withdrawn";
+
+    const startMonth = startDate.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+
+    if (flow.frequency === "one-off" || count <= 1) {
+      return `1 payment ${typeLabel} • ${fmtCompact(totalAmount)} total • ${startMonth} to ${startMonth}`;
+    }
+
+    const stepMonths =
+      flow.frequency === "monthly"
+        ? 1
+        : flow.frequency === "quarterly"
+        ? 3
+        : flow.frequency === "half-yearly"
+        ? 6
+        : 12;
+
+    const endDate = addMonths(startDate, (count - 1) * stepMonths);
+    const endMonth = endDate.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+
+    return `${count} payments ${typeLabel} • ${fmtCompact(totalAmount)} total • ${startMonth} to ${endMonth}`;
+  };
+
   // --- Expand recurring custom flows into explicit cash flows ---
-  const expandedCashFlows = useMemo(() => {
+  const expandedCashFlows = useMemo<CashFlow[]>(() => {
     if (activeTab === "sip") {
       const totalMonths = sipDurationUnit === "years" ? sipDuration * 12 : sipDuration;
-      const flows: { date: Date; amount: number }[] = [];
+      const flows: CashFlow[] = [];
       const startDate = new Date();
-      
+      startDate.setDate(1);
+
       for (let m = 0; m < totalMonths; m++) {
-        const d = new Date(startDate);
-        d.setMonth(d.getMonth() + m);
-        flows.push({ date: d, amount: -sipMonthly });
+        const d = addMonths(startDate, m);
+        flows.push({ date: d, amount: -Math.abs(sipMonthly) });
       }
-      const endDate = new Date(startDate);
-      endDate.setMonth(endDate.getMonth() + totalMonths);
-      flows.push({ date: endDate, amount: sipCurrentValue });
+      const endDate = addMonths(startDate, totalMonths);
+      flows.push({ date: endDate, amount: Math.abs(sipCurrentValue) });
       return flows;
     }
 
     // Custom Mode Expansion
-    const flows: { date: Date; amount: number }[] = [];
+    const flows: CashFlow[] = [];
     customFlows.forEach((item) => {
-      const baseDate = new Date(item.date);
+      const baseDate = parseLocalDate(item.date);
       const sign = item.type === "invested" ? -1 : 1;
       const val = Math.abs(item.amount) * sign;
 
       if (item.frequency === "one-off") {
         flows.push({ date: baseDate, amount: val });
       } else {
-        const occurrences = item.count || 12;
-        const monthStep = item.frequency === "monthly" ? 1 : item.frequency === "quarterly" ? 3 : 12;
+        const occurrences = Math.max(1, item.count || 1);
+        const monthStep =
+          item.frequency === "monthly"
+            ? 1
+            : item.frequency === "quarterly"
+            ? 3
+            : item.frequency === "half-yearly"
+            ? 6
+            : 12;
+
         for (let i = 0; i < occurrences; i++) {
-          const d = new Date(baseDate);
-          d.setMonth(d.getMonth() + i * monthStep);
+          const d = addMonths(baseDate, i * monthStep);
           flows.push({ date: d, amount: val });
         }
       }
     });
 
-    return flows.sort((a, b) => a.date.getTime() - b.date.getTime());
+    return flows.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [activeTab, sipMonthly, sipDuration, sipDurationUnit, sipCurrentValue, customFlows]);
 
-  // --- XIRR Solver Engine (Newton-Raphson + Bisection) ---
-  const xirrResult = useMemo(() => {
-    const amounts = expandedCashFlows.map((f) => f.amount);
-    const hasNegative = amounts.some((a) => a < 0);
-    const hasPositive = amounts.some((a) => a > 0);
-
-    if (!hasNegative || !hasPositive || expandedCashFlows.length < 2) {
-      return {
-        success: false,
-        error: "XIRR requires both investment cashflows (negative) and redemption/valuation cashflows (positive).",
-        xirrNominal: "0.00",
-        xirrReal: "0.00",
-        totalInvested: 0,
-        totalRedeemed: 0,
-        netGain: 0,
-        absoluteReturn: "0.0",
-        daysDuration: 0,
-        yearsDuration: "0.00",
-        isExtremeAnnualized: false
-      };
-    }
-
-    const d1 = expandedCashFlows[0].date.getTime();
-    const dLast = expandedCashFlows[expandedCashFlows.length - 1].date.getTime();
-    const daysDuration = Math.max(1, (dLast - d1) / (1000 * 60 * 60 * 24));
-    const yearsDuration = daysDuration / 365;
-
-    const f = (r: number) => {
-      let sum = 0;
-      for (let i = 0; i < expandedCashFlows.length; i++) {
-        const days = (expandedCashFlows[i].date.getTime() - d1) / (1000 * 60 * 60 * 24);
-        sum += expandedCashFlows[i].amount / Math.pow(1 + r, days / 365);
-      }
-      return sum;
-    };
-
-    const df = (r: number) => {
-      let sum = 0;
-      for (let i = 0; i < expandedCashFlows.length; i++) {
-        const days = (expandedCashFlows[i].date.getTime() - d1) / (1000 * 60 * 60 * 24);
-        sum -= (days / 365) * expandedCashFlows[i].amount / Math.pow(1 + r, (days / 365) + 1);
-      }
-      return sum;
-    };
-
-    let r = 0.1;
-    let converged = false;
-    for (let iter = 0; iter < 100; iter++) {
-      const val = f(r);
-      const deriv = df(r);
-      if (Math.abs(deriv) < 1e-12) break;
-      const nextR = r - val / deriv;
-      if (Math.abs(nextR - r) < 1e-7) {
-        r = nextR;
-        converged = true;
-        break;
-      }
-      r = nextR;
-    }
-
-    if (!converged) {
-      let low = -0.99;
-      let high = 10.0;
-      for (let iter = 0; iter < 100; iter++) {
-        const mid = (low + high) / 2;
-        const val = f(mid);
-        if (Math.abs(val) < 1e-5) {
-          r = mid;
-          converged = true;
-          break;
-        }
-        if (f(low) * val < 0) high = mid;
-        else low = mid;
-      }
-    }
-
-    const xirrNominal = r * 100;
-    const infRate = inflation / 100;
-    const xirrReal = ((1 + r) / (1 + infRate) - 1) * 100;
-
-    let totalInvested = 0;
-    let totalRedeemed = 0;
-    amounts.forEach((a) => {
-      if (a < 0) totalInvested += Math.abs(a);
-      else totalRedeemed += a;
-    });
-
-    const netGain = totalRedeemed - totalInvested;
-    const absoluteReturn = totalInvested > 0 ? (netGain / totalInvested) * 100 : 0;
-    const isExtremeAnnualized = Math.abs(xirrNominal) > 200 && yearsDuration < 1.0;
-
-    return {
-      success: true,
-      xirrNominal: xirrNominal.toFixed(2),
-      xirrReal: xirrReal.toFixed(2),
-      totalInvested,
-      totalRedeemed,
-      netGain,
-      absoluteReturn: absoluteReturn.toFixed(1),
-      daysDuration: Math.round(daysDuration),
-      yearsDuration: yearsDuration.toFixed(2),
-      isExtremeAnnualized
-    };
+  // --- Calculate XIRR using the robust Brent's method engine ---
+  const xirrResult = useMemo<XirrResult>(() => {
+    return calculateXirrDetailed(expandedCashFlows, inflation);
   }, [expandedCashFlows, inflation]);
 
-  const fmt = (v: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: currency, maximumFractionDigits: 0 }).format(v);
-
-  const fmtCompact = (v: number) => {
-    if (v >= 10000000) return `₹${(v / 10000000).toFixed(2)}Cr`;
-    if (v >= 100000) return `₹${(v / 100000).toFixed(1)}L`;
-    if (v >= 1000) return `₹${(v / 1000).toFixed(0)}K`;
-    return `₹${v}`;
-  };
-
   return (
-    <div className="space-y-8 py-6 animate-fadeIn text-light-grey max-w-5xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 py-4 sm:py-6 px-3 sm:px-6 md:px-8 animate-fadeIn text-light-grey max-w-5xl mx-auto w-full">
       {/* Header Title */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
-          <Calculator className="text-emerald" size={32} />
-          XIRR Calculator
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
+          <Calculator className="text-emerald shrink-0" size={30} />
+          <span>XIRR Calculator</span>
         </h1>
-        <p className="text-sm text-muted-grey max-w-2xl mx-auto">
+        <p className="text-xs sm:text-sm text-muted-grey max-w-2xl mx-auto px-2">
           Find the true annualized return on your SIPs, mutual funds, and any investments made on different dates. Enter your cash flows and get your XIRR instantly.
         </p>
       </div>
 
-      {/* Main Container */}
-      <div className="p-6 md:p-8 glass-card border border-border-navy/80 rounded-3xl space-y-6 shadow-2xl">
-        {/* Top Controls Bar: Tabs & Currency */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-border-navy/60 pb-4">
-          <div className="grid grid-cols-2 bg-navy-bg p-1 rounded-xl border border-border-navy/80 w-full sm:w-80">
+      {/* Main Card Container */}
+      <div className="p-4 sm:p-6 md:p-8 glass-card border border-border-navy/80 rounded-2xl sm:rounded-3xl space-y-5 sm:space-y-6 shadow-2xl">
+        {/* Top Header: Title / Currency / Tabs */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border-navy/60 pb-4">
+            <h2 className="text-sm sm:text-base font-bold text-white">Your investments</h2>
+
+            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-2 text-xs font-semibold">
+                <span className="text-muted-grey">Currency</span>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="bg-navy-bg border border-border-navy/80 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none cursor-pointer focus:border-emerald transition-all"
+                >
+                  <option value="INR">INR (₹)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+              </div>
+
+              {/* Inflation Adjustment Toggle */}
+              <button
+                onClick={() => setAdjustInflation(!adjustInflation)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                  adjustInflation
+                    ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
+                    : "bg-navy-bg border-border-navy/80 text-muted-grey hover:text-white"
+                }`}
+                title="Toggle Real vs Nominal XIRR"
+              >
+                Inflation: {adjustInflation ? `${inflation}% (Real)` : "Off"}
+              </button>
+            </div>
+          </div>
+
+          {/* Mode Switcher Tabs */}
+          <div className="grid grid-cols-2 bg-navy-bg p-1 rounded-xl border border-border-navy/80 w-full max-w-sm sm:max-w-md mx-auto">
             <button
               onClick={() => setActiveTab("sip")}
-              className={`py-2 px-4 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
-                activeTab === "sip" ? "bg-emerald text-navy-bg shadow-md" : "text-muted-grey hover:text-white"
+              className={`py-2 px-3 sm:px-4 text-xs font-extrabold rounded-lg transition-all cursor-pointer text-center ${
+                activeTab === "sip"
+                  ? "bg-emerald text-navy-bg shadow-md"
+                  : "text-muted-grey hover:text-white"
               }`}
             >
               SIP Mode
             </button>
             <button
               onClick={() => setActiveTab("custom")}
-              className={`py-2 px-4 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
-                activeTab === "custom" ? "bg-emerald text-navy-bg shadow-md" : "text-muted-grey hover:text-white"
+              className={`py-2 px-3 sm:px-4 text-xs font-extrabold rounded-lg transition-all cursor-pointer text-center ${
+                activeTab === "custom"
+                  ? "bg-emerald text-navy-bg shadow-md"
+                  : "text-muted-grey hover:text-white"
               }`}
             >
               Custom cash flows
             </button>
           </div>
-
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            <span className="text-muted-grey">Currency</span>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="bg-navy-bg border border-border-navy/80 rounded-lg px-3 py-1.5 text-xs text-white outline-none cursor-pointer"
-            >
-              <option value="INR">INR (₹)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-            </select>
-          </div>
         </div>
 
         {/* --- TAB 1: QUICK SIP MODE --- */}
         {activeTab === "sip" && (
-          <div className="space-y-6 animate-fadeIn">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+              {/* Monthly Investment */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-grey">Monthly investment</label>
+                <label className="text-xs font-bold text-muted-grey block">Monthly investment</label>
                 <NumericInput
                   value={sipMonthly}
                   onChange={setSipMonthly}
@@ -291,32 +278,35 @@ export default function XirrCalculator() {
                   max={10000000}
                   step={500}
                   type="currency"
-                  className="w-full text-left bg-navy-bg py-2.5 rounded-xl border-border-navy text-sm font-bold"
+                  className="w-full text-left bg-navy-bg py-2.5 px-3 rounded-xl border border-border-navy/80 text-sm font-bold"
                 />
               </div>
 
+              {/* Invested For */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-grey">Invested for</label>
+                <label className="text-xs font-bold text-muted-grey block">Invested for</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
+                    min={1}
+                    max={600}
                     value={sipDuration}
-                    onChange={(e) => setSipDuration(Math.max(1, Number(e.target.value)))}
-                    className="w-full bg-navy-bg border border-border-navy/80 rounded-xl px-3 py-2 text-sm font-bold text-white outline-none focus:border-emerald"
+                    onChange={(e) => setSipDuration(Math.max(1, Number(e.target.value) || 1))}
+                    className="w-full bg-navy-bg border border-border-navy/80 rounded-xl px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-emerald"
                   />
                   <div className="grid grid-cols-2 bg-navy-bg p-0.5 rounded-lg border border-border-navy/80 shrink-0">
                     <button
                       onClick={() => setSipDurationUnit("years")}
-                      className={`px-2.5 py-1 text-[11px] font-bold rounded cursor-pointer ${
-                        sipDurationUnit === "years" ? "bg-emerald/20 text-emerald" : "text-muted-grey"
+                      className={`px-2.5 py-1.5 text-[11px] font-bold rounded cursor-pointer transition-all ${
+                        sipDurationUnit === "years" ? "bg-emerald/20 text-emerald" : "text-muted-grey hover:text-white"
                       }`}
                     >
                       Years
                     </button>
                     <button
                       onClick={() => setSipDurationUnit("months")}
-                      className={`px-2.5 py-1 text-[11px] font-bold rounded cursor-pointer ${
-                        sipDurationUnit === "months" ? "bg-emerald/20 text-emerald" : "text-muted-grey"
+                      className={`px-2.5 py-1.5 text-[11px] font-bold rounded cursor-pointer transition-all ${
+                        sipDurationUnit === "months" ? "bg-emerald/20 text-emerald" : "text-muted-grey hover:text-white"
                       }`}
                     >
                       Months
@@ -325,8 +315,9 @@ export default function XirrCalculator() {
                 </div>
               </div>
 
+              {/* Current Value / Redemption */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-grey">Current value</label>
+                <label className="text-xs font-bold text-muted-grey block">Current value / Redemption</label>
                 <NumericInput
                   value={sipCurrentValue}
                   onChange={setSipCurrentValue}
@@ -334,7 +325,7 @@ export default function XirrCalculator() {
                   max={1000000000}
                   step={5000}
                   type="currency"
-                  className="w-full text-left bg-navy-bg py-2.5 rounded-xl border-border-navy text-sm font-bold"
+                  className="w-full text-left bg-navy-bg py-2.5 px-3 rounded-xl border border-border-navy/80 text-sm font-bold"
                 />
               </div>
             </div>
@@ -344,176 +335,357 @@ export default function XirrCalculator() {
         {/* --- TAB 2: CUSTOM CASH FLOWS MODE --- */}
         {activeTab === "custom" && (
           <div className="space-y-4 animate-fadeIn">
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
               {customFlows.map((flow) => (
                 <div
                   key={flow.id}
-                  className={`grid grid-cols-2 sm:grid-cols-12 gap-2.5 items-center p-3 rounded-2xl bg-navy-bg border ${
-                    flow.type === "invested" ? "border-emerald/40" : "border-blue-500/40"
-                  } transition-all`}
+                  className={`p-3 sm:p-4 rounded-2xl bg-navy-bg/90 border transition-all ${
+                    flow.type === "invested"
+                      ? "border-emerald/50 shadow-[0_0_12px_rgba(16,185,129,0.08)]"
+                      : "border-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.08)]"
+                  } space-y-2.5`}
                 >
-                  {/* Type Selector */}
-                  <div className="col-span-2 sm:col-span-3">
-                    <select
-                      value={flow.type}
-                      onChange={(e) => updateFlow(flow.id, "type", e.target.value as FlowType)}
-                      className={`w-full bg-navy-card/80 border rounded-xl px-3 py-2 text-xs font-extrabold outline-none cursor-pointer ${
-                        flow.type === "invested" ? "border-emerald/40 text-emerald" : "border-blue-500/40 text-blue-400"
-                      }`}
-                    >
-                      <option value="invested">📉 Invested</option>
-                      <option value="withdrawn">📈 Withdrawn</option>
-                    </select>
-                  </div>
+                  {/* DESKTOP ROW (md and up) */}
+                  <div className="hidden md:flex items-center gap-2.5">
+                    {/* 1. Type Selector */}
+                    <div className="w-32 shrink-0">
+                      <select
+                        value={flow.type}
+                        onChange={(e) => updateFlow(flow.id, "type", e.target.value as FlowType)}
+                        className={`w-full bg-navy-card border rounded-xl px-3 py-2 text-xs font-extrabold outline-none cursor-pointer ${
+                          flow.type === "invested"
+                            ? "border-emerald/40 text-emerald"
+                            : "border-blue-500/40 text-blue-400"
+                        }`}
+                      >
+                        <option value="invested">Invested</option>
+                        <option value="withdrawn">Withdrawn</option>
+                      </select>
+                    </div>
 
-                  {/* Amount Input */}
-                  <div className="col-span-2 sm:col-span-3">
-                    <NumericInput
-                      value={flow.amount}
-                      onChange={(val) => updateFlow(flow.id, "amount", val)}
-                      min={0}
-                      max={1000000000}
-                      step={1000}
-                      type="currency"
-                      className="w-full text-left text-xs font-bold"
-                    />
-                  </div>
+                    {/* 2. Amount Input */}
+                    <div className="flex-1 min-w-[130px]">
+                      <NumericInput
+                        value={flow.amount}
+                        onChange={(val) => updateFlow(flow.id, "amount", val)}
+                        min={0}
+                        max={1000000000}
+                        step={1000}
+                        type="currency"
+                        className="w-full text-left text-xs font-bold bg-navy-card"
+                      />
+                    </div>
 
-                  {/* Date Input */}
-                  <div className="col-span-1 sm:col-span-3">
-                    <input
-                      type="date"
-                      value={flow.date}
-                      onChange={(e) => updateFlow(flow.id, "date", e.target.value)}
-                      className="w-full bg-navy-card/80 border border-border-navy rounded-xl px-2 sm:px-3 py-2 text-xs font-bold text-white outline-none cursor-pointer focus:border-emerald"
-                    />
-                  </div>
+                    {/* 3. Date Input */}
+                    <div className="w-36 shrink-0">
+                      <input
+                        type="date"
+                        value={flow.date}
+                        onChange={(e) => updateFlow(flow.id, "date", e.target.value)}
+                        className="w-full bg-navy-card border border-border-navy/80 rounded-xl px-2.5 py-2 text-xs font-bold text-white outline-none cursor-pointer focus:border-emerald"
+                      />
+                    </div>
 
-                  {/* Frequency Input */}
-                  <div className="col-span-1 sm:col-span-2">
-                    <select
-                      value={flow.frequency}
-                      onChange={(e) => updateFlow(flow.id, "frequency", e.target.value as Frequency)}
-                      className="w-full bg-navy-card/80 border border-border-navy rounded-xl px-2 py-2 text-xs font-semibold text-white outline-none cursor-pointer"
-                    >
-                      <option value="one-off">One-off</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
-                      <option value="yearly">Yearly</option>
-                    </select>
-                  </div>
+                    {/* 4. Frequency Selector */}
+                    <div className="w-28 shrink-0">
+                      <select
+                        value={flow.frequency}
+                        onChange={(e) => {
+                          const nextFreq = e.target.value as Frequency;
+                          updateFlow(flow.id, "frequency", nextFreq);
+                          if (nextFreq !== "one-off" && (!flow.count || flow.count < 1)) {
+                            updateFlow(flow.id, "count", 1);
+                          }
+                        }}
+                        className="w-full bg-navy-card border border-border-navy/80 rounded-xl px-2.5 py-2 text-xs font-semibold text-white outline-none cursor-pointer focus:border-emerald"
+                      >
+                        <option value="one-off">One-off</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="half-yearly">Half-yearly</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
+                    </div>
 
-                  {/* Remove Button */}
-                  <div className="col-span-2 sm:col-span-1 flex justify-end">
+                    {/* 5. Count Multiplier */}
+                    {flow.frequency !== "one-off" && (
+                      <div className="flex items-center gap-1.5 shrink-0 bg-navy-card border border-border-navy/80 rounded-xl px-2.5 py-1">
+                        <span className="text-xs text-muted-grey font-bold select-none">×</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={1200}
+                          value={flow.count || 1}
+                          onChange={(e) => {
+                            const parsed = parseInt(e.target.value, 10);
+                            updateFlow(flow.id, "count", isNaN(parsed) ? 1 : Math.max(1, Math.min(1200, parsed)));
+                          }}
+                          className="w-10 bg-transparent text-xs font-mono font-bold text-center text-white outline-none"
+                          placeholder="1"
+                        />
+                      </div>
+                    )}
+
+                    {/* 6. Remove Button */}
                     <button
                       onClick={() => removeFlow(flow.id)}
-                      className="p-1.5 text-muted-grey hover:text-red-400 transition-colors cursor-pointer"
+                      className="p-2 text-muted-grey hover:text-red-400 transition-colors cursor-pointer rounded-lg hover:bg-red-500/10 shrink-0 ml-auto"
                       title="Remove flow"
                     >
                       <Trash2 size={16} />
                     </button>
                   </div>
+
+                  {/* MOBILE & TABLET LAYOUT (< md) */}
+                  <div className="flex md:hidden flex-col gap-2">
+                    {/* Top line: Type + Amount + Delete */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-28 shrink-0">
+                        <select
+                          value={flow.type}
+                          onChange={(e) => updateFlow(flow.id, "type", e.target.value as FlowType)}
+                          className={`w-full bg-navy-card border rounded-xl px-2 py-2 text-xs font-extrabold outline-none cursor-pointer ${
+                            flow.type === "invested"
+                              ? "border-emerald/40 text-emerald"
+                              : "border-blue-500/40 text-blue-400"
+                          }`}
+                        >
+                          <option value="invested">Invested</option>
+                          <option value="withdrawn">Withdrawn</option>
+                        </select>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <NumericInput
+                          value={flow.amount}
+                          onChange={(val) => updateFlow(flow.id, "amount", val)}
+                          min={0}
+                          max={1000000000}
+                          step={1000}
+                          type="currency"
+                          className="w-full text-left text-xs font-bold bg-navy-card"
+                        />
+                      </div>
+
+                      <button
+                        onClick={() => removeFlow(flow.id)}
+                        className="p-2 text-muted-grey hover:text-red-400 transition-colors cursor-pointer rounded-lg hover:bg-red-500/10 shrink-0"
+                        title="Remove flow"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+
+                    {/* Bottom line: Date + Frequency + (Optional Count) */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-[120px]">
+                        <input
+                          type="date"
+                          value={flow.date}
+                          onChange={(e) => updateFlow(flow.id, "date", e.target.value)}
+                          className="w-full bg-navy-card border border-border-navy/80 rounded-xl px-2.5 py-2 text-xs font-bold text-white outline-none cursor-pointer focus:border-emerald"
+                        />
+                      </div>
+
+                      <div className="w-28 shrink-0">
+                        <select
+                          value={flow.frequency}
+                          onChange={(e) => {
+                            const nextFreq = e.target.value as Frequency;
+                            updateFlow(flow.id, "frequency", nextFreq);
+                            if (nextFreq !== "one-off" && (!flow.count || flow.count < 1)) {
+                              updateFlow(flow.id, "count", 1);
+                            }
+                          }}
+                          className="w-full bg-navy-card border border-border-navy/80 rounded-xl px-2 py-2 text-xs font-semibold text-white outline-none cursor-pointer focus:border-emerald"
+                        >
+                          <option value="one-off">One-off</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="quarterly">Quarterly</option>
+                          <option value="half-yearly">Half-yearly</option>
+                          <option value="yearly">Yearly</option>
+                        </select>
+                      </div>
+
+                      {flow.frequency !== "one-off" && (
+                        <div className="flex items-center gap-1 shrink-0 bg-navy-card border border-border-navy/80 rounded-xl px-2 py-1">
+                          <span className="text-xs text-muted-grey font-bold select-none">×</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={1200}
+                            value={flow.count || 1}
+                            onChange={(e) => {
+                              const parsed = parseInt(e.target.value, 10);
+                              updateFlow(flow.id, "count", isNaN(parsed) ? 1 : Math.max(1, Math.min(1200, parsed)));
+                            }}
+                            className="w-8 bg-transparent text-xs font-mono font-bold text-center text-white outline-none"
+                            placeholder="1"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Summary Subtext: Count • Total • Date Span */}
+                  <div className="text-[11px] text-muted-grey font-medium pl-1 leading-snug">
+                    {getFlowSummary(flow)}
+                  </div>
                 </div>
               ))}
             </div>
 
-            {/* Actions: + Investment / + Withdrawal */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+            {/* Actions: + Investment / + Withdrawal & Hint */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => addFlow("invested")}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald/10 border border-emerald/30 text-emerald hover:bg-emerald hover:text-navy-bg rounded-xl text-xs font-extrabold transition-all cursor-pointer"
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-4 py-2.5 bg-emerald/10 border border-emerald/30 text-emerald hover:bg-emerald hover:text-navy-bg rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-sm"
                 >
                   <Plus size={14} /> + Investment
                 </button>
                 <button
                   onClick={() => addFlow("withdrawn")}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white rounded-xl text-xs font-extrabold transition-all cursor-pointer"
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-4 py-2.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-sm"
                 >
                   <Plus size={14} /> + Withdrawal
                 </button>
               </div>
-              <p className="text-[10px] text-muted-grey">
+              <p className="text-[11px] text-muted-grey text-center sm:text-right">
                 Set a frequency to add a whole series in one card. Skip years by just not adding them.
               </p>
             </div>
           </div>
         )}
 
-        {/* --- HERO RESULTS DISPLAY BOX (FINBOOM EXACT DESIGN) --- */}
-        <div className="p-6 rounded-2xl bg-navy-bg/90 border border-border-navy/80 space-y-6">
+        {/* --- HERO RESULTS DISPLAY BOX --- */}
+        <div className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-navy-bg/95 border border-border-navy/90 space-y-5 sm:space-y-6 shadow-xl">
           {xirrResult.success ? (
-            <div className="space-y-6">
+            <div className="space-y-5 sm:space-y-6">
               {/* Header result row */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border-navy/60 pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 border-b border-border-navy/60 pb-4">
                 <div>
                   <span className="text-xs font-bold text-muted-grey block">Annualized return (XIRR)</span>
                   {adjustInflation && (
-                    <span className="text-[10px] text-amber-500 font-semibold">Real (Inflation Adjusted @ {inflation}%)</span>
+                    <span className="text-[11px] text-amber-400 font-semibold flex items-center gap-1 mt-0.5">
+                      Real (Inflation Adjusted @ {inflation}%)
+                    </span>
                   )}
                 </div>
-                <div className="text-right">
-                  <span className="text-4xl md:text-5xl font-black text-emerald tracking-tight">
+                <div className="text-left sm:text-right w-full sm:w-auto">
+                  <span
+                    className={`text-3xl sm:text-4xl md:text-5xl font-black tracking-tight font-mono block ${
+                      Number(xirrResult.xirrNominal) >= 0 ? "text-emerald" : "text-red-400"
+                    }`}
+                  >
                     {adjustInflation ? `${xirrResult.xirrReal}%` : `${xirrResult.xirrNominal}%`}
                   </span>
                 </div>
               </div>
 
               {/* 4 Key Metrics Bar */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                <div>
-                  <span className="text-muted-grey block text-[10px] uppercase font-bold">Invested</span>
-                  <span className="font-extrabold text-white text-base mt-0.5 block">{fmt(xirrResult.totalInvested)}</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-xs">
+                <div className="bg-navy-card/40 p-2.5 sm:p-0 rounded-xl sm:rounded-none">
+                  <span className="text-muted-grey block text-[10px] uppercase font-bold tracking-wider">Invested</span>
+                  <span className="font-extrabold text-white text-sm sm:text-base md:text-lg mt-0.5 block font-mono truncate">
+                    {fmtCurrency(xirrResult.totalInvested)}
+                  </span>
                 </div>
-                <div>
-                  <span className="text-muted-grey block text-[10px] uppercase font-bold">Current value</span>
-                  <span className="font-extrabold text-white text-base mt-0.5 block">{fmt(xirrResult.totalRedeemed)}</span>
+                <div className="bg-navy-card/40 p-2.5 sm:p-0 rounded-xl sm:rounded-none">
+                  <span className="text-muted-grey block text-[10px] uppercase font-bold tracking-wider">Current value</span>
+                  <span className="font-extrabold text-white text-sm sm:text-base md:text-lg mt-0.5 block font-mono truncate">
+                    {fmtCurrency(xirrResult.totalRedeemed)}
+                  </span>
                 </div>
-                <div>
-                  <span className="text-muted-grey block text-[10px] uppercase font-bold">Gain</span>
-                  <span className="font-extrabold text-emerald text-base mt-0.5 block">{fmt(xirrResult.netGain)}</span>
+                <div className="bg-navy-card/40 p-2.5 sm:p-0 rounded-xl sm:rounded-none">
+                  <span className="text-muted-grey block text-[10px] uppercase font-bold tracking-wider">Gain</span>
+                  <span
+                    className={`font-extrabold text-sm sm:text-base md:text-lg mt-0.5 block font-mono truncate ${
+                      xirrResult.netGain >= 0 ? "text-emerald" : "text-red-400"
+                    }`}
+                  >
+                    {xirrResult.netGain >= 0 ? "+" : ""}
+                    {fmtCurrency(xirrResult.netGain)}
+                  </span>
                 </div>
-                <div>
-                  <span className="text-muted-grey block text-[10px] uppercase font-bold">Absolute return</span>
-                  <span className="font-extrabold text-emerald text-base mt-0.5 block">{xirrResult.absoluteReturn}%</span>
+                <div className="bg-navy-card/40 p-2.5 sm:p-0 rounded-xl sm:rounded-none">
+                  <span className="text-muted-grey block text-[10px] uppercase font-bold tracking-wider">Absolute return</span>
+                  <span
+                    className={`font-extrabold text-sm sm:text-base md:text-lg mt-0.5 block font-mono truncate ${
+                      Number(xirrResult.absoluteReturn) >= 0 ? "text-emerald" : "text-red-400"
+                    }`}
+                  >
+                    {Number(xirrResult.absoluteReturn) >= 0 ? "+" : ""}
+                    {xirrResult.absoluteReturn}%
+                  </span>
                 </div>
               </div>
 
               {/* Ratio Progress Bar */}
-              <div className="space-y-1.5 pt-2">
-                <div className="h-3 w-full bg-navy-card rounded-full overflow-hidden flex border border-border-navy/40">
-                  <div
-                    className="bg-muted-grey/40 h-full transition-all"
-                    style={{ width: `${Math.min(100, (xirrResult.totalInvested / Math.max(xirrResult.totalRedeemed, 1)) * 100)}%` }}
-                  />
-                  <div
-                    className="bg-emerald h-full transition-all flex-1"
-                  />
+              <div className="space-y-2 pt-1 sm:pt-2">
+                <div className="h-2.5 sm:h-3 w-full bg-navy-card rounded-full overflow-hidden flex border border-border-navy/40">
+                  {xirrResult.netGain >= 0 ? (
+                    <>
+                      <div
+                        className="bg-muted-grey/50 h-full transition-all"
+                        style={{
+                          width: `${Math.max(
+                            5,
+                            Math.min(95, (xirrResult.totalInvested / Math.max(xirrResult.totalRedeemed, 1)) * 100)
+                          )}%`
+                        }}
+                      />
+                      <div className="bg-emerald h-full transition-all flex-1" />
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        className="bg-emerald h-full transition-all"
+                        style={{
+                          width: `${Math.max(
+                            5,
+                            Math.min(95, (xirrResult.totalRedeemed / Math.max(xirrResult.totalInvested, 1)) * 100)
+                          )}%`
+                        }}
+                      />
+                      <div className="bg-red-500/70 h-full transition-all flex-1" />
+                    </>
+                  )}
                 </div>
-                <div className="flex justify-between text-[10px] text-muted-grey font-bold">
+                <div className="flex justify-between text-[11px] sm:text-xs text-muted-grey font-bold">
                   <span>Invested {fmtCompact(xirrResult.totalInvested)}</span>
-                  <span>Gains {fmtCompact(xirrResult.netGain)}</span>
+                  <span>
+                    {xirrResult.netGain >= 0 ? "Gains" : "Loss"} {fmtCompact(xirrResult.netGain)}
+                  </span>
                 </div>
               </div>
+
+              {/* Explanatory Footer Text */}
+              <p className="text-[11px] sm:text-xs text-muted-grey/80 leading-relaxed pt-2 border-t border-border-navy/40">
+                XIRR annualizes returns across investments made on different dates. It is the money-weighted rate that makes your cash flows balance. Calculated in your browser. Nothing is stored.
+              </p>
             </div>
           ) : (
-            <div className="p-4 bg-red-500/5 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold">
-              {xirrResult.error}
+            <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-2xl text-xs font-semibold space-y-1">
+              <div className="font-bold flex items-center gap-1.5">
+                <Info size={16} /> Calculation Notice
+              </div>
+              <p>{xirrResult.error}</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Educational Guide */}
-      <section className="p-6 rounded-2xl border border-border-navy bg-navy-card/45 space-y-4">
-        <h3 className="text-base font-bold text-white flex items-center gap-1.5">
-          <Info className="text-emerald" size={18} />
-          Why XIRR is the number that matters
+      <section className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-border-navy bg-navy-card/45 space-y-3 sm:space-y-4">
+        <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+          <Info className="text-emerald shrink-0" size={20} />
+          <span>Why XIRR is the number that matters</span>
         </h3>
-        <p className="text-xs text-muted-grey leading-relaxed">
+        <p className="text-xs sm:text-sm text-muted-grey leading-relaxed">
           Most people judge an investment by how much it grew: put in 1 lakh, now it is worth 1.35 lakh, so a 35% gain. That absolute return hides the one thing that lets you compare investments fairly: <strong className="text-white">time</strong>. A 35% gain over six months is extraordinary; the same gain over ten years barely keeps up with inflation.
         </p>
-        <p className="text-xs text-muted-grey leading-relaxed">
+        <p className="text-xs sm:text-sm text-muted-grey leading-relaxed">
           XIRR (Extended Internal Rate of Return) solves this by calculating your exact money-weighted annualized return, accounting for the timing and amount of every single cash flow.
         </p>
       </section>

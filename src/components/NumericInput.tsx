@@ -88,8 +88,10 @@ export default function NumericInput({
 
   const displayValue = isFocused ? tempValue : formatValue(value);
 
+  const hasCustomWidth = className.includes("w-");
+
   return (
-    <div className={`flex items-center gap-1 bg-navy-bg/75 border border-border-navy/60 focus-within:border-emerald/60 rounded-lg px-2 py-1 text-xs text-emerald font-bold transition-all w-28 sm:w-32 md:w-36 shrink-0 ${className}`}>
+    <div className={`flex items-center gap-1 bg-navy-bg/75 border border-border-navy/60 focus-within:border-emerald/60 rounded-lg px-2 py-1 text-xs text-emerald font-bold transition-all ${hasCustomWidth ? "" : "w-28 sm:w-32 md:w-36 shrink-0"} ${className}`}>
       {type === "currency" && (
         <span className="text-muted-grey/60 text-[10px] sm:text-xs select-none shrink-0">₹</span>
       )}

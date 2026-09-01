@@ -55,9 +55,11 @@
   * **APY (Atal Pension Yojana)**: Maps official contributions and maps the post-retirement fixed pension decay under inflation.
   * **TDS**: Computes transactional tax deductions, limits, and PAN card missing penalty rates.
   * **POMIS (Post Office Monthly Income Scheme)**: Models the erosion of both flat monthly interest income and the principal returned at 5 years.
-  * **SCSS (Senior Citizens Savings Scheme)**: Enforces the ₹30L limit and quarterly SCSS payouts, discounting both for inflation.
-  * **XIRR**: Computes the Extended Internal Rate of Return for irregular transaction cash flows using a Newton-Raphson numerical solver, showing nominal vs. real yields.
-* **Step Up SIP Simulator**: Compare the compounding power and maturity value of a flat monthly SIP against a Step Up SIP (increasing yearly by a percentage or a fixed amount) using interactive area charts.
+  * **XIRR (Extended Internal Rate of Return)**:
+    * **Brent-Dekker Robust Numerical Solver**: Solves irregular, non-periodic cash flows using an industry-grade Brent-Dekker root finding engine with multi-point logarithmic grid bracketing ($[-0.999999, +10000.0]$) to eliminate numerical divergence, NaN anomalies, and zero-derivative traps.
+    * **Interactive Series & Count Multiplier (`× [count]`)**: Supports One-off, Monthly, Quarterly, Half-Yearly, and Yearly cash flows with dedicated multiplier counters and real-time subtext summaries (e.g. `12 payments Invested • ₹12L total • Sep 2025 to Aug 2026`).
+    * **Default SIP-First Onboarding**: Directly loads into Quick SIP mode for effortless SIP return calculations, with a seamless toggle to granular custom cash flow series.
+    * **Nominal vs. Real Yields & Responsive UI**: Displays both nominal XIRR and inflation-adjusted real returns alongside dynamic invested-to-gain ratio progress bars, fully responsive across mobile and desktop.
 * **Loan EMI & Prepayment Simulator**: Calculate monthly EMIs and simulate interest savings/tenure reduction from extra monthly/annual prepayments.
 * **Emergency Fund & Liquid Runway Planner**: Determine risk-adjusted emergency reserve targets based on job sector stability and family dependent buffers.
 * **FIRE Early Retirement Simulator**: Simulate lean/fat early retirement target corpuses using safe withdrawal rate (SWR) rules and calculate required monthly bridging SIPs.
