@@ -71,10 +71,10 @@ export default function GoalPlanner() {
   const [selectedGoal, setSelectedGoal] = useState<GoalType>(GOAL_TYPES[0]);
   const [targetAmount, setTargetAmount] = useState(selectedGoal.defaultAmount);
   const [years, setYears] = useState(selectedGoal.defaultYears);
-  const [expectedReturn, setExpectedReturn] = useState(12);
+  const [expectedReturn, setExpectedReturn] = useState(10);
   const [adjustInflation, setAdjustInflation] = useState(false);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   useEffect(() => {
     fetch("/api/rates")
@@ -292,10 +292,10 @@ export default function GoalPlanner() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setExpectedReturn(12)}
+                  onClick={() => setExpectedReturn(10)}
                   className="text-[9px] font-bold text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light px-2 py-0.5 rounded transition-all"
                 >
-                  Equity Index (12%)
+                  Equity Index (10% Post-Tax)
                 </button>
               </div>
             </div>

@@ -303,7 +303,7 @@ export default function FinancialDnaPage() {
 
   // Inflation interactive calculator state
   const [inflationYears, setInflationYears] = useState(20);
-  const [inflationRate, setInflationRate] = useState(6.0);
+  const [inflationRate, setInflationRate] = useState(7.0);
 
   // Custom expense creation state
   const [newNeedName, setNewNeedName] = useState("");
@@ -543,10 +543,10 @@ export default function FinancialDnaPage() {
           MODE 1: PROGRESSIVE ASSESSMENT FLOW (STEPS 1 TO 9)
          ========================================================================= */}
       {viewMode === "assessment" && (
-        <div className="max-w-5xl mx-auto space-y-4 animate-fadeIn pb-12">
+        <div className="w-full max-w-[1560px] mx-auto space-y-6 animate-fadeIn pb-12">
           
           {/* Unified Compact Command Header & Live Telemetry Card */}
-          <div className="bg-navy-card border border-border-navy rounded-3xl p-4 sm:p-6 shadow-xl space-y-4">
+          <div className="bg-navy-card border border-border-navy rounded-3xl p-5 sm:p-7 md:p-8 shadow-2xl space-y-5">
             
             {/* Top Row: Title + Action Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-navy/60 pb-3.5">
@@ -632,35 +632,35 @@ export default function FinancialDnaPage() {
             </div>
 
             {/* Metrics Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="card-tile-neutral px-3 py-2 rounded-xl border">
-                <span className="text-[10px] text-muted-grey uppercase font-bold block">Monthly Income</span>
-                <span className="text-sm font-black text-heading">{fmt(liveTotalIncome)}/mo</span>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="card-tile-neutral px-4 py-3 rounded-2xl border flex flex-col justify-between">
+                <span className="text-[11px] text-muted-grey uppercase font-bold tracking-wider block">Monthly Income</span>
+                <span className="text-base sm:text-xl font-black text-heading mt-1">{fmt(liveTotalIncome)}/mo</span>
               </div>
-              <div className="card-tile-neutral px-3 py-2 rounded-xl border">
-                <span className="text-[10px] text-muted-grey uppercase font-bold block">True Living Need</span>
-                <span className="text-sm font-black text-rose-500">{fmt(liveTrueEssential)}/mo</span>
+              <div className="card-tile-neutral px-4 py-3 rounded-2xl border flex flex-col justify-between">
+                <span className="text-[11px] text-muted-grey uppercase font-bold tracking-wider block">True Living Need</span>
+                <span className="text-base sm:text-xl font-black text-rose-500 mt-1">{fmt(liveTrueEssential)}/mo</span>
               </div>
-              <div className="card-tile-neutral px-3 py-2 rounded-xl border">
-                <span className="text-[10px] text-muted-grey uppercase font-bold block">Buffer Coverage</span>
-                <span className="text-sm font-black text-emerald">{liveEmergencyCoverage} Months</span>
+              <div className="card-tile-neutral px-4 py-3 rounded-2xl border flex flex-col justify-between">
+                <span className="text-[11px] text-muted-grey uppercase font-bold tracking-wider block">Buffer Coverage</span>
+                <span className="text-base sm:text-xl font-black text-emerald mt-1">{liveEmergencyCoverage} Months</span>
               </div>
-              <div className="card-tile-neutral px-3 py-2 rounded-xl border">
-                <span className="text-[10px] text-muted-grey uppercase font-bold block">DNA Health Score</span>
-                <span className="text-sm font-black text-indigo-500 dark:text-indigo-300">{dna.overallScore} pts ({dna.grade})</span>
+              <div className="card-tile-neutral px-4 py-3 rounded-2xl border flex flex-col justify-between">
+                <span className="text-[11px] text-muted-grey uppercase font-bold tracking-wider block">DNA Health Score</span>
+                <span className="text-base sm:text-xl font-black text-indigo-400 mt-1">{dna.overallScore} pts ({dna.grade})</span>
               </div>
             </div>
 
             {/* Step Navigation Pill Stepper (Embedded in Command Card) */}
-            <div className="border-t border-border-navy/60 pt-3 space-y-2">
+            <div className="border-t border-border-navy/60 pt-3.5 space-y-2.5">
               <div className="flex items-center justify-between text-xs font-bold text-muted-grey">
                 <span className="text-emerald flex items-center gap-1.5 uppercase tracking-wider font-extrabold text-[11px]">
                   <Sparkles className="w-3.5 h-3.5" /> Step {currentStep} of 9
                 </span>
-                <span className="text-heading font-mono text-[11px]">{Math.round((currentStep / 9) * 100)}% Complete</span>
+                <span className="text-heading font-mono text-xs">{Math.round((currentStep / 9) * 100)}% Complete</span>
               </div>
 
-              <div className="grid grid-cols-3 sm:grid-cols-9 gap-1">
+              <div className="grid grid-cols-3 sm:grid-cols-9 gap-1.5 sm:gap-2">
                 {[
                   "1. Profile", "2. Income", "3. Needs", "4. Wants",
                   "5. Emergency", "6. Health", "7. Term", "8. SIP", "9. Review"
@@ -669,12 +669,12 @@ export default function FinancialDnaPage() {
                     type="button"
                     key={idx}
                     onClick={() => setCurrentStep(idx + 1)}
-                    className={`cursor-pointer px-1.5 py-1 rounded-lg text-center text-[10px] sm:text-[11px] transition font-bold truncate ${
+                    className={`cursor-pointer px-2.5 py-2 rounded-xl text-center text-xs transition font-bold truncate ${
                       currentStep === idx + 1
-                        ? "bg-indigo-600 !text-white shadow-sm"
+                        ? "bg-indigo-600 !text-white shadow-md shadow-indigo-600/30"
                         : currentStep > idx + 1
-                        ? "text-heading bg-navy-bg hover:bg-navy-light"
-                        : "text-muted-grey/60 hover:text-heading"
+                        ? "text-heading bg-navy-bg hover:bg-navy-light border border-border-navy"
+                        : "text-muted-grey/70 hover:text-heading bg-navy-bg/50"
                     }`}
                   >
                     {name}
@@ -687,16 +687,16 @@ export default function FinancialDnaPage() {
 
           {/* STEP 1: PERSONAL PROFILE */}
           {currentStep === 1 && (
-            <div className="bg-navy-card border border-border-navy rounded-2xl p-5 sm:p-8 shadow-xl space-y-6">
+            <div className="bg-navy-card border border-border-navy rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl space-y-7">
               <div className="border-b border-border-navy pb-4">
                 <span className="text-xs font-bold text-emerald uppercase tracking-wider">Section 1</span>
-                <h2 className="text-xl sm:text-2xl font-black text-heading mt-1">Personal Financial Context</h2>
+                <h2 className="text-2xl sm:text-3xl font-black text-heading mt-1">Personal Financial Context</h2>
                 <p className="text-xs sm:text-sm text-muted-grey mt-1">
                   Your age, employment structure, and family dependents determine your essential safety margins.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
                 {/* Age */}
                 <div>
                   <label className="text-xs font-bold text-muted-grey uppercase tracking-wider block mb-1.5">
@@ -934,7 +934,7 @@ export default function FinancialDnaPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
                   {assessmentData.needs.map((item, idx) => {
                     const isItemFilled = (item.amount || 0) > 0;
                     return (
@@ -1036,7 +1036,7 @@ export default function FinancialDnaPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
                   {assessmentData.wants.map((item, idx) => {
                     const isItemFilled = (item.amount || 0) > 0;
                     return (
@@ -1762,7 +1762,7 @@ export default function FinancialDnaPage() {
           MODE 2: FINANCIAL DNA RESULTS & INTELLIGENCE DASHBOARD
          ========================================================================= */}
       {viewMode === "results" && (
-        <div className="max-w-7xl mx-auto space-y-8 animate-fadeIn">
+        <div className="w-full max-w-[1560px] mx-auto space-y-8 animate-fadeIn">
           {/* Top Row: Hero DNA Score Card & Financial Snapshot */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Main Score Hero Card */}

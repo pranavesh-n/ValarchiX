@@ -13,8 +13,8 @@ export default function NpsCalculator() {
   const [annuityRatio, setAnnuityRatio] = useState(40); // Statutory minimum is 40%
   const [annuityYield, setAnnuityYield] = useState(6.0); // Safe annuity interest rate
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   useEffect(() => {
     fetch("/api/rates")

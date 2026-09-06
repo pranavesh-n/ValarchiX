@@ -10,11 +10,11 @@ export default function ChildLegacyEngine() {
   const [targetAge, setTargetAge] = useState(21);
   const [monthlyInvestment, setMonthlyInvestment] = useState(10000);
   const [adjustEducationInflation, setAdjustEducationInflation] = useState(false);
-  const [educationInflationRate, setEducationInflationRate] = useState(8.0);
+  const [educationInflationRate, setEducationInflationRate] = useState(7.0);
 
   const [ppfRate, setPpfRate] = useState(7.1);
   const [ssyRate, setSsyRate] = useState(8.2);
-  const [sipRate, setSipRate] = useState(13.0);
+  const [sipRate, setSipRate] = useState(10.0);
 
   const tenureYears = Math.max(1, targetAge - currentAge);
 

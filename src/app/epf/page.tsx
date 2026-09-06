@@ -13,8 +13,8 @@ export default function EpfCalculator() {
   const [retirementAge, setRetirementAge] = useState(58); // Standard retirement age is 58 in EPFO
   const [currentEpfBalance, setCurrentEpfBalance] = useState(100000);
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   const EPF_INTEREST_RATE = 8.25; // Current EPFO Interest Rate (FY 24-25 baseline)
 

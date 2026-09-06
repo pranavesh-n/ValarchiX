@@ -40,16 +40,16 @@ export default function BeyondFdsPage() {
 
   // States for Compounding Story (Rohan vs Priya)
   const [monthlyInvest, setMonthlyInvest] = useState(10000);
-  const [compoundingRate, setCompoundingRate] = useState(12);
+  const [compoundingRate, setCompoundingRate] = useState(10);
 
   // States for FD Destroyer
   const [fdDeposit, setFdDeposit] = useState(1000000); // 10 Lakhs
   const [fdRate, setFdRate] = useState(7.0);
   const [fdTaxSlab, setFdTaxSlab] = useState(30); // 0%, 10%, 20%, 30%
-  const [fdInflation, setFdInflation] = useState(5.09);
+  const [fdInflation, setFdInflation] = useState(7.0);
   const [fdYears, setFdYears] = useState(15);
 
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   useEffect(() => {
     setMounted(true);

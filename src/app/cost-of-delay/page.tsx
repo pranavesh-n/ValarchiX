@@ -9,9 +9,9 @@ export default function CostOfDelayCalculator() {
   const [showAudit, setShowAudit] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [monthlySIP, setMonthlySIP] = useState(10000);
-  const [rate, setRate] = useState(12);
+  const [rate, setRate] = useState(10);
   const [totalYears, setTotalYears] = useState(30);
-  const [inflation, setInflation] = useState(6);
+  const [inflation, setInflation] = useState(7);
   const [adjustInflation, setAdjustInflation] = useState(true);
 
   useEffect(() => setMounted(true), []);

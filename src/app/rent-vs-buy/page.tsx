@@ -26,7 +26,7 @@ export default function RentVsBuyPage() {
   const [loanRate, setLoanRate] = useState(8.5);
   const [loanTenure, setLoanTenure] = useState(20);
 
-  const [equityReturn, setEquityReturn] = useState(12.0);
+  const [equityReturn, setEquityReturn] = useState(10.0);
   const [propertyAppreciation, setPropertyAppreciation] = useState(6.0);
   const [rentInflation, setRentInflation] = useState(7.0);
   const [horizonYears, setHorizonYears] = useState(20);

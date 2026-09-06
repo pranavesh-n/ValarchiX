@@ -9,8 +9,8 @@ export default function NscCalculator() {
   const [showAudit, setShowAudit] = useState(false);
   const [investment, setInvestment] = useState(100000);
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   const NSC_INTEREST_RATE = 7.70; // Current NSC Interest Rate (compounded annually)
   const NSC_TENURE = 5; // NSC has a fixed 5-year lock-in period

@@ -20,12 +20,12 @@ export default function FireCalculator() {
   const [targetAge, setTargetAge] = useState(45);
   const [expenses, setExpenses] = useState(50000); // monthly expenses today
   const [savings, setSavings] = useState(500000); // current net worth
-  const [preRate, setPreRate] = useState(12); // expected index returns
+  const [preRate, setPreRate] = useState(10); // expected index returns
   const [postRate, setPostRate] = useState(7); // safe retirement yields (nominal)
-  const [inflation, setInflation] = useState(5.09); // baseline inflation
+  const [inflation, setInflation] = useState(7.0); // baseline inflation
   const [swr, setSwr] = useState(3.0); // Safe Withdrawal Rate (3.0% India benchmark)
   const [fireMultiplier, setFireMultiplier] = useState(1.0); // lifestyle toggle
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   useEffect(() => {
     fetch("/api/rates")

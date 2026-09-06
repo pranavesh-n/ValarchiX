@@ -12,8 +12,8 @@ export default function GratuityCalculator() {
   const [yearsUntilRetirement, setYearsUntilRetirement] = useState(15);
   const [expectedSalaryGrowth, setExpectedSalaryGrowth] = useState(6);
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   const TAX_EXEMPT_LIMIT = 2500000; // 25 Lakhs tax-exempt limit for private sector gratuity (recently updated)
 

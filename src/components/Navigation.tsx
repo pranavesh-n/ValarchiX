@@ -45,7 +45,8 @@ import {
   CheckCircle2,
   Smartphone,
   BookOpen,
-  ShieldCheck
+  ShieldCheck,
+  Menu
 } from "lucide-react";
 import {
   getCurrentUserSession,
@@ -53,6 +54,7 @@ import {
   signOutUser
 } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
+import { getPrimaryFirstName, setCachedUserInfo } from "@/lib/passcode";
 
 interface NavItem {
   name: string;
@@ -90,10 +92,16 @@ const NAV_ITEMS: NavGroup[] = [
     ]
   },
   {
-    category: "Analyzers",
+    category: "Screeners & Analyzers",
     items: [
-      { name: "Mutual Funds Screener", href: "/mutual-funds", icon: Layers, desc: "Direct vs Regular, TER drag & rolling returns" },
-      { name: "Debt Funds Analyzer", href: "/debt-funds", icon: Shield, desc: "Yield to maturity & Macaulay duration" }
+      { name: "Mutual Funds Screener", href: "/mutual-funds", icon: Layers, desc: "Direct vs Regular, TER drag & 48 AMC Factsheets" },
+      { name: "Debt Funds Analyzer", href: "/debt-funds", icon: Shield, desc: "Yield to maturity, duration & credit risk" },
+      { name: "Portfolio Intelligence", href: "/portfolio-intelligence", icon: PieChart, desc: "CAS parser, true XIRR, overlap & drag" },
+      { name: "Portfolio Simulator", href: "/portfolio-simulator", icon: Sliders, desc: "20-yr multi-asset stress test & backtest" },
+      { name: "Tax Regime Hub", href: "/tax", icon: Calculator, desc: "Old vs New regime deduction & rebate solver" },
+      { name: "Rent vs Buy Decision", href: "/rent-vs-buy", icon: Landmark, desc: "Real estate opportunity cost vs equity SIP" },
+      { name: "Debt Payoff Optimizer", href: "/debt-payoff", icon: Scissors, desc: "Snowball vs Avalanche interest minimization" },
+      { name: "Credit Card Debt Trap", href: "/credit-card", icon: CreditCard, desc: "42% annualized APR debt trap solver" }
     ]
   },
   {
@@ -101,10 +109,7 @@ const NAV_ITEMS: NavGroup[] = [
     items: [
       { name: "Latte Factor Spends", href: "/latte-factor", icon: Coffee, desc: "Small daily leak compounding to wealth" },
       { name: "Emergency Fund Fortress", href: "/emergency-fund", icon: ShieldAlert, desc: "3-6 month liquid emergency buffer" },
-      { name: "Rent vs Buy Decision", href: "/rent-vs-buy", icon: Landmark, desc: "Opportunity cost of real estate vs equity" },
       { name: "Inflation & Purchasing Power", href: "/inflation", icon: BarChart2, desc: "Future cost & purchasing power erosion" },
-      { name: "Credit Card Debt Trap", href: "/credit-card", icon: CreditCard, desc: "42% annualized APR debt trap solver" },
-      { name: "Debt Payoff Optimizer", href: "/debt-payoff", icon: Scissors, desc: "Snowball vs Avalanche debt freedom" },
       { name: "Human Life Value (HLV)", href: "/hlv", icon: HeartPulse, desc: "Income replacement pure term cover" },
       { name: "FIRE Early Retirement", href: "/fire", icon: Flame, desc: "25x-30x annual spend corpus milestones" }
     ]
@@ -143,7 +148,9 @@ const NAV_ITEMS: NavGroup[] = [
       { name: "Loan EMI Simulator", href: "/emi", icon: Landmark, desc: "Principal vs interest amortization split" },
       { name: "Advanced Income Tax", href: "/income-tax", icon: Calculator, desc: "Section 80C, 80D, 87A rebate & cess" },
       { name: "TDS Deductor Math", href: "/tds", icon: Calculator, desc: "Tax deducted at source on payments" },
-      { name: "NSC Certificate", href: "/nsc", icon: Coins, desc: "5-year national savings post office" }
+      { name: "NSC Certificate", href: "/nsc", icon: Coins, desc: "5-year national savings post office" },
+      { name: "POMIS Monthly Income", href: "/pomis", icon: Coins, desc: "Post Office 5-year guaranteed income scheme" },
+      { name: "Goal Inflation Solver", href: "/goal", icon: Target, desc: "Real purchasing power future goal planning" }
     ]
   }
 ];
@@ -157,9 +164,21 @@ const FUNDSINDIA_GOALS = [
   { name: "Emergency Funds", href: "/emergency-fund", icon: ShieldAlert, desc: "3-6 month liquid fortress" },
 ];
 
+const ANALYZER_ITEMS = [
+  { name: "Mutual Funds Screener", href: "/mutual-funds", icon: Layers, desc: "Direct vs Regular, TER drag & 48 AMC Factsheets", color: "text-emerald", bg: "bg-emerald/10" },
+  { name: "Debt Funds Analyzer", href: "/debt-funds", icon: Shield, desc: "Yield to maturity, duration & credit risk", color: "text-teal-400", bg: "bg-teal-500/10" },
+  { name: "Portfolio Intelligence", href: "/portfolio-intelligence", icon: PieChart, desc: "CAS parser, true XIRR, overlap & concentration", color: "text-indigo-400", bg: "bg-indigo-500/10" },
+  { name: "Portfolio Simulator", href: "/portfolio-simulator", icon: Sliders, desc: "20-yr multi-asset stress test & backtesting", color: "text-purple-400", bg: "bg-purple-500/10" },
+  { name: "Tax Regime Hub", href: "/tax", icon: Calculator, desc: "Old vs New regime deduction & rebate solver", color: "text-amber-400", bg: "bg-amber-500/10" },
+  { name: "Rent vs Buy Housing", href: "/rent-vs-buy", icon: Landmark, desc: "Real estate opportunity cost vs equity SIP", color: "text-blue-400", bg: "bg-blue-500/10" },
+  { name: "Debt Payoff Optimizer", href: "/debt-payoff", icon: Scissors, desc: "Snowball vs Avalanche interest minimization", color: "text-rose-400", bg: "bg-rose-500/10" },
+  { name: "Credit Card Trap", href: "/credit-card", icon: CreditCard, desc: "42% APR interest & minimum due solver", color: "text-rose-400", bg: "bg-rose-500/10" },
+];
+
 const BOTTOM_TABS = [
   { name: "Home", href: "/", icon: Home, type: "link" as const },
   { name: "Engines", href: "#", icon: LayoutGrid, type: "drawer" as const },
+  { name: "Screeners", href: "#", icon: Layers, type: "drawer" as const },
   { name: "Calculators", href: "#", icon: Calculator, type: "drawer" as const },
   { name: "Vaathi", href: "/vaathi", icon: GraduationCap, type: "link" as const },
   { name: "Profile", href: "/profile", icon: ShieldCheck, type: "link" as const },
@@ -221,12 +240,16 @@ export default function Navigation() {
       const s = await getCurrentUserSession();
       if (s?.user) {
         setSession(s);
+        setCachedUserInfo(s.user);
       }
     }
     loadAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, newSession: any) => {
       setSession(newSession);
+      if (newSession?.user) {
+        setCachedUserInfo(newSession.user);
+      }
     });
 
     const checkPwa = () => {
@@ -319,7 +342,8 @@ export default function Navigation() {
 
   const engineItems = NAV_ITEMS.find(g => g.category === "Intelligence Engines")?.items || [];
 
-  const userName = session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "User";
+  const rawName = session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "User";
+  const userName = session?.user ? getPrimaryFirstName(rawName) : "User";
   const userEmail = session?.user?.email || "";
   const userAvatar = session?.user?.user_metadata?.avatar_url;
   const userInitial = userName.charAt(0).toUpperCase() || "U";
@@ -328,12 +352,12 @@ export default function Navigation() {
     <>
       {/* ===== MAIN NAVBAR ===== */}
       <header className="sticky top-0 z-40 w-full border-b border-border-navy bg-navy-bg/95 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6 md:px-8">
+        <div className="max-w-[1680px] mx-auto flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6 md:px-8 lg:px-10">
           
           {/* Logo that navigates directly to Home Page */}
           <Link
             href="/"
-            className="flex items-center gap-3 group cursor-pointer text-left focus:outline-none"
+            className="flex items-center gap-3 group cursor-pointer text-left focus:outline-none shrink-0"
             title="ValarchiX Home"
           >
             <div className="relative">
@@ -348,7 +372,7 @@ export default function Navigation() {
           </Link>
 
           {/* Center Navigation Links */}
-          <nav className="hidden lg:flex items-center space-x-2 font-bold text-sm text-muted-grey">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 font-bold text-xs xl:text-sm text-muted-grey">
             
             {/* 1. Plan your goals dropdown */}
             <div 
@@ -456,14 +480,68 @@ export default function Navigation() {
               )}
             </div>
 
-            {/* 3. Calculators Comprehensive Mega-Menu */}
+            {/* 3. Screeners & Analyzers Mega-Menu */}
+            <div 
+              className="relative"
+              onMouseEnter={() => handleDropdownHover("analyzers")}
+              onMouseLeave={handleDropdownLeave}
+            >
+              <button 
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl transition hover:text-heading cursor-pointer ${
+                  openDropdown === "analyzers" ? "text-heading font-black" : ""
+                }`}
+              >
+                <span>Screeners &amp; Analyzers</span>
+                <ChevronDown size={15} className={`transition-transform duration-200 ${openDropdown === "analyzers" ? "rotate-180 text-heading" : ""}`} />
+              </button>
+
+              {openDropdown === "analyzers" && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[560px] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50 space-y-2.5">
+                  <div className="flex items-center justify-between px-2 pb-1 border-b border-border-navy/60">
+                    <span className="text-xs font-black uppercase tracking-wider text-heading flex items-center gap-1.5">
+                      <Layers size={14} className="text-emerald" />
+                      <span>Screeners &amp; Financial Analyzers</span>
+                    </span>
+                    <span className="text-[11px] font-bold text-emerald bg-emerald/10 px-2.5 py-0.5 rounded-full border border-emerald/20">
+                      8 Screeners &amp; Tools
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {ANALYZER_ITEMS.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setOpenDropdown(null)}
+                          className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
+                        >
+                          <div className={`p-2 rounded-xl ${item.bg} ${item.color} group-hover:scale-105 transition shrink-0 mt-0.5`}>
+                            <Icon size={17} />
+                          </div>
+                          <div>
+                            <div className="text-xs sm:text-sm font-black text-heading group-hover:text-emerald transition">
+                              {item.name}
+                            </div>
+                            <div className="text-[11px] text-muted-grey leading-tight mt-0.5">{item.desc}</div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 4. Calculators Comprehensive Mega-Menu */}
             <div 
               className="relative"
               onMouseEnter={() => handleDropdownHover("calculators")}
               onMouseLeave={handleDropdownLeave}
             >
               <button 
-                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl transition hover:text-heading cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl transition hover:text-heading cursor-pointer ${
                   openDropdown === "calculators" ? "text-heading font-black" : ""
                 }`}
               >
@@ -562,7 +640,7 @@ export default function Navigation() {
                       </div>
                     </div>
 
-                    {/* Column 4: Tax, Debt & Analyzers */}
+                    {/* Column 4: Tax, Debt & Loans */}
                     <div className="space-y-2 border-l border-border-navy/50 pl-3.5">
                       <div className="text-xs font-black uppercase tracking-wider text-amber-500 px-2 pb-1 border-b border-border-navy/60">
                         Tax, Debt &amp; Loans
@@ -575,8 +653,8 @@ export default function Navigation() {
                           { name: "Advanced Income Tax", href: "/income-tax", icon: Calculator },
                           { name: "TDS Deductor Math", href: "/tds", icon: Calculator },
                           { name: "NSC Certificate", href: "/nsc", icon: Coins },
-                          { name: "Mutual Funds Screener", href: "/mutual-funds", icon: Layers },
-                          { name: "Debt Funds Analyzer", href: "/debt-funds", icon: Shield },
+                          { name: "POMIS Monthly Income", href: "/pomis", icon: Coins },
+                          { name: "Goal Inflation Solver", href: "/goal", icon: Target },
                         ].map((t) => (
                           <Link
                             key={t.name}
@@ -643,10 +721,21 @@ export default function Navigation() {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-full border border-border-navy bg-navy-card/50 text-emerald hover:text-heading hover:border-emerald/40 transition-all cursor-pointer shadow-sm"
+              className="p-2 sm:p-2.5 rounded-full border border-border-navy bg-navy-card/50 text-emerald hover:text-heading hover:border-emerald/40 transition-all cursor-pointer shadow-sm shrink-0"
               title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+
+            {/* Mobile / Tablet Full Suite Menu Button */}
+            <button
+              type="button"
+              onClick={() => setSidebarDrawerOpen(true)}
+              className="lg:hidden p-2 sm:p-2.5 rounded-full border border-border-navy bg-navy-card/60 hover:bg-navy-light text-heading hover:border-emerald/40 transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0"
+              title="All 56+ Tools & Categories"
+              aria-label="All 56+ Tools & Categories"
+            >
+              <Menu size={18} />
             </button>
 
             {/* ===== GOOGLE AUTH PROFILE / SIGN IN BUTTON ===== */}
@@ -824,7 +913,7 @@ export default function Navigation() {
 
       {/* ===== MOBILE BOTTOM NAVIGATION BAR ===== */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border-navy bg-navy-bg/95 backdrop-blur-md safe-area-bottom">
-        <div className="flex items-center justify-around h-16 px-1">
+        <div className="flex items-center justify-between max-w-lg mx-auto h-16 px-1.5">
           {BOTTOM_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = tab.type === "link" && pathname === tab.href;
@@ -841,14 +930,16 @@ export default function Navigation() {
                     setMobileDrawer(mobileDrawer === tab.name ? null : tab.name);
                   }
                 }}
-                className={`flex flex-col items-center justify-center gap-1 w-16 py-1.5 rounded-2xl transition-all ${
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 max-w-[64px] py-1 px-0.5 rounded-xl transition-all cursor-pointer ${
                   isActive || isDrawerOpen
                     ? "text-emerald font-black"
                     : "text-muted-grey hover:text-heading"
                 }`}
               >
-                <Icon size={20} strokeWidth={isActive || isDrawerOpen ? 2.5 : 1.8} />
-                <span className="text-[11px] font-bold">{tab.name}</span>
+                <Icon size={18} className="sm:w-5 sm:h-5 shrink-0" strokeWidth={isActive || isDrawerOpen ? 2.5 : 1.8} />
+                <span className="text-[10px] sm:text-[11px] font-bold truncate max-w-full text-center leading-tight">
+                  {tab.name}
+                </span>
               </button>
             );
           })}
@@ -870,7 +961,7 @@ export default function Navigation() {
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald"></div>
                 <h3 className="text-base font-black text-heading">
-                  {mobileDrawer === "Engines" ? "Intelligence Engines" : "Financial Calculators"}
+                  {mobileDrawer === "Engines" ? "Intelligence Engines" : mobileDrawer === "Analyzers" || mobileDrawer === "Screeners" ? "Screeners & Analyzers" : "Financial Calculators"}
                 </h3>
               </div>
               <button 
@@ -939,6 +1030,40 @@ export default function Navigation() {
                     <p className="text-xs text-muted-grey mt-0.5">AI Financial Literacy & Planning Mentor</p>
                   </div>
                 </Link>
+              </div>
+            )}
+
+            {/* If Mobile Drawer is Screeners / Analyzers */}
+            {(mobileDrawer === "Analyzers" || mobileDrawer === "Screeners") && (
+              <div className="space-y-2.5">
+                {ANALYZER_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={closeDrawer}
+                      className={`flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all ${
+                        isActive
+                          ? "bg-emerald text-slate-950 border-emerald shadow-md"
+                          : "card-tile-neutral hover:bg-navy-light"
+                      }`}
+                    >
+                      <div className={`p-2.5 rounded-xl ${isActive ? "bg-slate-950/15 text-slate-950" : `${item.bg} ${item.color}`} shrink-0 mt-0.5`}>
+                        <Icon size={20} />
+                      </div>
+                      <div className="min-w-0">
+                        <span className={`font-black text-sm block ${isActive ? "text-slate-950" : "text-heading"}`}>
+                          {item.name}
+                        </span>
+                        <p className={`text-xs mt-0.5 ${isActive ? "text-slate-900/80" : "text-muted-grey"}`}>
+                          {item.desc}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             )}
 
@@ -1051,8 +1176,8 @@ export default function Navigation() {
                       { name: "Advanced Income Tax", href: "/income-tax", icon: Calculator },
                       { name: "TDS Deductor", href: "/tds", icon: Calculator },
                       { name: "NSC Certificate", href: "/nsc", icon: Coins },
-                      { name: "Mutual Funds", href: "/mutual-funds", icon: Layers },
-                      { name: "Debt Funds", href: "/debt-funds", icon: Shield },
+                      { name: "POMIS Income", href: "/pomis", icon: Coins },
+                      { name: "Goal Solver", href: "/goal", icon: Target },
                     ].map((t) => (
                       <Link
                         key={t.name}

@@ -18,9 +18,9 @@ export default function IncomeTaxCalculator() {
 
   // Bracket Creep Simulator Inputs
   const [salaryGrowth, setSalaryGrowth] = useState(5); // 5% salary growth (matching inflation)
-  const [inflation, setInflation] = useState(5.09);
+  const [inflation, setInflation] = useState(7.0);
   const [projectionYears, setProjectionYears] = useState(10);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   useEffect(() => {
     fetch("/api/rates")

@@ -9,8 +9,8 @@ export default function SsyCalculator() {
   const [yearlyDeposit, setYearlyDeposit] = useState(100000);
   const [girlAge, setGirlAge] = useState(5);
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   const SSY_INTEREST_RATE = 8.20; // Current Sukanya Samriddhi Yojana Interest Rate
 

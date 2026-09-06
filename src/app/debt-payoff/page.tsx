@@ -80,8 +80,8 @@ export default function DebtPayoffCalculator() {
   const [strategy, setStrategy] = useState<"snowball" | "avalanche">("avalanche");
   const [extraPayment, setExtraPayment] = useState(5000);
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   const [debts, setDebts] = useState<Debt[]>([
     { id: 1, name: "Credit Card", balance: 100000, rate: 36, minPayment: 3000 },

@@ -109,7 +109,7 @@ const SUITE_CATEGORIES = [
 export default function HomePage() {
   const [quickSip, setQuickSip] = useState(10000);
   const [quickTenure, setQuickTenure] = useState(15);
-  const [quickReturnRate, setQuickReturnRate] = useState(12);
+  const [quickReturnRate, setQuickReturnRate] = useState(10);
   const [activeCategoryTab, setActiveCategoryTab] = useState("wealth");
 
   // Compounding Simulator Calculation

@@ -14,8 +14,8 @@ export default function SwpCalculator() {
   const [expectedReturn, setExpectedReturn] = useState(8.5); // Moderate return on conservative allocation
   const [years, setYears] = useState(20);
   const [adjustWithdrawal, setAdjustWithdrawal] = useState(true); // Inflating withdrawals yearly
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   useEffect(() => {
     fetch("/api/rates")

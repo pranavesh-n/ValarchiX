@@ -52,18 +52,18 @@ export default function RootLayout({
         <Navigation />
         <div className="flex-1 flex flex-col min-w-0 w-full overflow-x-hidden">
           <AppLockGate>
-            <main className="flex-1 px-3 sm:px-6 pt-3 sm:pt-5 pb-24 md:pb-8 max-w-6xl w-full mx-auto min-w-0 overflow-x-hidden">
+            <main className="flex-1 px-4 sm:px-6 md:px-8 lg:px-10 pt-4 sm:pt-6 pb-24 md:pb-12 max-w-[1680px] w-full mx-auto min-w-0 overflow-x-hidden">
               {children}
             </main>
           </AppLockGate>
           
           {/* Universal Footer Disclaimer */}
-          <footer className="border-t border-border-navy bg-footer-bg py-6 pb-28 md:pb-8 px-4 text-center text-xs text-muted-grey mt-auto">
-            <div className="max-w-4xl mx-auto space-y-2">
+          <footer className="border-t border-border-navy bg-footer-bg py-6 pb-28 md:pb-8 px-4 sm:px-6 md:px-8 lg:px-10 text-center text-xs text-muted-grey mt-auto">
+            <div className="max-w-[1680px] mx-auto space-y-2">
               <p className="font-semibold text-emerald">
                 💡 &ldquo;We don&apos;t tell what to pick, we tell how to pick&rdquo;
               </p>
-              <p className="leading-relaxed">
+              <p className="leading-relaxed max-w-4xl mx-auto">
                 ValarchiX is an educational simulator for building financial knowledge. Calculators, planning models, and metrics are designed to teach analytical thinking. We do not provide SEBI-registered investment, legal, or tax advice. Read our full <a href="/disclaimer" className="text-emerald hover:underline font-semibold">Disclaimer &amp; Legal Disclosures</a> before using the platform.
               </p>
               <p>© {new Date().getFullYear()} ValarchiX. All rights reserved.</p>

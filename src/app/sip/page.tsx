@@ -35,13 +35,13 @@ export default function SipCalculator() {
   const [sipFrequency, setSipFrequency] = useState<"daily" | "weekly" | "monthly" | "quarterly" | "yearly">("monthly");
   const [showAudit, setShowAudit] = useState(false);
   const [amount, setAmount] = useState(10000);
-  const [rate, setRate] = useState(12);
+  const [rate, setRate] = useState(10);
   const [fdRate, setFdRate] = useState(7.0);
   const [taxSlab, setTaxSlab] = useState(30); // 10%, 20%, 30%
   const [years, setYears] = useState(15);
-  const [inflation, setInflation] = useState(5.09);
+  const [inflation, setInflation] = useState(7.0);
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   useEffect(() => {
     fetch("/api/rates")
@@ -345,10 +345,10 @@ export default function SipCalculator() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRate(12)}
+                  onClick={() => setRate(10)}
                   className="text-[9px] font-bold text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light px-2 py-0.5 rounded transition-all"
                 >
-                  Equity Index (12%)
+                  Equity Index (10% Post-Tax)
                 </button>
               </div>
             </div>
@@ -694,13 +694,13 @@ export default function SipCalculator() {
                 <div className="flex items-start gap-2 bg-red-500/5 border border-red-500/10 p-3 rounded-xl">
                   <AlertTriangle className="text-red-400 shrink-0 mt-0.5" size={16} />
                   <p>
-                    <strong>The FD Wealth erosion:</strong> Banks offer nominal rates (e.g. 7%). After subtracting 30% income tax slab, the yield drops to <strong>4.9%</strong>. Since inflation is <strong>5.09%</strong>, your purchasing power drops by <strong>-0.19% every year</strong>. Your money is actually shrinking in real terms!
+                    <strong>The FD Wealth erosion:</strong> Banks offer nominal rates (e.g. 7%). After subtracting 30% income tax slab, the yield drops to <strong>4.9%</strong>. Since long-term inflation is benchmarked at <strong>7.00%</strong>, your purchasing power drops by <strong>-2.10% every year</strong>. Your money is actually shrinking in real terms!
                   </p>
                 </div>
                 <div className="flex items-start gap-2 bg-emerald/5 border border-emerald/10 p-3 rounded-xl">
                   <ShieldCheck className="text-emerald shrink-0 mt-0.5" size={16} />
                   <p>
-                    <strong>The Mutual Fund Compounding Advantage:</strong> Equities compound at a higher nominal rate (e.g. 12%). Because tax is deferred until withdrawal (and LTCG enjoy a flat 12.5% rate with a ₹1.25L annual exemption), your money grows with less tax friction, yielding a real post-tax return of <strong>~6.5% p.a.</strong> above inflation.
+                    <strong>The Mutual Fund Compounding Advantage:</strong> Equities compound at a higher nominal rate. Because tax is deferred until withdrawal (and post-tax return is optimal at <strong>10.0% p.a.</strong> net of 12.5% LTCG tax and TER drag), your money beats 7% inflation with a positive real return of <strong>~3.0% p.a.</strong> compounding over time.
                   </p>
                 </div>
               </div>

@@ -10,8 +10,8 @@ export default function ScssCalculator() {
   const [deposit, setDeposit] = useState(1000000); // 10 Lakhs default
   const [tenureYears, setTenureYears] = useState(5); // 5 years standard, or 8 years with extension
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   const SCSS_INTEREST_RATE = 8.20; // Current Senior Citizens Savings Scheme rate
   const SCSS_MAX_LIMIT = 3000000; // statutory limit of ₹30 Lakhs (upgraded from 15L in Budget 2023)

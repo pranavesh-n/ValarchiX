@@ -22,8 +22,8 @@ export default function LoanEmiCalculator() {
   const [prepaymentType, setPrepaymentType] = useState<"none" | "monthly" | "annual">("none");
   const [prepaymentValue, setPrepaymentValue] = useState(10000); // ₹10,000 monthly or ₹1,00,000 annual
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

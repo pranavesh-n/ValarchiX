@@ -17,13 +17,13 @@ import NumericInput from "@/components/NumericInput";
 export default function StepUpSipCalculator() {
   const [showAudit, setShowAudit] = useState(false);
   const [amount, setAmount] = useState(10000);
-  const [rate, setRate] = useState(12);
+  const [rate, setRate] = useState(10);
   const [stepUpType, setStepUpType] = useState<"percent" | "fixed">("percent");
   const [stepUpValue, setStepUpValue] = useState(10); // 10% or ₹1,000
   const [years, setYears] = useState(15);
-  const [inflation, setInflation] = useState(5.09);
+  const [inflation, setInflation] = useState(7.0);
   const [adjustInflation, setAdjustInflation] = useState(false);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   useEffect(() => {
     fetch("/api/rates")
@@ -275,10 +275,10 @@ export default function StepUpSipCalculator() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRate(12)}
+                  onClick={() => setRate(10)}
                   className="text-[9px] font-bold text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light px-2 py-0.5 rounded transition-all cursor-pointer"
                 >
-                  Equity Index (12%)
+                  Equity Index (10% Post-Tax)
                 </button>
               </div>
             </div>

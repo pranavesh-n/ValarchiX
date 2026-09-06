@@ -12,7 +12,7 @@ export default function HLVCalculator() {
   const [annualIncome, setAnnualIncome] = useState(1200000);
   const [currentAge, setCurrentAge] = useState(32);
   const [retirementAge, setRetirementAge] = useState(60);
-  const [inflation, setInflation] = useState(6);
+  const [inflation, setInflation] = useState(7);
   const [existingInsurance, setExistingInsurance] = useState(5000000);
   const [existingLiabilities, setExistingLiabilities] = useState(3000000);
   const [annualExpenses, setAnnualExpenses] = useState(600000); // family annual expenses

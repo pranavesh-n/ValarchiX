@@ -82,7 +82,7 @@ const DEBT_CATEGORIES: DebtCategory[] = [
 export default function DebtFundExplorer() {
   const [selectedCategory, setSelectedCategory] = useState<DebtCategory>(DEBT_CATEGORIES[0]);
   const [timelineFilter, setTimelineFilter] = useState("all");
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09, lastUpdated: "" });
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0, lastUpdated: "" });
 
   useEffect(() => {
     fetch("/api/rates")

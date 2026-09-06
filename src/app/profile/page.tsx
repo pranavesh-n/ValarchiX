@@ -33,8 +33,22 @@ import {
   hashPin,
   getUserPasscodeKey,
   getUserLockEnabledKey,
-  getUserSessionUnlockedKey
+  getUserSessionUnlockedKey,
+  getPrimaryFirstName,
+  setCachedUserInfo
 } from "@/lib/passcode";
+
+const KEYPAD_DIGITS = [
+  { num: "1", sub: "" },
+  { num: "2", sub: "ABC" },
+  { num: "3", sub: "DEF" },
+  { num: "4", sub: "GHI" },
+  { num: "5", sub: "JKL" },
+  { num: "6", sub: "MNO" },
+  { num: "7", sub: "PQRS" },
+  { num: "8", sub: "TUV" },
+  { num: "9", sub: "WXYZ" },
+];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -99,6 +113,9 @@ export default function ProfilePage() {
 
       const s = await getCurrentUserSession();
       setSession(s);
+      if (s?.user) {
+        setCachedUserInfo(s.user);
+      }
 
       // Check Passcode State strictly for this authenticated user
       if (s?.user) {
@@ -143,10 +160,12 @@ export default function ProfilePage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, newSession: any) => {
       setSession(newSession);
       if (event === "SIGNED_IN" && newSession?.user) {
+        setCachedUserInfo(newSession.user);
         const alreadyNotified = sessionStorage.getItem("valarchix_login_toast_shown");
         if (!alreadyNotified) {
           sessionStorage.setItem("valarchix_login_toast_shown", "true");
-          const name = newSession.user.user_metadata?.full_name || newSession.user.email?.split("@")[0] || "Investor";
+          const rawName = newSession.user.user_metadata?.full_name || newSession.user.email?.split("@")[0] || "Investor";
+          const name = getPrimaryFirstName(rawName);
           showToast(`Logged in successfully as ${name} ✅`);
         }
       } else if (event === "SIGNED_OUT") {
@@ -176,6 +195,7 @@ export default function ProfilePage() {
         // Backwards compatibility keys
         localStorage.setItem("valarchix_app_pin", hashed);
         sessionStorage.setItem("valarchix_session_unlocked", "true");
+        setCachedUserInfo(session.user);
 
         setPasscodeEnabled(true);
         const isUpdate = passcodeEnabled;
@@ -277,8 +297,9 @@ export default function ProfilePage() {
     await signOutUser();
   };
 
+  const rawUserName = session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "ValarchiX Investor";
   const userName = session?.user
-    ? (session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "ValarchiX Investor")
+    ? getPrimaryFirstName(rawUserName)
     : "Guest Investor";
   const userEmail = session?.user
     ? session.user.email
@@ -670,90 +691,119 @@ export default function ProfilePage() {
 
       {/* Full-Screen Set/Change Passcode Screen (Matches App Lock Gate UI) */}
       {passcodeModalOpen && (
-        <div className="fixed inset-0 z-[9999] bg-[#0c121e] text-white flex flex-col items-center justify-center p-4 select-none animate-fadeIn">
-          <div className="flex flex-col items-center justify-center max-w-sm w-full space-y-4 text-center">
+        <div className="fixed inset-0 z-[99999] bg-[#050b17] text-white flex flex-col items-center justify-center p-4 select-none overflow-y-auto animate-fadeIn">
+          {/* Ambient background glow accents */}
+          <div className="absolute top-1/4 -left-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+          {/* Security Vault Card Container */}
+          <div className="relative z-10 w-full max-w-sm mx-auto bg-[#091428]/95 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] text-center flex flex-col items-center space-y-5">
             
-            {/* Original ValarchiX Official Logo */}
+            {/* ValarchiX Official Security Emblem */}
             <div className="relative">
-              <img
-                src="/logo.svg"
-                alt="ValarchiX"
-                className="w-16 h-16 rounded-2xl shadow-xl shadow-emerald/30 border border-emerald/50 object-contain bg-[#030a16]"
-              />
-              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald border-2 border-[#0c121e]"></span>
+              <div className="w-16 h-16 rounded-2xl bg-[#030914] border border-emerald-500/40 p-2.5 shadow-xl shadow-emerald-500/20 flex items-center justify-center">
+                <img
+                  src="/logo.svg"
+                  alt="ValarchiX"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-[#091428]"></span>
+              </span>
             </div>
 
             {/* Heading & Subtitle */}
-            <div className="space-y-1 pt-1">
+            <div className="space-y-1.5 pt-0.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-400">
+                <ShieldCheck size={13} />
+                <span>Device Passcode Security</span>
+              </div>
               <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                 {passcodeEnabled ? "Change Passcode PIN 🔐" : "Set 4-Digit Passcode 🔐"}
               </h1>
-              <p className="text-xs text-neutral-400 font-medium">
+              <p className="text-xs text-slate-400 font-medium leading-relaxed">
                 Enter 4 digits to secure ValarchiX on this device
               </p>
             </div>
 
             {/* 4 Circular PIN Dots */}
-            <div className="flex items-center justify-center gap-3.5 py-3">
-              {[0, 1, 2, 3].map((index) => (
-                <div
-                  key={index}
-                  className={`w-3.5 h-3.5 rounded-full transition-all duration-150 border ${
-                    currentPin.length > index
-                      ? "bg-white border-white scale-110 shadow-sm"
-                      : "border-neutral-600 bg-transparent"
-                  }`}
-                />
-              ))}
+            <div className="flex items-center justify-center gap-4 py-2">
+              {[0, 1, 2, 3].map((index) => {
+                const filled = currentPin.length > index;
+                return (
+                  <div
+                    key={index}
+                    className={`transition-all duration-200 ${
+                      filled
+                        ? "w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-500 border border-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.6)] scale-110"
+                        : "w-3.5 h-3.5 rounded-full border-2 border-slate-600 bg-slate-800/40"
+                    }`}
+                  />
+                );
+              })}
             </div>
 
-            {/* Keypad Grid (Same large 3x4 layout as unlock gate) */}
-            <div className="grid grid-cols-3 gap-3 pt-2 w-full max-w-[280px]">
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
+            {/* Tactile Keypad */}
+            <div className="grid grid-cols-3 gap-3 w-full max-w-[280px]">
+              {KEYPAD_DIGITS.map((item) => (
                 <button
-                  key={num}
+                  key={item.num}
                   type="button"
-                  onClick={() => handlePinKeyPress(num)}
-                  className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm select-none touch-manipulation"
+                  onClick={() => handlePinKeyPress(item.num)}
+                  className="h-14 sm:h-15 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-emerald-500/20 active:scale-95 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-150 flex flex-col items-center justify-center cursor-pointer shadow-sm touch-manipulation select-none"
                 >
-                  {num}
+                  <span className="text-xl font-bold text-white tracking-tight leading-none">
+                    {item.num}
+                  </span>
+                  {item.sub && (
+                    <span className="text-[9px] font-semibold tracking-widest text-slate-400 uppercase mt-0.5 leading-none">
+                      {item.sub}
+                    </span>
+                  )}
                 </button>
               ))}
               
               {/* Row 4: Lock Icon */}
-              <div className="h-16 flex items-center justify-center text-neutral-600">
-                <Lock size={20} />
+              <div className="h-14 sm:h-15 flex items-center justify-center text-slate-500 rounded-2xl">
+                <Lock size={18} className="text-slate-500/80" />
               </div>
 
               {/* Row 4: Digit 0 */}
               <button
                 type="button"
                 onClick={() => handlePinKeyPress("0")}
-                className="h-16 rounded-2xl bg-[#172033] hover:bg-[#202c45] active:scale-90 text-white font-black text-xl flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm select-none touch-manipulation"
+                className="h-14 sm:h-15 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-emerald-500/20 active:scale-95 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-150 flex flex-col items-center justify-center cursor-pointer shadow-sm touch-manipulation select-none"
               >
-                0
+                <span className="text-xl font-bold text-white tracking-tight leading-none">
+                  0
+                </span>
+                <span className="text-[9px] font-semibold tracking-widest text-slate-400 uppercase mt-0.5 leading-none">
+                  +
+                </span>
               </button>
 
               {/* Row 4: Backspace Button */}
               <button
                 type="button"
                 onClick={handlePinDelete}
-                className="h-16 rounded-2xl bg-[#172033] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 active:scale-90 flex items-center justify-center border border-white/5 transition cursor-pointer shadow-sm select-none touch-manipulation"
+                className="h-14 sm:h-15 rounded-2xl bg-white/[0.03] hover:bg-rose-500/15 text-slate-400 hover:text-rose-400 active:scale-95 border border-white/[0.06] transition-all duration-150 flex items-center justify-center cursor-pointer shadow-sm touch-manipulation select-none"
                 title="Delete digit"
               >
-                <Delete size={22} />
+                <Delete size={20} />
               </button>
             </div>
 
             {/* Cancel Button */}
-            <div className="pt-3 min-h-[48px] flex items-center justify-center">
+            <div className="pt-2 w-full flex items-center justify-center min-h-[44px]">
               <button
                 type="button"
                 onClick={() => {
                   setPasscodeModalOpen(false);
                   setCurrentPin("");
                 }}
-                className="text-xs font-bold text-neutral-400 hover:text-white px-5 py-2.5 rounded-full border border-white/10 hover:border-white/20 transition cursor-pointer"
+                className="text-xs font-bold text-slate-400 hover:text-white px-5 py-2.5 rounded-full border border-white/10 hover:border-white/20 transition cursor-pointer"
               >
                 Cancel &amp; Return to Profile
               </button>

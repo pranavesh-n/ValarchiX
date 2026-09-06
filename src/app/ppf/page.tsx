@@ -10,8 +10,8 @@ export default function PpfCalculator() {
   const [yearlyDeposit, setYearlyDeposit] = useState(150000);
   const [years, setYears] = useState(15); // PPF has a default 15-year lock-in
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   const PPF_INTEREST_RATE = 7.10; // Current actual PPF interest rate (fixed by Govt)
 
@@ -307,7 +307,7 @@ export default function PpfCalculator() {
               Educational Concept: PPF Sovereign Safety
             </h3>
             <p className="text-xs text-muted-grey leading-relaxed">
-              The Public Provident Fund is backed directly by the Central Government of India, making default risk virtually non-existent. However, because it compounds at a fixed rate (7.10% p.a.), it tracks close to average CPI inflation (5.09%). This means it is the perfect tool for capital preservation and debt allocation, but should be combined with equity indexes for long-term growth.
+              The Public Provident Fund is backed directly by the Central Government of India, making default risk virtually non-existent. However, because it compounds at a fixed rate (7.10% p.a.), it tracks close to average benchmark inflation (7.00%). This means it is the perfect tool for capital preservation and debt allocation, but should be combined with equity indexes for long-term growth.
             </p>
           </div>
 

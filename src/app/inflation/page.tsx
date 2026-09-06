@@ -9,8 +9,8 @@ export default function InflationCalculator() {
   const [showAudit, setShowAudit] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [amount, setAmount] = useState(1000000);
-  const [inflation, setInflation] = useState(6);
-  const [investReturn, setInvestReturn] = useState(12);
+  const [inflation, setInflation] = useState(7);
+  const [investReturn, setInvestReturn] = useState(10);
   const [years, setYears] = useState(20);
 
   useEffect(() => setMounted(true), []);

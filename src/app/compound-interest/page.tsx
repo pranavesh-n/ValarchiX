@@ -10,10 +10,10 @@ export default function CompoundInterestCalculator() {
   const [mounted, setMounted] = useState(false);
   const [principal, setPrincipal] = useState(100000);
   const [annualTopUp, setAnnualTopUp] = useState(0);
-  const [rate, setRate] = useState(12);
+  const [rate, setRate] = useState(10);
   const [years, setYears] = useState(20);
   const [compounding, setCompounding] = useState<"monthly" | "quarterly" | "yearly">("monthly");
-  const [inflation, setInflation] = useState(6);
+  const [inflation, setInflation] = useState(7);
   const [adjustInflation, setAdjustInflation] = useState(true);
 
   useEffect(() => setMounted(true), []);

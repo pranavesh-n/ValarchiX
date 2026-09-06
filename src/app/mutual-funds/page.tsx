@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Layers, Search, Info, ShieldAlert, RefreshCw, HelpCircle, GitCompare, BookOpen, Filter, ArrowUpDown, ChevronRight, TrendingUp, ExternalLink, Lock, ShieldCheck, Coins, BarChart2, Zap, GraduationCap, Download } from "lucide-react";
+import { Layers, Search, Info, ShieldAlert, RefreshCw, HelpCircle, GitCompare, BookOpen, Filter, ArrowUpDown, ChevronRight, TrendingUp, ExternalLink, Lock, ShieldCheck, Coins, BarChart2, Zap, GraduationCap, Download, X, Sparkles } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { getCurrentUserSession } from "@/lib/supabase/auth";
 
@@ -33,49 +33,54 @@ interface ParsedMetrics {
 }
 
 const AMC_FACTSHEETS = [
-  { name: "SBI Mutual Fund", code: "SBI", logo: "🏛️", website: "https://www.sbimf.com", pdfUrl: "https://www.sbimf.com/factsheets", tag: "Largest AMC in India" },
-  { name: "HDFC Mutual Fund", code: "HDFC", logo: "🏦", website: "https://www.hdfcfund.com", pdfUrl: "https://www.hdfcfund.com/mutual-funds/factsheets", tag: "Top Equity Asset Manager" },
-  { name: "ICICI Prudential MF", code: "ICICI", logo: "🏢", website: "https://www.icicipruamc.com", pdfUrl: "https://digitalfactsheet.icicipruamc.com/fact/icici-prudential-flexicap-fund.php", tag: "High Liquidity Specialist" },
-  { name: "Nippon India MF", code: "NIPPON", logo: "🇯🇵", website: "https://mf.nipponindiaim.com", pdfUrl: "https://mf.nipponindiaim.com/investor-service/downloads/factsheet-portfolio-and-other-disclosures", tag: "Small Cap Leader" },
-  { name: "Kotak Mahindra MF", code: "KOTAK", logo: "💳", website: "https://www.kotakmf.com", pdfUrl: "https://www.kotak.bank.in//MF_Factsheet/equity.html", tag: "Conservative & Growth" },
-  { name: "Parag Parikh (PPFAS)", code: "PPFAS", logo: "🐢", website: "https://amc.ppfas.com", pdfUrl: "https://amc.ppfas.com/downloads/factsheet/", tag: "Value & International Equity" },
-  { name: "Quant Mutual Fund", code: "QUANT", logo: "⚡", website: "https://quantmutual.com", pdfUrl: "https://www.quantmutual.com/downloads/factsheet", tag: "VLRT Quantitative Model" },
-  { name: "Axis Mutual Fund", code: "AXIS", logo: "📈", website: "https://www.axismf.com", pdfUrl: "https://transact.axismf.com/downloads", tag: "Quality Growth Focus" },
-  { name: "Mirae Asset MF", code: "MIRAE", logo: "🌐", website: "https://www.miraeassetmf.co.in", pdfUrl: "https://www.miraeassetmf.co.in/downloads/factsheet", tag: "Large & Large-Mid Leader" },
-  { name: "Motilal Oswal MF", code: "MO", logo: "🎯", website: "https://www.motilaloswalmf.com", pdfUrl: "https://www.motilaloswalmf.com/downloads/factsheets", tag: "QGLP Concentrated Stocks" },
-  { name: "UTI Mutual Fund", code: "UTI", logo: "🏛️", website: "https://www.utimf.com", pdfUrl: "https://www.utimf.com/downloads/fact-sheet", tag: "India Oldest AMC Legacy" },
-  { name: "DSP Mutual Fund", code: "DSP", logo: "🌲", website: "https://www.dspim.com", pdfUrl: "https://www.dspim.com/downloads?category=Information%20Documents&sub_category=Factsheets", tag: "Quantitative & Systematic" },
-  { name: "Tata Mutual Fund", code: "TATA", logo: "⚙️", website: "https://www.tatamutualfund.com", pdfUrl: "https://www.tatamutualfund.com/information-documents/factsheets", tag: "Trusted Conglomerate AMC" },
-  { name: "Bandhan Mutual Fund", code: "BANDHAN", logo: "💎", website: "https://bandhanmutual.com", pdfUrl: "https://bandhanmutual.com/downloads/factsheet/all-schemes", tag: "Formerly IDFC AMC" },
-  { name: "Canara Robeco MF", code: "CANARA", logo: "🛡️", website: "https://www.canararobeco.com", pdfUrl: "https://www.canararobeco.com/documents/forms-downloads/forms-information-documents/information-documents/factsheets/", tag: "Consistent Performance" },
-  { name: "Edelweiss MF", code: "EDELWEISS", logo: "🚀", website: "https://www.edelweissmf.com", pdfUrl: "https://www.edelweissmf.com/downloads/factsheets", tag: "Target Maturity & Factor" },
-  { name: "Sundaram MF", code: "SUNDARAM", logo: "☀️", website: "https://www.sundarammutual.com", pdfUrl: "https://www.sundarammutual.com/fundwise-factsheet", tag: "Mid & Small Cap Specialist" },
-  { name: "Invesco Mutual Fund", code: "INVESCO", logo: "🦅", website: "https://www.invescomutualfund.com", pdfUrl: "https://www.invescomutualfund.com/literature-forms/factsheets", tag: "Global Asset Manager" },
-  { name: "HSBC Mutual Fund", code: "HSBC", logo: "🌍", website: "https://www.assetmanagement.hsbc.co.in", pdfUrl: "https://www.assetmanagement.hsbc.co.in/en/mutual-funds/investor-resources?Date=&Cap=&Doc=fund-factsheets#&module-21=1", tag: "International Multi-Asset" },
-  { name: "Franklin Templeton", code: "FRANKLIN", logo: "📜", website: "https://www.franklintempletonindia.com", pdfUrl: "https://www.franklintempletonindia.com/downloads/fund-documents", tag: "Global Value Investment" },
-  { name: "Aditya Birla Sun Life", code: "ABSL", logo: "🌞", website: "https://www.adityabirlacapital.com", pdfUrl: "https://mutualfund.adityabirlacapital.com/forms-and-downloads/factsheets", tag: "Diversified Asset Giant" },
-  { name: "PGIM India MF", code: "PGIM", logo: "🔷", website: "https://www.pgimindia.com", pdfUrl: "https://www.pgimindia.com/mutual-funds/forms-and-product-updates/Fund-Factsheet", tag: "Global Investment House" },
-  { name: "Union Mutual Fund", code: "UNION", logo: "🤝", website: "https://www.unionmf.com", pdfUrl: "https://www.unionmf.com/about-us/downloads/factsheets", tag: "PSU Bank Backed AMC" },
-  { name: "Baroda BNP Paribas MF", code: "BARODA", logo: "🏛️", website: "https://www.barodabnpparibasmf.in", pdfUrl: "https://www.barodabnpparibasmf.in/downloads/monthly-factsheet", tag: "Indo-French Alliance" },
-  { name: "Mahindra Manulife MF", code: "MAHINDRA", logo: "🚜", website: "https://www.mahindramanulife.com", pdfUrl: "https://www.mahindramanulife.com/", tag: "Rural & Semi-Urban Focus" },
-  { name: "JM Financial MF", code: "JM", logo: "📊", website: "https://www.jmfl.com", pdfUrl: "https://www.jmfinancialmf.com/downloads/Factsheet", tag: "Pioneer Private AMC" },
-  { name: "LIC Mutual Fund", code: "LIC", logo: "🛡️", website: "https://www.licmf.com", pdfUrl: "https://www.licmf.com/downloads/factsheet", tag: "Sovereign Trust Legacy" },
-  { name: "Navi Mutual Fund", code: "NAVI", logo: "📱", website: "https://www.navimutualfund.com", pdfUrl: "https://navi.com/mutual-fund/downloads/factsheet", tag: "Zero-Commission Index Funds" },
-  { name: "Groww Mutual Fund", code: "GROWW", logo: "🌱", website: "https://www.growwmf.in", pdfUrl: "https://www.growwmf.in/downloads/fact-sheet", tag: "Tech-First Asset House" },
-  { name: "Zerodha Fund House", code: "ZERODHA", logo: "📐", website: "https://www.zerodhafundhouse.com", pdfUrl: "https://www.zerodhafundhouse.com/resources/fund-documents", tag: "Passive Only Index AMC" },
-  { name: "WhiteOak Capital MF", code: "WHITEOAK", logo: "🌳", website: "https://mf.whiteoakcapital.com", pdfUrl: "https://mf.whiteoakamc.com/regulatory-disclosures/scheme-summary-document", tag: "OpCo-FinCo Stock Picking" },
-  { name: "Samco Mutual Fund", code: "SAMCO", logo: "🎯", website: "https://www.samco.in", pdfUrl: "https://www.samcomf.com/downloads", tag: "HexaShield Investment Model" },
-  { name: "NJ Mutual Fund", code: "NJ", logo: "💼", website: "https://www.njgroup.in", pdfUrl: "https://downloads.njmutualfund.com/downloads.php", tag: "Rule-Based Quantitative AMC" },
-  { name: "360 ONE MF (IIFL)", code: "360ONE", logo: "⭕", website: "https://www.360.one", pdfUrl: "https://www.360.one/asset/mutual-funds/downloads/", tag: "Focused & High Net-Worth" },
-  { name: "ITI Mutual Fund", code: "ITI", logo: "🏭", website: "https://www.itiamc.com", pdfUrl: "https://www.itiamc.com/downloads", tag: "Long-Term Growth Focus" },
-  { name: "Trust Mutual Fund", code: "TRUST", logo: "🤝", website: "https://www.trustgroup.in", pdfUrl: "https://www.trustmf.com/downloads?activeTab=factsheets", tag: "Fixed Income & Debt Focus" },
-  { name: "Taurus Mutual Fund", code: "TAURUS", logo: "🐂", website: "https://www.taurusmutualfund.com", pdfUrl: "https://www.taurusmutualfund.com/factsheet", tag: "Niche Sectoral Funds" },
-  { name: "Quantum Mutual Fund", code: "QUANTUM", logo: "⚛️", website: "https://www.quantumamc.com", pdfUrl: "https://www.quantumamc.com/factsheets/combined/-1/0/0", tag: "Direct-Only Value Investing" },
-  { name: "Shriram Mutual Fund", code: "SHRIRAM", logo: "🏛️", website: "https://www.shrirammf.in", pdfUrl: "https://www.shriramamc.in/factsheet", tag: "Multi-Asset & Hybrid" },
-  { name: "Helios Mutual Fund", code: "HELIOS", logo: "☀️", website: "https://www.helioscapital.in", pdfUrl: "https://www.heliosmf.in/downloads", tag: "Elimination Strategy AMC" },
-  { name: "Old Bridge MF", code: "OLDBRIDGE", logo: "🌉", website: "https://www.oldbridgemf.com", pdfUrl: "https://www.oldbridgemf.com/factsheet.html", tag: "Cyclical & Value Focus" },
-  { name: "Bajaj Finserv MF", code: "BAJAJ", logo: "⚡", website: "https://www.bajajfinservamc.in", pdfUrl: "https://www.bajajamc.com/downloads?factsheet", tag: "Megatrend & Tech Focus" },
-  { name: "BOI Mutual Fund", code: "BOI", logo: "🏦", website: "https://www.boimf.in", pdfUrl: "https://www.boimf.in/investor-corner", tag: "Bank of India Asset Arm" }
+  { name: "SBI Mutual Fund", code: "SBI", logo: "🏛️", website: "https://www.sbimf.com", pdfUrl: "https://www.sbimf.com/factsheets" },
+  { name: "HDFC Mutual Fund", code: "HDFC", logo: "🏦", website: "https://www.hdfcfund.com", pdfUrl: "https://www.hdfcfund.com/mutual-funds/factsheets" },
+  { name: "ICICI Prudential MF", code: "ICICI", logo: "🏢", website: "https://www.icicipruamc.com", pdfUrl: "https://digitalfactsheet.icicipruamc.com/fact/icici-prudential-flexicap-fund.php" },
+  { name: "Nippon India MF", code: "NIPPON", logo: "🇯🇵", website: "https://mf.nipponindiaim.com", pdfUrl: "https://mf.nipponindiaim.com/investor-service/downloads/factsheet-portfolio-and-other-disclosures" },
+  { name: "Kotak Mahindra MF", code: "KOTAK", logo: "💳", website: "https://www.kotakmf.com", pdfUrl: "https://www.kotak.bank.in//MF_Factsheet/equity.html" },
+  { name: "Parag Parikh (PPFAS)", code: "PPFAS", logo: "🐢", website: "https://amc.ppfas.com", pdfUrl: "https://amc.ppfas.com/downloads/factsheet/" },
+  { name: "Quant Mutual Fund", code: "QUANT", logo: "⚡", website: "https://quantmutual.com", pdfUrl: "https://www.quantmutual.com/downloads/factsheet" },
+  { name: "Axis Mutual Fund", code: "AXIS", logo: "📈", website: "https://www.axismf.com", pdfUrl: "https://transact.axismf.com/downloads" },
+  { name: "Mirae Asset MF", code: "MIRAE", logo: "🌐", website: "https://www.miraeassetmf.co.in", pdfUrl: "https://www.miraeassetmf.co.in/downloads/factsheet" },
+  { name: "Motilal Oswal MF", code: "MO", logo: "🎯", website: "https://www.motilaloswalmf.com", pdfUrl: "https://www.motilaloswalmf.com/downloads/factsheets" },
+  { name: "UTI Mutual Fund", code: "UTI", logo: "🏛️", website: "https://www.utimf.com", pdfUrl: "https://www.utimf.com/downloads/fact-sheet" },
+  { name: "DSP Mutual Fund", code: "DSP", logo: "🌲", website: "https://www.dspim.com", pdfUrl: "https://www.dspim.com/downloads?category=Information%20Documents&sub_category=Factsheets" },
+  { name: "Tata Mutual Fund", code: "TATA", logo: "⚙️", website: "https://www.tatamutualfund.com", pdfUrl: "https://www.tatamutualfund.com/information-documents/factsheets" },
+  { name: "Bandhan Mutual Fund", code: "BANDHAN", logo: "💎", website: "https://bandhanmutual.com", pdfUrl: "https://bandhanmutual.com/downloads/factsheet/all-schemes" },
+  { name: "Canara Robeco MF", code: "CANARA", logo: "🛡️", website: "https://www.canararobeco.com", pdfUrl: "https://www.canararobeco.com/documents/forms-downloads/forms-information-documents/information-documents/factsheets/" },
+  { name: "Edelweiss MF", code: "EDELWEISS", logo: "🚀", website: "https://www.edelweissmf.com", pdfUrl: "https://www.edelweissmf.com/downloads/factsheets" },
+  { name: "Sundaram MF", code: "SUNDARAM", logo: "☀️", website: "https://www.sundarammutual.com", pdfUrl: "https://www.sundarammutual.com/fundwise-factsheet" },
+  { name: "Invesco Mutual Fund", code: "INVESCO", logo: "🦅", website: "https://www.invescomutualfund.com", pdfUrl: "https://www.invescomutualfund.com/literature-forms/factsheets" },
+  { name: "HSBC Mutual Fund", code: "HSBC", logo: "🌍", website: "https://www.assetmanagement.hsbc.co.in", pdfUrl: "https://www.assetmanagement.hsbc.co.in/en/mutual-funds/investor-resources?Date=&Cap=&Doc=fund-factsheets#&module-21=1" },
+  { name: "Franklin Templeton", code: "FRANKLIN", logo: "📜", website: "https://www.franklintempletonindia.com", pdfUrl: "https://www.franklintempletonindia.com/downloads/fund-documents?category=Factsheets" },
+  { name: "Aditya Birla Sun Life", code: "ABSL", logo: "🌞", website: "https://www.adityabirlacapital.com", pdfUrl: "https://mutualfund.adityabirlacapital.com/forms-and-downloads/factsheets" },
+  { name: "PGIM India MF", code: "PGIM", logo: "🔷", website: "https://www.pgimindia.com", pdfUrl: "https://www.pgimindia.com/mutual-funds/forms-and-product-updates/Fund-Factsheet" },
+  { name: "Union Mutual Fund", code: "UNION", logo: "🤝", website: "https://www.unionmf.com", pdfUrl: "https://www.unionmf.com/about-us/downloads/factsheets" },
+  { name: "Baroda BNP Paribas MF", code: "BARODA", logo: "🏛️", website: "https://www.barodabnpparibasmf.in", pdfUrl: "https://www.barodabnpparibasmf.in/downloads/monthly-factsheet" },
+  { name: "Mahindra Manulife MF", code: "MAHINDRA", logo: "🚜", website: "https://www.mahindramanulife.com", pdfUrl: "https://www.mahindramanulife.com/downloads#factsheets" },
+  { name: "JM Financial MF", code: "JM", logo: "📊", website: "https://www.jmfl.com", pdfUrl: "https://www.jmfinancialmf.com/downloads/Factsheet" },
+  { name: "LIC Mutual Fund", code: "LIC", logo: "🛡️", website: "https://www.licmf.com", pdfUrl: "https://www.licmf.com/downloads/factsheet" },
+  { name: "Navi Mutual Fund", code: "NAVI", logo: "📱", website: "https://www.navimutualfund.com", pdfUrl: "https://navi.com/mutual-fund/downloads/factsheet" },
+  { name: "Groww Mutual Fund", code: "GROWW", logo: "🌱", website: "https://www.growwmf.in", pdfUrl: "https://www.growwmf.in/downloads/fact-sheet" },
+  { name: "Zerodha Fund House", code: "ZERODHA", logo: "📐", website: "https://www.zerodhafundhouse.com", pdfUrl: "https://www.zerodhafundhouse.com/resources/fund-documents" },
+  { name: "WhiteOak Capital MF", code: "WHITEOAK", logo: "🌳", website: "https://mf.whiteoakcapital.com", pdfUrl: "https://mf.whiteoakamc.com/regulatory-disclosures/scheme-summary-document" },
+  { name: "Samco Mutual Fund", code: "SAMCO", logo: "🎯", website: "https://www.samco.in", pdfUrl: "https://www.samcomf.com/downloads#factsheets" },
+  { name: "NJ Mutual Fund", code: "NJ", logo: "💼", website: "https://www.njgroup.in", pdfUrl: "https://downloads.njmutualfund.com/downloads.php" },
+  { name: "360 ONE MF (IIFL)", code: "360ONE", logo: "⭕", website: "https://www.360.one", pdfUrl: "https://www.360.one/asset/mutual-funds/downloads/" },
+  { name: "ITI Mutual Fund", code: "ITI", logo: "🏭", website: "https://www.itiamc.com", pdfUrl: "https://www.itiamc.com/downloads#factsheets" },
+  { name: "Trust Mutual Fund", code: "TRUST", logo: "🤝", website: "https://www.trustgroup.in", pdfUrl: "https://www.trustmf.com/downloads?activeTab=factsheets" },
+  { name: "Taurus Mutual Fund", code: "TAURUS", logo: "🐂", website: "https://www.taurusmutualfund.com", pdfUrl: "https://www.taurusmutualfund.com/factsheet" },
+  { name: "Quantum Mutual Fund", code: "QUANTUM", logo: "⚛️", website: "https://www.quantumamc.com", pdfUrl: "https://www.quantumamc.com/factsheets/combined/-1/0/0" },
+  { name: "Shriram Mutual Fund", code: "SHRIRAM", logo: "🏛️", website: "https://www.shrirammf.in", pdfUrl: "https://www.shriramamc.in/factsheet" },
+  { name: "Helios Mutual Fund", code: "HELIOS", logo: "☀️", website: "https://www.helioscapital.in", pdfUrl: "https://www.heliosmf.in/downloads#factsheets" },
+  { name: "Old Bridge MF", code: "OLDBRIDGE", logo: "🌉", website: "https://www.oldbridgemf.com", pdfUrl: "https://www.oldbridgemf.com/factsheet.html" },
+  { name: "Bajaj Finserv MF", code: "BAJAJ", logo: "⚡", website: "https://www.bajajfinservamc.in", pdfUrl: "https://www.bajajamc.com/downloads?factsheet" },
+  { name: "BOI Mutual Fund", code: "BOI", logo: "🏦", website: "https://www.boimf.in", pdfUrl: "https://www.boimf.in/investor-corner#factsheets" },
+  { name: "The Wealth Company MF", code: "WEALTHCOMPANY", logo: "💎", website: "https://www.wealthcompanyamc.in", pdfUrl: "https://www.wealthcompanyamc.in/literature-forms/scheme-documents/factsheets/" },
+  { name: "Unifi Mutual Fund", code: "UNIFI", logo: "🏛️", website: "https://www.unifimf.com", pdfUrl: "https://unifimf.com/factsheet" },
+  { name: "Capitalmind MF", code: "CAPITALMIND", logo: "🧠", website: "https://capitalmindmf.com", pdfUrl: "https://capitalmindmf.com/factsheet.html#" },
+  { name: "Jio BlackRock MF", code: "JIOBLACKROCK", logo: "🌐", website: "https://www.jioblackrock.com", pdfUrl: "https://www.jioblackrockamc.com/statutory-disclosure/fund-documents/factsheet" },
+  { name: "Angel One MF", code: "ANGELONE", logo: "👼", website: "https://www.angelonemf.com", pdfUrl: "https://www.angelonemf.com/downloads#factsheets" }
 ];
 
 const AMC_BRAND_EMBLEMS: Record<string, { bg: string; text: string; label: string; icon: string }> = {
@@ -122,6 +127,11 @@ const AMC_BRAND_EMBLEMS: Record<string, { bg: string; text: string; label: strin
   OLDBRIDGE: { bg: "bg-[#1E293B]", text: "text-[#F59E0B]", label: "OLD BRIDGE", icon: "🌉" },
   BAJAJ: { bg: "bg-[#0284C7]", text: "text-white", label: "BAJAJ", icon: "⚡" },
   BOI: { bg: "bg-[#1D4ED8]", text: "text-white", label: "BOI MF", icon: "🏦" },
+  WEALTHCOMPANY: { bg: "bg-[#0A2540]", text: "text-[#00D4B2]", label: "WEALTH CO", icon: "💎" },
+  UNIFI: { bg: "bg-[#7C2D12]", text: "text-white", label: "UNIFI", icon: "🏛️" },
+  CAPITALMIND: { bg: "bg-[#1E1B4B]", text: "text-[#A78BFA]", label: "CAPMIND", icon: "🧠" },
+  JIOBLACKROCK: { bg: "bg-[#000000]", text: "text-[#0085FF]", label: "JIO B-ROCK", icon: "🌐" },
+  ANGELONE: { bg: "bg-[#1E3A8A]", text: "text-[#F97316]", label: "ANGEL ONE", icon: "👼" },
   SHINE: { bg: "bg-[#059669]", text: "text-white", label: "SHINE", icon: "✨" },
 };
 
@@ -146,6 +156,29 @@ const AMCLogo = ({ name, code }: { website: string; name: string; code?: string 
   );
 };
 
+const getCategoryBadgeClass = (category: string) => {
+  switch (category) {
+    case "Large Cap":
+      return "bg-sky-500/10 text-sky-400 border-sky-500/30";
+    case "Index":
+      return "bg-blue-500/10 text-blue-400 border-blue-500/30";
+    case "Mid Cap":
+      return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+    case "Small Cap":
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+    case "Flexi / Multi Cap":
+      return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+    case "ELSS":
+      return "bg-pink-500/10 text-pink-400 border-pink-500/30";
+    case "Hybrid":
+      return "bg-orange-500/10 text-orange-400 border-orange-500/30";
+    case "Debt & Liquid":
+      return "bg-teal-500/10 text-teal-400 border-teal-500/30";
+    default:
+      return "bg-navy-light text-muted-grey border-border-navy";
+  }
+};
+
 export default function MutualFundAnalyzer() {
   const [viewMode, setViewMode] = useState<"screener" | "analyzer" | "factsheets">("screener");
   const [session, setSession] = useState<any>(null);
@@ -166,11 +199,11 @@ export default function MutualFundAnalyzer() {
   const [loadingCompare, setLoadingCompare] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  
+
   // Selected Fund Keys (AMFI Scheme Codes)
-  const [mainCode, setMainCode] = useState<number>(120503); // Default: Axis Bluechip Fund
+  const [mainCode, setMainCode] = useState<number>(122639); // Default: Parag Parikh Flexi Cap Fund Direct Growth
   const [compareCode, setCompareCode] = useState<number | null>(null);
-  
+
   // Loaded Fund details
   const [mainFund, setMainFund] = useState<ParsedMetrics | null>(null);
   const [compareFund, setCompareFund] = useState<ParsedMetrics | null>(null);
@@ -178,8 +211,8 @@ export default function MutualFundAnalyzer() {
 
   // Inflation States
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [inflation, setInflation] = useState(5.09);
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [inflation, setInflation] = useState(7.0);
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   const getRealCagr = (nominalCagr: number | null | undefined) => {
     if (nominalCagr === null || nominalCagr === undefined) return null;
@@ -202,7 +235,7 @@ export default function MutualFundAnalyzer() {
 
   useEffect(() => {
     setMounted(true);
-    getCurrentUserSession().then((s) => setSession(s)).catch(() => {});
+    getCurrentUserSession().then((s) => setSession(s)).catch(() => { });
     fetch("/api/rates")
       .then((res) => res.json())
       .then((data) => {
@@ -311,29 +344,36 @@ export default function MutualFundAnalyzer() {
     return screenerFunds
       .filter((fund) => {
         // Text Search Filter
-        const matchesSearch = fund.name.toLowerCase().includes(screenerSearch.toLowerCase()) || 
-                              fund.code.toString().includes(screenerSearch);
+        const query = screenerSearch.trim().toLowerCase();
+        const matchesSearch = !query ||
+          (fund.name && fund.name.toLowerCase().includes(query)) ||
+          (fund.category && fund.category.toLowerCase().includes(query)) ||
+          (fund.schemeCategory && fund.schemeCategory.toLowerCase().includes(query)) ||
+          (fund.code && fund.code.toString().includes(query));
         if (!matchesSearch) return false;
 
         // Category Filter
         if (screenerFilterCategory === "All") return true;
         if (screenerFilterCategory === "Large Cap") {
-          return fund.category.toLowerCase().includes("large cap") || fund.category.toLowerCase().includes("index");
+          return fund.category === "Large Cap" || fund.category === "Index" || (fund.schemeCategory && fund.schemeCategory.toLowerCase().includes("large cap"));
         }
         if (screenerFilterCategory === "Mid Cap") {
-          return fund.category.toLowerCase().includes("mid cap");
+          return fund.category === "Mid Cap" || (fund.schemeCategory && fund.schemeCategory.toLowerCase().includes("mid cap"));
         }
         if (screenerFilterCategory === "Small Cap") {
-          return fund.category.toLowerCase().includes("small cap");
+          return fund.category === "Small Cap" || (fund.schemeCategory && fund.schemeCategory.toLowerCase().includes("small cap"));
         }
-        if (screenerFilterCategory === "Flexi Cap") {
-          return fund.category.toLowerCase().includes("flexi cap") || fund.category.toLowerCase().includes("multi cap");
+        if (screenerFilterCategory === "Flexi / Multi Cap") {
+          return fund.category === "Flexi / Multi Cap" || (fund.schemeCategory && (fund.schemeCategory.toLowerCase().includes("flexi") || fund.schemeCategory.toLowerCase().includes("multi")));
         }
-        if (screenerFilterCategory === "Debt/Liquid") {
-          return fund.category.toLowerCase().includes("debt") || 
-                 fund.category.toLowerCase().includes("liquid") ||
-                 fund.category.toLowerCase().includes("gilt") ||
-                 fund.category.toLowerCase().includes("hybrid");
+        if (screenerFilterCategory === "ELSS") {
+          return fund.category === "ELSS" || (fund.schemeCategory && fund.schemeCategory.toLowerCase().includes("elss"));
+        }
+        if (screenerFilterCategory === "Hybrid") {
+          return fund.category === "Hybrid" || (fund.schemeCategory && fund.schemeCategory.toLowerCase().includes("hybrid"));
+        }
+        if (screenerFilterCategory === "Debt & Liquid") {
+          return fund.category === "Debt & Liquid" || (fund.schemeCategory && (fund.schemeCategory.toLowerCase().includes("debt") || fund.schemeCategory.toLowerCase().includes("liquid") || fund.schemeCategory.toLowerCase().includes("gilt") || fund.schemeCategory.toLowerCase().includes("bond")));
         }
         return true;
       })
@@ -341,14 +381,14 @@ export default function MutualFundAnalyzer() {
         const key = screenerSort.key;
         const valA = a[key];
         const valB = b[key];
-        
+
         // Handle nulls
         if (valA === null || valA === undefined) return 1;
         if (valB === null || valB === undefined) return -1;
-        
+
         if (typeof valA === "string") {
-          return screenerSort.direction === "asc" 
-            ? valA.localeCompare(valB) 
+          return screenerSort.direction === "asc"
+            ? valA.localeCompare(valB)
             : valB.localeCompare(valA);
         } else {
           return screenerSort.direction === "asc"
@@ -357,6 +397,30 @@ export default function MutualFundAnalyzer() {
         }
       });
   }, [screenerFunds, screenerSearch, screenerFilterCategory, screenerSort]);
+
+  // Compute category counts for tab badges
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      All: screenerFunds.length,
+      "Large Cap": 0,
+      "Mid Cap": 0,
+      "Small Cap": 0,
+      "Flexi / Multi Cap": 0,
+      ELSS: 0,
+      Hybrid: 0,
+      "Debt & Liquid": 0
+    };
+    screenerFunds.forEach((f) => {
+      if (f.category === "Large Cap" || f.category === "Index") counts["Large Cap"]++;
+      if (f.category === "Mid Cap") counts["Mid Cap"]++;
+      if (f.category === "Small Cap") counts["Small Cap"]++;
+      if (f.category === "Flexi / Multi Cap") counts["Flexi / Multi Cap"]++;
+      if (f.category === "ELSS") counts["ELSS"]++;
+      if (f.category === "Hybrid") counts["Hybrid"]++;
+      if (f.category === "Debt & Liquid") counts["Debt & Liquid"]++;
+    });
+    return counts;
+  }, [screenerFunds]);
 
   // Compute rebased comparison chart data based on time horizon
   const rebasedChartData = useMemo(() => {
@@ -468,33 +532,30 @@ export default function MutualFundAnalyzer() {
         <div className="flex overflow-x-auto no-scrollbar scrollbar-none whitespace-nowrap min-w-0 w-full pb-1 md:pb-0">
           <button
             onClick={() => setViewMode("screener")}
-            className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
-              viewMode === "screener"
-                ? "border-emerald text-emerald bg-emerald/5"
-                : "border-transparent text-muted-grey hover:text-white"
-            }`}
+            className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${viewMode === "screener"
+              ? "border-emerald text-emerald bg-emerald/5"
+              : "border-transparent text-muted-grey hover:text-white"
+              }`}
           >
             <Filter size={15} />
             <span>Mutual Fund Screener</span>
           </button>
           <button
             onClick={() => setViewMode("analyzer")}
-            className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
-              viewMode === "analyzer"
-                ? "border-emerald text-emerald bg-emerald/5"
-                : "border-transparent text-muted-grey hover:text-white"
-            }`}
+            className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${viewMode === "analyzer"
+              ? "border-emerald text-emerald bg-emerald/5"
+              : "border-transparent text-muted-grey hover:text-white"
+              }`}
           >
             <Layers size={15} />
             <span>Detail Fund Analyzer & Compare</span>
           </button>
           <button
             onClick={() => setViewMode("factsheets")}
-            className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
-              viewMode === "factsheets"
-                ? "border-emerald text-emerald bg-emerald/5"
-                : "border-transparent text-muted-grey hover:text-white"
-            }`}
+            className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${viewMode === "factsheets"
+              ? "border-emerald text-emerald bg-emerald/5"
+              : "border-transparent text-muted-grey hover:text-white"
+              }`}
           >
             <BookOpen size={15} />
             <span>AMC Factsheets & Selection Rules</span>
@@ -541,139 +602,380 @@ export default function MutualFundAnalyzer() {
       </div>
 
       {viewMode === "screener" ? (
-        <div className="space-y-8 animate-fadeIn">
+        <div className="space-y-6 animate-fadeIn min-w-0 w-full">
           {/* Controls Bar: Category Filter & Text Search */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-navy-card/25 p-4 rounded-2xl border border-border-navy">
+          <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-4 bg-navy-card/40 p-4 sm:p-5 rounded-2xl border border-border-navy/80 shadow-lg min-w-0 w-full">
             {/* Category tabs */}
-            <div className="flex flex-wrap gap-2 text-xs font-bold">
-              {["All", "Large Cap", "Mid Cap", "Small Cap", "Flexi Cap", "Debt/Liquid"].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setScreenerFilterCategory(cat)}
-                  className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
-                    screenerFilterCategory === cat
-                      ? "bg-emerald text-navy-bg shadow-md"
-                      : "bg-navy-bg border border-border-navy text-muted-grey hover:text-white"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold min-w-0">
+              {[
+                { key: "All", label: "All" },
+                { key: "Large Cap", label: "Large Cap & Index" },
+                { key: "Mid Cap", label: "Mid Cap" },
+                { key: "Small Cap", label: "Small Cap" },
+                { key: "Flexi / Multi Cap", label: "Flexi / Multi Cap" },
+                { key: "ELSS", label: "ELSS (Tax Saver)" },
+                { key: "Hybrid", label: "Hybrid" },
+                { key: "Debt & Liquid", label: "Debt & Liquid" },
+              ].map((tab) => {
+                const count = categoryCounts[tab.key === "Large Cap & Index" ? "Large Cap" : tab.key] ?? 0;
+                const isActive = screenerFilterCategory === (tab.key === "Large Cap & Index" ? "Large Cap" : tab.key);
+                const filterKey = tab.key === "Large Cap & Index" ? "Large Cap" : tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setScreenerFilterCategory(filterKey)}
+                    className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 text-xs font-semibold ${isActive
+                      ? "bg-emerald text-navy-bg shadow-md font-bold scale-[1.02]"
+                      : "bg-navy-bg/80 border border-border-navy text-muted-grey hover:text-white hover:border-emerald/40"
+                      }`}
+                  >
+                    <span>{tab.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${isActive ? "bg-navy-bg/25 text-navy-bg" : "bg-navy-card text-muted-grey/80"}`}>
+                      {categoryCounts[filterKey] ?? 0}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Text Search Box */}
-            <div className="w-full md:w-80 flex items-center gap-2.5 glass-input focus-within:border-emerald py-2">
-              <Search className="text-muted-grey" size={16} />
+            <div className="w-full xl:w-84 flex items-center gap-2.5 glass-input focus-within:border-emerald py-2 px-3 shrink-0">
+              <Search className="text-muted-grey shrink-0" size={16} />
               <input
                 type="text"
                 value={screenerSearch}
                 onChange={(e) => setScreenerSearch(e.target.value)}
-                placeholder="Search screener..."
-                className="w-full bg-transparent outline-none text-white text-xs"
+                placeholder="Search fund name, code, category..."
+                className="w-full bg-transparent outline-none text-white text-xs placeholder:text-muted-grey/60"
               />
+              {screenerSearch && (
+                <button
+                  onClick={() => setScreenerSearch("")}
+                  className="text-muted-grey hover:text-white p-0.5"
+                  title="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Loading / Table */}
+          {/* Screener Meta Bar: Count & Real-time Indicator */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-2 text-xs text-muted-grey">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span>
+                Showing <strong className="text-white font-mono">{sortedAndFilteredScreenerFunds.length}</strong> of <strong className="text-white font-mono">{screenerFunds.length}</strong> verified funds
+              </span>
+              {screenerFilterCategory !== "All" && (
+                <span className="bg-emerald/10 text-emerald text-[10px] px-2 py-0.5 rounded-full font-semibold border border-emerald/20">
+                  Filtered by: {screenerFilterCategory}
+                </span>
+              )}
+              {screenerSearch && (
+                <span className="bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-sky-500/20">
+                  Query: &ldquo;{screenerSearch}&rdquo;
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-[11px]">
+              <span className="inline-flex items-center gap-1 text-emerald font-semibold">
+                <Sparkles size={12} />
+                {adjustInflation ? `Real CAGRs (CPI ${inflation}% Adjusted)` : "Nominal CAGRs"}
+              </span>
+              <span className="text-muted-grey/40">•</span>
+              <span className="text-muted-grey">Direct Plan Growth Only</span>
+            </div>
+          </div>
+
+          {/* Loading State */}
           {loadingScreener ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3 text-emerald text-sm">
-              <RefreshCw className="animate-spin text-emerald" size={24} />
-              <span>Fetching live AMFI-derived NAVs and risk metrics...</span>
+            <div className="space-y-3 py-8">
+              <div className="flex items-center justify-center gap-3 text-emerald text-sm font-semibold pb-4">
+                <RefreshCw className="animate-spin text-emerald" size={22} />
+                <span>Loading real-time AMFI scheme metrics...</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((idx) => (
+                  <div key={idx} className="h-36 rounded-2xl bg-navy-card/30 border border-border-navy/60 animate-pulse" />
+                ))}
+              </div>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-border-navy bg-navy-card/15">
-              <table className="min-w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-border-navy bg-navy-card/45 text-[10px] text-muted-grey font-bold uppercase tracking-wider">
-                    {[
-                      { label: "Fund Scheme Name", key: "name" },
-                      { label: "Category", key: "category" },
-                      { label: "NAV", key: "currentNav" },
-                      { label: adjustInflation ? "1Y Real CAGR" : "1Y CAGR", key: "cagr1Y" },
-                      { label: adjustInflation ? "3Y Real CAGR" : "3Y CAGR", key: "cagr3Y" },
-                      { label: adjustInflation ? "5Y Real CAGR" : "5Y CAGR", key: "cagr5Y" },
-                      { label: "Vol.", key: "volatility" },
-                      { label: "Sharpe", key: "sharpe" },
-                      { label: "Sortino", key: "sortino" }
-                    ].map((col) => (
-                      <th
-                        key={col.key}
-                        onClick={() => {
-                          const isCurrent = screenerSort.key === col.key;
-                          setScreenerSort({
-                            key: col.key,
-                            direction: isCurrent && screenerSort.direction === "desc" ? "asc" : "desc"
-                          });
-                        }}
-                        className="px-4 py-4 cursor-pointer hover:text-white hover:bg-navy-light/35 transition-all"
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <span>{col.label}</span>
-                          <ArrowUpDown size={10} className="text-muted-grey/60" />
-                        </div>
-                      </th>
-                    ))}
-                    <th className="px-4 py-4 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-navy/40">
-                  {sortedAndFilteredScreenerFunds.length > 0 ? (
-                    sortedAndFilteredScreenerFunds.map((fund) => {
-                      const displayCagr3Y = adjustInflation ? getRealCagr(fund.cagr3Y) : fund.cagr3Y;
-                      const isHighCagr = displayCagr3Y && displayCagr3Y >= 15;
-                      return (
-                        <tr key={fund.code} className="hover:bg-navy-light/20 transition-all font-semibold text-light-grey">
-                          <td className="px-4 py-4">
-                            <div className="space-y-0.5 max-w-[280px]">
-                              <p className="text-white font-bold leading-snug truncate" title={fund.name}>
-                                {fund.name}
-                              </p>
-                              <p className="text-[9px] font-mono text-muted-grey">Code: {fund.code}</p>
+            <>
+              {/* DESKTOP & TABLET: Broad Full-Width Screener Table */}
+              <div className="hidden md:block overflow-x-auto rounded-2xl border border-border-navy/80 bg-navy-card/25 shadow-xl min-w-0 w-full">
+                <table className="w-full text-left border-collapse text-xs min-w-full">
+                  <thead>
+                    <tr className="border-b border-border-navy bg-navy-card/60 text-[11px] text-muted-grey font-bold uppercase tracking-wider select-none">
+                      {[
+                        { label: "Fund Scheme Name", key: "name", width: "w-4/12" },
+                        { label: "Category", key: "category", width: "w-2/12" },
+                        { label: "NAV", key: "currentNav", width: "w-1/12" },
+                        { label: adjustInflation ? "1Y Real" : "1Y CAGR", key: "cagr1Y", width: "w-1/12" },
+                        { label: adjustInflation ? "3Y Real" : "3Y CAGR", key: "cagr3Y", width: "w-1/12" },
+                        { label: adjustInflation ? "5Y Real" : "5Y CAGR", key: "cagr5Y", width: "w-1/12" },
+                        { label: "Vol.", key: "volatility", width: "w-1/12" },
+                        { label: "Sharpe", key: "sharpe", width: "w-1/12" },
+                        { label: "Sortino", key: "sortino", width: "w-1/12" }
+                      ].map((col) => {
+                        const isCurrent = screenerSort.key === col.key;
+                        return (
+                          <th
+                            key={col.key}
+                            onClick={() => {
+                              setScreenerSort({
+                                key: col.key,
+                                direction: isCurrent && screenerSort.direction === "desc" ? "asc" : "desc"
+                              });
+                            }}
+                            className={`px-4 py-3.5 cursor-pointer hover:text-white hover:bg-navy-light/40 transition-all ${col.width || ""}`}
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <span className={isCurrent ? "text-emerald" : ""}>{col.label}</span>
+                              <ArrowUpDown size={11} className={isCurrent ? "text-emerald" : "text-muted-grey/40"} />
                             </div>
-                          </td>
-                          <td className="px-4 py-4 text-[10px]">
-                            <span className="bg-navy-light px-2 py-0.5 rounded border border-border-navy text-muted-grey text-[9px] whitespace-nowrap">
-                              {fund.category}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 font-mono text-white">₹{fund.currentNav}</td>
-                          <td className="px-4 py-4 font-mono">
-                            {fund.cagr1Y ? `${(adjustInflation ? getRealCagr(fund.cagr1Y) : fund.cagr1Y)?.toFixed(2)}%` : "-"}
-                          </td>
-                          <td className={`px-4 py-4 font-mono ${isHighCagr ? "text-emerald font-bold" : ""}`}>
-                            {fund.cagr3Y ? `${(adjustInflation ? getRealCagr(fund.cagr3Y) : fund.cagr3Y)?.toFixed(2)}%` : "-"}
-                          </td>
-                          <td className="px-4 py-4 font-mono">
-                            {fund.cagr5Y ? `${(adjustInflation ? getRealCagr(fund.cagr5Y) : fund.cagr5Y)?.toFixed(2)}%` : "-"}
-                          </td>
-                          <td className="px-4 py-4 font-mono text-muted-grey">{fund.volatility}%</td>
-                          <td className="px-4 py-4 font-mono">{fund.sharpe ?? "-"}</td>
-                          <td className="px-4 py-4 font-mono">{fund.sortino ?? "-"}</td>
-                          <td className="px-4 py-4 text-center">
+                          </th>
+                        );
+                      })}
+                      <th className="px-4 py-3.5 text-center w-1/12">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-navy/50">
+                    {sortedAndFilteredScreenerFunds.length > 0 ? (
+                      sortedAndFilteredScreenerFunds.map((fund) => {
+                        const displayCagr1Y = adjustInflation ? getRealCagr(fund.cagr1Y) : fund.cagr1Y;
+                        const displayCagr3Y = adjustInflation ? getRealCagr(fund.cagr3Y) : fund.cagr3Y;
+                        const displayCagr5Y = adjustInflation ? getRealCagr(fund.cagr5Y) : fund.cagr5Y;
+
+                        return (
+                          <tr
+                            key={fund.code}
+                            className="hover:bg-navy-light/25 transition-all font-semibold text-light-grey group cursor-pointer"
+                            onClick={() => {
+                              setMainCode(fund.code);
+                              setViewMode("analyzer");
+                            }}
+                          >
+                            {/* Fund Name */}
+                            <td className="px-4 py-4">
+                              <div className="space-y-1 max-w-[340px]">
+                                <p className="text-white font-bold leading-snug group-hover:text-emerald transition-colors line-clamp-2" title={fund.name}>
+                                  {fund.name}
+                                </p>
+                                <div className="flex items-center gap-2 flex-wrap text-[10px]">
+                                  <span className="font-mono text-muted-grey bg-navy-bg/90 border border-border-navy px-1.5 py-0.2 rounded">
+                                    Code: {fund.code}
+                                  </span>
+                                  {fund.schemeCategory && (
+                                    <span className="text-muted-grey/70 truncate max-w-[200px]" title={fund.schemeCategory}>
+                                      {fund.schemeCategory}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Category Badge */}
+                            <td className="px-4 py-4">
+                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider inline-flex items-center border whitespace-nowrap ${getCategoryBadgeClass(fund.category)}`}>
+                                {fund.category}
+                              </span>
+                            </td>
+
+                            {/* NAV */}
+                            <td className="px-4 py-4 font-mono text-white text-sm font-bold whitespace-nowrap">
+                              ₹{fund.currentNav.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+
+                            {/* 1Y CAGR */}
+                            <td className="px-4 py-4 font-mono whitespace-nowrap">
+                              {displayCagr1Y !== null && displayCagr1Y !== undefined ? (
+                                <span className={`font-bold ${displayCagr1Y >= 12 ? "text-emerald" : displayCagr1Y >= 0 ? "text-emerald/80" : "text-rose-400"}`}>
+                                  {displayCagr1Y >= 0 ? "+" : ""}{displayCagr1Y.toFixed(2)}%
+                                </span>
+                              ) : (
+                                <span className="text-muted-grey/60">-</span>
+                              )}
+                            </td>
+
+                            {/* 3Y CAGR */}
+                            <td className="px-4 py-4 font-mono whitespace-nowrap">
+                              {displayCagr3Y !== null && displayCagr3Y !== undefined ? (
+                                <span className={`font-extrabold ${displayCagr3Y >= 15 ? "text-emerald drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" : displayCagr3Y >= 0 ? "text-emerald/90" : "text-rose-400"}`}>
+                                  {displayCagr3Y >= 0 ? "+" : ""}{displayCagr3Y.toFixed(2)}%
+                                </span>
+                              ) : (
+                                <span className="text-muted-grey/60">-</span>
+                              )}
+                            </td>
+
+                            {/* 5Y CAGR */}
+                            <td className="px-4 py-4 font-mono whitespace-nowrap">
+                              {displayCagr5Y !== null && displayCagr5Y !== undefined ? (
+                                <span className={`font-bold ${displayCagr5Y >= 15 ? "text-emerald" : displayCagr5Y >= 0 ? "text-emerald/80" : "text-rose-400"}`}>
+                                  {displayCagr5Y >= 0 ? "+" : ""}{displayCagr5Y.toFixed(2)}%
+                                </span>
+                              ) : (
+                                <span className="text-muted-grey/60">-</span>
+                              )}
+                            </td>
+
+                            {/* Volatility */}
+                            <td className="px-4 py-4 font-mono whitespace-nowrap">
+                              <span className={fund.volatility < 3 ? "text-sky-400" : fund.volatility > 16 ? "text-amber-400" : "text-muted-grey"}>
+                                {fund.volatility}%
+                              </span>
+                            </td>
+
+                            {/* Sharpe */}
+                            <td className="px-4 py-4 font-mono whitespace-nowrap">
+                              <span className={fund.sharpe >= 0.7 ? "text-emerald font-bold" : fund.sharpe < 0 ? "text-rose-400" : "text-muted-grey"}>
+                                {fund.sharpe !== null && fund.sharpe !== undefined ? fund.sharpe : "-"}
+                              </span>
+                            </td>
+
+                            {/* Sortino */}
+                            <td className="px-4 py-4 font-mono whitespace-nowrap">
+                              <span className={fund.sortino >= 1.0 ? "text-emerald font-bold" : fund.sortino < 0 ? "text-rose-400" : "text-muted-grey"}>
+                                {fund.sortino !== null && fund.sortino !== undefined ? fund.sortino : "-"}
+                              </span>
+                            </td>
+
+                            {/* Action Button */}
+                            <td className="px-4 py-4 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => {
+                                  setMainCode(fund.code);
+                                  setViewMode("analyzer");
+                                }}
+                                className="bg-emerald hover:bg-emerald/90 text-navy-bg font-extrabold px-3 py-1.5 rounded-lg inline-flex items-center gap-1 transition-all cursor-pointer text-[10px] shadow-sm hover:scale-105"
+                              >
+                                <span>Analyze</span>
+                                <ChevronRight size={11} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={10} className="px-4 py-16 text-center text-muted-grey italic">
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Layers className="text-muted-grey/40" size={32} />
+                            <span>No funds match the selected category or search filter.</span>
                             <button
                               onClick={() => {
-                                setMainCode(fund.code);
-                                setViewMode("analyzer");
+                                setScreenerSearch("");
+                                setScreenerFilterCategory("All");
                               }}
-                              className="bg-emerald hover:bg-emerald/90 text-navy-bg font-extrabold px-3 py-1.5 rounded-lg inline-flex items-center gap-1 transition-all cursor-pointer text-[10px]"
+                              className="text-xs text-emerald underline mt-1 cursor-pointer"
                             >
-                              <span>Analyze</span>
-                              <ChevronRight size={10} />
+                              Reset filters
                             </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={10} className="px-4 py-12 text-center text-muted-grey italic">
-                        No funds match the selected filters or query.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE: Responsive Cards View (< 768px) */}
+              <div className="block md:hidden space-y-3.5">
+                {sortedAndFilteredScreenerFunds.length > 0 ? (
+                  sortedAndFilteredScreenerFunds.map((fund) => {
+                    const displayCagr1Y = adjustInflation ? getRealCagr(fund.cagr1Y) : fund.cagr1Y;
+                    const displayCagr3Y = adjustInflation ? getRealCagr(fund.cagr3Y) : fund.cagr3Y;
+                    const displayCagr5Y = adjustInflation ? getRealCagr(fund.cagr5Y) : fund.cagr5Y;
+
+                    return (
+                      <div
+                        key={fund.code}
+                        className="bg-navy-card/40 border border-border-navy/80 rounded-2xl p-4 space-y-3.5 shadow-md hover:border-emerald/40 transition-all"
+                      >
+                        {/* Header: Name, Code, Category */}
+                        <div className="flex items-start justify-between gap-2.5">
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <h3 className="text-white font-bold text-sm leading-snug line-clamp-2">
+                              {fund.name}
+                            </h3>
+                            <div className="flex items-center gap-2 flex-wrap text-[10px]">
+                              <span className="font-mono text-muted-grey bg-navy-bg px-1.5 py-0.5 rounded border border-border-navy">
+                                #{fund.code}
+                              </span>
+                              {fund.schemeCategory && (
+                                <span className="text-muted-grey/70 truncate max-w-[180px]">
+                                  {fund.schemeCategory}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider shrink-0 border ${getCategoryBadgeClass(fund.category)}`}>
+                            {fund.category}
+                          </span>
+                        </div>
+
+                        {/* NAV & Key Metric Banner */}
+                        <div className="flex items-center justify-between bg-navy-bg/70 px-3 py-2 rounded-xl border border-border-navy/60">
+                          <div>
+                            <span className="text-[10px] text-muted-grey block">Current NAV</span>
+                            <span className="text-white font-mono font-bold text-sm">
+                              ₹{fund.currentNav.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-muted-grey block">
+                              {adjustInflation ? "3Y Real CAGR" : "3Y CAGR"}
+                            </span>
+                            <span className={`font-mono font-extrabold text-sm ${displayCagr3Y && displayCagr3Y >= 14 ? "text-emerald" : displayCagr3Y && displayCagr3Y >= 0 ? "text-emerald/90" : "text-rose-400"}`}>
+                              {displayCagr3Y !== null && displayCagr3Y !== undefined ? `${displayCagr3Y >= 0 ? "+" : ""}${displayCagr3Y.toFixed(2)}%` : "-"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 3-Column CAGR Grid */}
+                        <div className="grid grid-cols-3 gap-2 text-center bg-navy-card/25 p-2.5 rounded-xl border border-border-navy/40 text-xs">
+                          <div>
+                            <span className="text-[10px] text-muted-grey block">1Y CAGR</span>
+                            <span className={`font-mono font-bold text-xs ${displayCagr1Y && displayCagr1Y >= 0 ? "text-emerald" : "text-rose-400"}`}>
+                              {displayCagr1Y !== null && displayCagr1Y !== undefined ? `${displayCagr1Y >= 0 ? "+" : ""}${displayCagr1Y.toFixed(1)}%` : "-"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-muted-grey block">5Y CAGR</span>
+                            <span className={`font-mono font-bold text-xs ${displayCagr5Y && displayCagr5Y >= 0 ? "text-emerald" : "text-rose-400"}`}>
+                              {displayCagr5Y !== null && displayCagr5Y !== undefined ? `${displayCagr5Y >= 0 ? "+" : ""}${displayCagr5Y.toFixed(1)}%` : "-"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-muted-grey block">Sharpe</span>
+                            <span className="font-mono font-bold text-xs text-white">
+                              {fund.sharpe ?? "-"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action CTA */}
+                        <button
+                          onClick={() => {
+                            setMainCode(fund.code);
+                            setViewMode("analyzer");
+                          }}
+                          className="w-full bg-emerald hover:bg-emerald/90 text-navy-bg font-extrabold py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 text-xs transition-all shadow-md active:scale-95"
+                        >
+                          <span>Analyze in Depth</span>
+                          <ChevronRight size={13} />
+                        </button>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="bg-navy-card/30 border border-border-navy rounded-2xl p-8 text-center text-muted-grey italic">
+                    <p className="text-xs">No mutual funds match your filter criteria.</p>
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           {/* Educational Glossary on Parameters */}
@@ -682,7 +984,7 @@ export default function MutualFundAnalyzer() {
               <BookOpen className="text-emerald" size={20} />
               <h2 className="text-lg font-bold text-white tracking-tight">Mutual Fund Evaluation Glossary</h2>
             </div>
-            
+
             <p className="text-xs text-muted-grey leading-relaxed">
               When investing in mutual funds, returns are only half the equation. Risk and risk-adjusted metrics tell you whether the fund manager is actually delivering value, or simply taking excessive, dangerous risks.
             </p>
@@ -853,14 +1155,13 @@ export default function MutualFundAnalyzer() {
                           if (compareFund) {
                             setCompareCode(null);
                           } else {
-                            setCompareCode(120716); 
+                            setCompareCode(120716);
                           }
                         }}
-                        className={`flex-1 py-2 rounded-lg font-bold text-xs border transition-colors cursor-pointer ${
-                          compareFund 
-                            ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20" 
-                            : "bg-navy-light border-border-navy text-white hover:border-emerald/40"
-                        }`}
+                        className={`flex-1 py-2 rounded-lg font-bold text-xs border transition-colors cursor-pointer ${compareFund
+                          ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                          : "bg-navy-light border-border-navy text-white hover:border-emerald/40"
+                          }`}
                       >
                         {compareFund ? "Clear Comparison" : "Overlay Nifty 50 Index"}
                       </button>
@@ -940,8 +1241,8 @@ export default function MutualFundAnalyzer() {
                         {compareFund ? "Comparative Performance (Rebased to 100)" : "Fund Net Performance"}
                       </h3>
                       <p className="text-xs text-muted-grey mt-0.5">
-                        {compareFund 
-                          ? "Both funds started at 100 to compare compound return speeds" 
+                        {compareFund
+                          ? "Both funds started at 100 to compare compound return speeds"
                           : `NAV growth over the selected timeframe`}
                       </p>
                     </div>
@@ -952,9 +1253,8 @@ export default function MutualFundAnalyzer() {
                         <button
                           key={h}
                           onClick={() => setTimeHorizon(h)}
-                          className={`px-3 py-1 rounded transition-colors cursor-pointer ${
-                            timeHorizon === h ? "bg-emerald text-navy-bg" : "text-muted-grey hover:text-white"
-                          }`}
+                          className={`px-3 py-1 rounded transition-colors cursor-pointer ${timeHorizon === h ? "bg-emerald text-navy-bg" : "text-muted-grey hover:text-white"
+                            }`}
                         >
                           {h}
                         </button>
@@ -972,12 +1272,12 @@ export default function MutualFundAnalyzer() {
                         >
                           <defs>
                             <linearGradient id="colorMain" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                              <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="colorCompare" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
+                              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#112d55" vertical={false} />
@@ -1307,7 +1607,7 @@ export default function MutualFundAnalyzer() {
                     Official AMC Factsheets Vault is Locked
                   </h3>
                   <p className="text-xs sm:text-sm text-muted-grey leading-relaxed">
-                    Accessing official monthly factsheet downloads across all 44 Indian Asset Management Companies is exclusively free for signed-in ValarchiX account holders.
+                    Accessing official monthly factsheet downloads across all 48 Indian Asset Management Companies is exclusively free for signed-in ValarchiX account holders.
                   </p>
                 </div>
                 <div className="pt-2">
@@ -1343,8 +1643,7 @@ export default function MutualFundAnalyzer() {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {AMC_FACTSHEETS.filter((amc) =>
                     amc.name.toLowerCase().includes(amcSearch.toLowerCase()) ||
-                    amc.code.toLowerCase().includes(amcSearch.toLowerCase()) ||
-                    amc.tag.toLowerCase().includes(amcSearch.toLowerCase())
+                    amc.code.toLowerCase().includes(amcSearch.toLowerCase())
                   ).map((amc) => (
                     <div key={amc.code} className="p-4 rounded-2xl border border-border-navy bg-navy-bg/60 hover:border-emerald/40 transition space-y-3 flex flex-col justify-between shadow-lg">
                       <div className="space-y-2">
@@ -1356,7 +1655,6 @@ export default function MutualFundAnalyzer() {
                         </div>
                         <div>
                           <h4 className="text-sm font-bold text-heading">{amc.name}</h4>
-                          <p className="text-[11px] text-muted-grey mt-0.5">{amc.tag}</p>
                         </div>
                       </div>
 

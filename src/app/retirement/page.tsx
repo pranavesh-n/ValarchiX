@@ -19,12 +19,12 @@ export default function RetirementPlanner() {
   const [retireAge, setRetireAge] = useState(60);
   const [lifeExpectancy, setLifeExpectancy] = useState(85);
   const [monthlyExpense, setMonthlyExpense] = useState(50000);
-  const [inflation, setInflation] = useState(5.09);
+  const [inflation, setInflation] = useState(7.0);
   const [adjustInflation, setAdjustInflation] = useState(true);
-  const [preReturn, setPreReturn] = useState(12);
+  const [preReturn, setPreReturn] = useState(10);
   const [postReturn, setPostReturn] = useState(6.95);
   const [swr, setSwr] = useState(3.0); // Safe Withdrawal Rate (3.0% India benchmark)
-  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 5.09 });
+  const [rates, setRates] = useState({ repoRate: 6.50, bondYield10Y: 6.95, inflationRate: 7.0 });
 
   useEffect(() => {
     fetch("/api/rates")
@@ -246,10 +246,10 @@ export default function RetirementPlanner() {
                 <div className="flex justify-start pt-0.5">
                   <button
                     type="button"
-                    onClick={() => setPreReturn(12)}
+                    onClick={() => setPreReturn(10)}
                     className="text-[9px] font-bold text-white border border-border-navy bg-navy-light/40 hover:bg-navy-light px-2 py-0.5 rounded transition-all"
                   >
-                    Equity Index (12%)
+                    Equity Index (10% Post-Tax)
                   </button>
                 </div>
               </div>

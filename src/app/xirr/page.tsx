@@ -42,12 +42,12 @@ export default function XirrCalculator() {
 
   // --- Inflation Adjustment State (User Configurable) ---
   const [adjustInflation, setAdjustInflation] = useState(false);
-  const [inflation, setInflation] = useState(5.09);
+  const [inflation, setInflation] = useState(7.0);
 
   useEffect(() => {
     fetch("/api/rates")
       .then((res) => res.json())
-      .then((data) => setInflation(data.inflationRate || 5.09))
+      .then((data) => setInflation(data.inflationRate || 7.0))
       .catch((err) => console.error("Error loading rates", err));
   }, []);
 
@@ -605,7 +605,7 @@ export default function XirrCalculator() {
                 />
                 <div className="flex justify-between text-[10px] text-muted-grey font-mono">
                   <span>0% (No Inflation)</span>
-                  <span>5.09% (Current CPI)</span>
+                  <span>7.0% (Standard Baseline)</span>
                   <span>10% (High)</span>
                   <span>20% (Severe)</span>
                 </div>
@@ -615,9 +615,8 @@ export default function XirrCalculator() {
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <span className="text-[10px] text-muted-grey font-bold uppercase tracking-wider">Presets:</span>
                 {[
-                  { label: "CPI Baseline (5.09%)", rate: 5.09 },
+                  { label: "Standard Baseline (7.0%)", rate: 7.0 },
                   { label: "Moderate (6.0%)", rate: 6.0 },
-                  { label: "Conservative (7.0%)", rate: 7.0 },
                   { label: "High Inflation (8.5%)", rate: 8.5 }
                 ].map((preset) => (
                   <button
