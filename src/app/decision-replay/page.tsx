@@ -62,15 +62,15 @@ export default function DecisionReplayPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8">
+    <div className="space-y-6 sm:space-y-8 py-4 sm:py-6 animate-fadeIn text-light-grey">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8 border-b border-slate-800 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="border-b border-border-navy pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-rose-400 font-semibold text-sm mb-1 uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-semibold text-sm mb-1 uppercase tracking-wider">
             <RotateCcw className="w-4 h-4" /> Engine 5: Decision Replay
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white">Record & Replay Financial Decisions</h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-heading tracking-tight">Record &amp; Replay Financial Decisions</h1>
+          <p className="text-muted-grey text-xs sm:text-sm mt-1">
             «Record significant financial choices and evaluate expected vs actual outcomes without hindsight bias.»
           </p>
         </div>
@@ -78,50 +78,50 @@ export default function DecisionReplayPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2"
+            className="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-lg shadow-rose-600/20 cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Record New Decision
           </button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="space-y-6">
         {/* Timeline of Decisions */}
         {decisions.map((dec) => {
           const evalRes = evaluateDecisionRetrospective(dec);
 
           return (
-            <div key={dec.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div key={dec.id} className="bg-navy-card border border-border-navy rounded-3xl p-6 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-navy pb-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono bg-slate-950 text-slate-400 border border-slate-800 px-2.5 py-1 rounded-lg">
+                  <span className="text-xs font-mono bg-navy-bg text-muted-grey border border-border-navy px-2.5 py-1 rounded-lg">
                     {dec.date}
                   </span>
-                  <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-950 text-rose-300 border border-rose-800">
+                  <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                     {dec.category}
                   </span>
                 </div>
 
                 <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
                   evalRes?.status === "Exceeded" || evalRes?.status === "On Track"
-                    ? "bg-emerald-950 text-emerald-400 border-emerald-800"
-                    : "bg-amber-950 text-amber-400 border-amber-800"
+                    ? "bg-emerald-500/10 text-emerald border-emerald-500/30"
+                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
                 }`}>
                   {evalRes?.status}
                 </span>
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-white">{dec.title}</h3>
-                <p className="text-sm text-slate-300 mt-1 leading-relaxed">{dec.rationale}</p>
+                <h3 className="text-lg font-bold text-heading">{dec.title}</h3>
+                <p className="text-sm text-muted-grey mt-1 leading-relaxed">{dec.rationale}</p>
               </div>
 
               {/* Hindsight-Free Evaluation Spotlight */}
-              <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 text-xs">
-                <div className="font-semibold text-rose-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <div className="bg-navy-bg border border-border-navy/80 rounded-2xl p-4 text-xs">
+                <div className="font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                   <Award className="w-3.5 h-3.5" /> Hindsight-Free Retrospective Audit
                 </div>
-                <div className="text-slate-300 leading-relaxed">{evalRes?.hindsightFreeAnalysis}</div>
+                <div className="text-muted-grey leading-relaxed">{evalRes?.hindsightFreeAnalysis}</div>
               </div>
             </div>
           );
@@ -130,27 +130,27 @@ export default function DecisionReplayPage() {
 
       {/* Add Decision Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-white">Record Financial Decision</h3>
+        <div className="fixed inset-0 bg-navy-bg/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-navy-card border border-border-navy rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-heading">Record Financial Decision</h3>
 
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase">Decision Title</label>
+              <label className="text-xs font-semibold text-muted-grey uppercase">Decision Title</label>
               <input
                 type="text"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="e.g. Started ₹5k Step-Up SIP in Nifty 50"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm mt-1 focus:border-rose-500 focus:outline-none"
+                className="w-full bg-navy-bg border border-border-navy rounded-xl px-4 py-2.5 text-heading text-sm mt-1 focus:border-rose-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase">Category</label>
+              <label className="text-xs font-semibold text-muted-grey uppercase">Category</label>
               <select
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value as any)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white text-sm mt-1 focus:border-rose-500 focus:outline-none"
+                className="w-full bg-navy-bg border border-border-navy rounded-xl px-3 py-2.5 text-heading text-sm mt-1 focus:border-rose-500 focus:outline-none"
               >
                 <option value="investment">Investment</option>
                 <option value="debt">Debt Payoff</option>
@@ -161,25 +161,25 @@ export default function DecisionReplayPage() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase">Reasoning / Rationale</label>
+              <label className="text-xs font-semibold text-muted-grey uppercase">Reasoning / Rationale</label>
               <textarea
                 value={newRationale}
                 onChange={(e) => setNewRationale(e.target.value)}
                 placeholder="Why did you make this decision based on what you know today?"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm mt-1 h-24 focus:border-rose-500 focus:outline-none"
+                className="w-full bg-navy-bg border border-border-navy rounded-xl p-3 text-heading text-sm mt-1 h-24 focus:border-rose-500 focus:outline-none"
               ></textarea>
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl"
+                className="px-4 py-2 rounded-xl text-muted-grey hover:text-heading text-sm font-semibold transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddDecision}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl"
+                className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-xl text-sm font-bold transition cursor-pointer shadow-md"
               >
                 Save Decision
               </button>

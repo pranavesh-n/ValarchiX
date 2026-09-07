@@ -2,75 +2,93 @@
 
 > 💡 **“We don't tell what to pick, we tell how to pick”**
 
-**valarchiX** is an interactive, educational platform designed to build deep financial knowledge. Rather than providing investment recommendations, valarchiX empowers users by teaching them how to evaluate business models, assess mutual funds, calculate compounding, and compare tax regimes through dynamic data models and interactive diagnostic planners.
+**ValarchiX (வளர்ச்சி · Growth)** is an institutional-grade, zero-commission financial knowledge operating system built for India. Rather than pushing sponsored investments, affiliate loans, or high-commission regular mutual funds, ValarchiX provides 100% mathematical, deterministic clarity with zero broker bias. It empowers users by teaching how to evaluate business models, diagnose financial health, run irregular cash-flow actuarial models, assess mutual fund drag, and navigate tax regimes through real-time data integrations and interactive diagnostic engines.
 
-## 🌟 Key Features & Modules
+---
 
-### 1. 🤖 Vaathi (வாத்தி) - Enterprise Financial AI Assistant & Mentor
-* **Single-Pass 1-Call LLM Execution**: Engineered for sub-second (~0.6s) response times by eliminating multi-turn tool calling latency, resulting in an **80% reduction in API calls & token overhead**.
-* **0-Token Pre-LLM Guardrail Interceptor**: Intercepts out-of-scope or non-financial queries at the API edge before reaching LLM models, costing **0 tokens** with immediate responses.
-* **Zero-Latency Semantic Response Cache**: Instantly delivers responses for common financial questions and calculations with **0ms network lag and zero token spend**.
-* **Zero-Downtime Dynamic Multi-Model Failover**: Resilient fallback engine that automatically routes prompts across **Llama-3.1-8b-instant**, **Llama-3.3-70b-versatile**, and **Google Gemini Flash** to prevent 429 rate limit hiccups or service disruptions.
-* **Token-Optimized Sliding Window Memory**: Preserves chat context using sliding memory windows and key entity extraction to stay within optimal context windows.
-* **25+ Integrated Financial Solvers with Parameter Safeguards**: Connects directly to custom math engines (SIP, Step-Up SIP, CAGR, FIRE, SWP, EMI Prepayments, Union Budget 2025 Tax Slabs, etc.) with robust fallback parameter destructuring and precise key extraction to prevent zero-value `₹0` anomalies.
+## 🏛️ 4-Pillar Categorized Architecture
 
-### 2. 📱 Smart Real-Time PWA Engine & Cross-Device Sync
-* **Real-Time Uninstallation Detection**: Integrates OS-level `navigator.getInstalledRelatedApps()` queries and `beforeinstallprompt` event listeners to reactively clear stale local storage flags immediately upon app uninstallation.
-* **Session-Aware Non-Intrusive Prompting**: Features intelligent session storage controls. Automatically presents the PWA installation modal after a 1.5-second delay for non-installed visitors without harassing returning users in the same session.
-* **Instant Native Install Trigger**: Includes an **"Install App"** header action button (`[⬇]`) on mobile and desktop that directly triggers the native browser PWA prompt (`promptEvent.prompt()`).
-* **Dynamic Header Button Visibility**: Automatically detects when the app is installed or running in standalone mode, hiding the install button to preserve clean UI real estate.
-* **OS-Native App Icon Architecture**: Generates crisp, transparent-canvas circular PNG icons (`192x192` & `512x512`) for Windows Desktop shortcuts and Android Home Screens while preserving authentic ValarchiX brand mark aesthetics across web components.
+Every engine, calculator, and diagnostic tool in ValarchiX is strictly segregated across four deterministic life-intent pillars:
 
-### 3. 📊 Mutual Funds Screener & Detail Analyzer
-* **Official Daily NAV Sourcing**: Sourced directly from the official **Association of Mutual Funds in India (AMFI)** master database, ensuring 100% accurate Net Asset Values (NAV).
-* **Comprehensive Metrics**: Calculates and evaluates compound annual growth rates (**1Y, 3Y, and 5Y CAGR**), annualized standard deviation (**Volatility**), **Sharpe Ratios**, and **Sortino Ratios**.
-* **Interactive Charting**: Plots historical NAV performance over customizable time horizons (1Y, 3Y, 5Y) using interactive, rebased line charts that overlay benchmark performance on a common baseline of `100`.
-* **Zero-Latency Search**: Features a word-tokenized local cache search engine that resolves queries instantly (0ms network lag) by splitting queries into words and matching them in any order.
-* **Benchmark Disclosures**: Clearly discloses benchmark approximations and data freshness timestamps at the top of the analytics tables and chart legends.
+1. **Wealth & Compounding**: Multi-frequency SIP (Daily/Weekly/Monthly/Yearly), Step-Up SIP, Lumpsum Compound Interest, Brent-Dekker XIRR Solver, SIP vs FD Comparative Simulator, and GoalX Priority Matrix.
+2. **Budgeting & Cash Flow**: Financial DNA Diagnostic Engine, Emergency Runway Planner, Debt Payoff Accelerator (Snowball vs Avalanche), Net Worth Audit, and Latte Factor Waste Tracker.
+3. **Retirement & Sovereign Schemes**: FIRE (Safe Withdrawal Rate & Bridging SIPs), SWP Sequence-of-Returns Simulator, Sukanya Samriddhi Yojana (SSY), Employee Provident Fund (EPF), Public Provident Fund (PPF), National Pension System (NPS Tier I/II), NSC, and Post Office MIS.
+4. **Tax, Debt & Analyzers**: Union Budget Revised Tax Regime Hub (Section 87A rebate & bracket creep), Loan EMI & Prepayment Simulator, HRA Exemption Math, AMFI Mutual Funds Screener, Debt Funds Yield Curve, Rent vs Buy 30-Year Actuarial Engine, and Decision Replay Counterfactual Simulator.
 
-### 4. 🗂️ Portfolio Allocator & Multi-Format Statement Parser
-* **Broker Statement Uploader**: Supports drag-and-drop uploading of **PDF, Excel (XLSX/XLS), and CSV** statements exported from popular brokers (e.g. Groww, Zerodha, CAMS).
-* **Structured Column Mapping**: Automatically scans and maps column headers like `Units`, `Invested Value`, and `Current Value` to extract values directly, preserving precise valuations down to the penny.
-* **Direct Classification Extraction**: Maps `Category` and `Sub-category` columns from uploaded sheets directly as the asset class and sector. This aligns the split charts and diversification scores with your custom spreadsheet definitions.
-* **Prefix-Based Matching Heuristics**: Compares sheet entries against local cached AMFI schemes using prefix-based intersection, resolving matches despite spelling variations, hyphens, or spacing.
-* **Specificity & Word-Length Constraints**: 
-  * Short words (3 letters or less, like `cap` or `mid`) must be exact matches to prevent collisions.
-  * Preserves 2-letter AMC brand names (like `JM` or `NJ`).
-  * Resolves multi-match collisions by calculating `specificity` (intersection / AMFI words) and using the shortest cleaned name as a tie-breaker.
-* **Folio Number Filtering**: Automatically filters out large integers representing folio or account numbers, preventing them from contaminating units or valuation calculations.
-* **Interactive Dashboard**: Displays total principal invested, current market valuations, net P&L absolute amount/return percentages, and dynamic allocation weight percentages.
+---
 
-### 5. 🪙 Calculators & Planners Suite (with Math Audits)
-* **Calculation Transparency Panels**: Every calculator features a collapsible **"How This is Calculated & Excel Replication"** section displaying math formulas, variables, and step-by-step Excel/Google Sheets functions (e.g. `PMT`, `FV`).
-* **Multi-Frequency SIP Simulator**: Supports **Daily, Weekly, Monthly, Quarterly, and Yearly** SIP investing intervals with dynamic slider ranges, period-compounding calculations, and dynamically generated spreadsheet replication formulas.
-* **13 New Inflation-Adjusted Calculators**:
-  * **SSY (Sukanya Samriddhi Yojana)**: Models 21-year sovereign savings for girl children under the 8.2% tax-free rate.
-  * **EPF (Employee Provident Fund)**: Simulates 12% employee/employer splits, EPS ₹1,250 caps, annual pay raises, and discounts the final corpus.
-  * **RD (Recurring Deposit)**: Standard bank recurring deposits compounded quarterly.
-  * **ROI & CAGR**: Calculates absolute yields and compound annual growth rate with inflation-discounted real CAGRs.
-  * **HRA Exemption**: Calculates Section 10(13A) tax exemptions and projects rent inflation vs. salary appraisal efficiency.
-  * **NSC (National Savings Certificate)**: Compounding savings under the 7.7% rate with Year 1-4 Section 80C reinvested tax deductions.
-  * **Advanced Income Tax**: Old vs. New slabs comparison side-by-side with a **Bracket Creep Simulator** demonstrating how inflation-matching pay rises hike your real tax rate.
-  * **Gratuity**: Calculates gratuity benefits under the Payment of Gratuity Act and discounts future payouts.
-  * **APY (Atal Pension Yojana)**: Maps official contributions and maps the post-retirement fixed pension decay under inflation.
-  * **TDS**: Computes transactional tax deductions, limits, and PAN card missing penalty rates.
-  * **POMIS (Post Office Monthly Income Scheme)**: Models the erosion of both flat monthly interest income and the principal returned at 5 years.
-  * **XIRR (Extended Internal Rate of Return)**:
-    * **Brent-Dekker Robust Numerical Solver**: Solves irregular, non-periodic cash flows using an industry-grade Brent-Dekker root finding engine with multi-point logarithmic grid bracketing ($[-0.999999, +10000.0]$) to eliminate numerical divergence, NaN anomalies, and zero-derivative traps.
-    * **Interactive Series & Count Multiplier (`× [count]`)**: Supports One-off, Monthly, Quarterly, Half-Yearly, and Yearly cash flows with dedicated multiplier counters and real-time subtext summaries (e.g. `12 payments Invested • ₹12L total • Sep 2025 to Aug 2026`).
-    * **Default SIP-First Onboarding**: Directly loads into Quick SIP mode for effortless SIP return calculations, with a seamless toggle to granular custom cash flow series.
-    * **Nominal vs. Real Yields & Responsive UI**: Displays both nominal XIRR and inflation-adjusted real returns alongside dynamic invested-to-gain ratio progress bars, fully responsive across mobile and desktop.
-* **Loan EMI & Prepayment Simulator**: Calculate monthly EMIs and simulate interest savings/tenure reduction from extra monthly/annual prepayments.
-* **Emergency Fund & Liquid Runway Planner**: Determine risk-adjusted emergency reserve targets based on job sector stability and family dependent buffers.
-* **FIRE Early Retirement Simulator**: Simulate lean/fat early retirement target corpuses using safe withdrawal rate (SWR) rules and calculate required monthly bridging SIPs.
-* **SWP Planner**: Simulate Systematic Withdrawal Plans (SWP) to design sustainable retirement cash flows, highlighting safe withdrawal rates (4% rule) and sequence of returns risk.
-* **Goal & Retirement Planners**: Plot future corpus requirements factoring in inflation, annual escalations, and target maturity horizons.
-* **NPS & PPF Simulators**: Run returns compounding models for public pension and provident schemes.
-* **Universal PDF Payout Download**: Features a responsive **"Download PDF"** button on every calculator page that utilizes custom print CSS styles. Hides interactive menus, sidebars, and input sliders to save clean, structured A4 PDF report files to phone or desktop.
-* **Macroeconomic Benchmarks**: Displays active G-Sec 10Y yields and baseline CPI inflation rates sourced dynamically.
+## 🌟 Core Engines & Flagship Capabilities
 
-### 6. ⚖️ Tax Regime Hub (Union Budget 2025)
-* **Budget 2025 Slabs**: Completely aligned with the revised **New Tax Regime** slabs for FY 2025-26 & FY 2026-27:
+### 1. 🧬 Financial DNA Diagnostic Engine
+* **8 Deterministic Pillars**: Evaluates personal financial resilience across:
+  1. *Emergency Runway* (Months of living expenses buffered)
+  2. *Needs-to-Income Ratio* (Essential survival expense burn rate)
+  3. *Wants Velocity* (Discretionary consumption discipline)
+  4. *Debt-to-Income (DTI)* (EMI serviceability and debt drag)
+  5. *Term Insurance Adequacy* (Income replacement coverage ratio)
+  6. *Health Cover Buffer* (Medical contingency protection)
+  7. *Equity Allocation Velocity* (Age-adjusted wealth compounding rate)
+  8. *Longevity Horizon* (Retirement corpus runway vs life expectancy)
+* **Objective Math**: 0-100 scientific score generated without subjective human bias or advisory commission kickbacks.
+* **Prescriptive Action Blueprint**: Outputs pinpoint vulnerability warnings and specific step-by-step mathematical remedies.
+
+### 2. 🎯 GoalX — Multi-Goal Priority Planner
+* **Multi-Tier Goal Matrix**: Categorizes life milestones into **Must-Have** (Retirement, Children's Education), **Good-to-Have** (Home Upgrade, Vehicle), and **Dream Goals** (Vacations, Luxury).
+* **Category-Specific Inflation Modeling**: Applies realistic annualized inflation escalators (e.g. 10%–12% for higher education and healthcare vs 6% general CPI).
+* **Automated Monthly SIP Distributor**: Solves optimal capital allocation across concurrent life goals within a fixed monthly savings budget.
+* **Goal Probability Modeling**: Evaluates milestone success likelihood under varying equity and debt return distributions.
+
+### 3. ⏪ Decision Replay — Financial Counterfactual Time Machine
+* **Opportunity Cost Counterfactual Engine**: Simulates what would have happened if money spent on consumer purchases (new car, flagship smartphone, luxury lifestyle upgrades) had instead been invested in equity index funds or compounding SIPs.
+* **Historical Asset Divergence**: Compares asset depreciation curves against Nifty 50 TRI performance, dividend reinvestments, and real purchasing power growth.
+* **Financial Regret Index**: Calculates the true lifetime opportunity cost of lifestyle inflation.
+
+### 4. 🏠 Rent vs Buy — 30-Year Actuarial Decision Engine
+* **Comprehensive 30-Year Lifecycle Math**: Compares the total financial impact of purchasing real estate versus renting over identical horizons.
+* **Real Estate Ownership Dynamics**: Models upfront down payments, registration and stamp duty (6%–8%), 30-year home loan EMI amortization schedules, property taxes, recurring maintenance, and localized capital appreciation.
+* **Renting & Index Investment Dynamics**: Models realistic rent escalation (5%–8% annually) alongside the compound growth of the down payment and monthly cash flow differentials invested in diversified equity index funds.
+* **Crossover Inflection Analysis**: Pinpoints the exact net worth crossover inflection year between buying and renting.
+
+### 5. ⚖️ SIP vs FD Head-to-Head Comparative Simulator
+* **Live Macro Benchmark Sourcing**: Integrates real-time Reserve Bank of India (RBI) repo rates (6.50%) and 10-Year Government Securities (G-Sec) benchmark yields (6.80%–7.10%).
+* **Tax-Bracket Drag Analysis**: Directly computes post-tax fixed income returns under 10%, 20%, and 30% marginal income tax slabs versus Equity Long Term Capital Gains (LTCG 12.5% above ₹1.25 Lakhs exemption).
+* **Inflation-Discounted Real Corpus**: Visualizes both nominal wealth and real purchasing-power-adjusted wealth curves side-by-side.
+* **Senior Citizen Bonus**: Includes senior citizen interest rate premium (+0.50%) toggle with quarterly compounding accuracy.
+
+### 6. 🤖 Vaathi (வாத்தி) — Enterprise Financial AI Mentor
+* **Single-Pass 1-Call LLM Execution**: Sub-second (~0.6s) response latency by eliminating multi-turn tool-calling overhead, reducing API token costs by **80%**.
+* **0-Token Pre-LLM Guardrail Interceptor**: Edge-level classifier that filters non-financial or malicious prompts at 0 token cost and 0ms latency.
+* **Zero-Latency Semantic Response Cache**: Instant responses for frequently asked financial queries with 0ms network lag.
+* **Zero-Downtime Multi-Model Failover**: Seamless automatic failover across **Llama 3.1 8B Instant**, **Llama 3.3 70B Versatile**, and **Google Gemini Flash**.
+* **25+ Bound Financial Solvers**: Directly bound to internal mathematical solvers (SIP, FIRE, CAGR, XIRR, Union Budget Slabs) with fallback parameter safeguards against `₹0` output anomalies.
+
+### 7. 📈 Brent-Dekker Numerical XIRR Engine
+* **Numerical Root Finding**: Implements an industry-grade Brent-Dekker algorithm combining bisection, secant, and inverse quadratic interpolation methods.
+* **Multi-Point Logarithmic Grid Bracketing**: Uses logarithmic bracket searches across $[-0.999999, +10000.0]$ to eliminate divergence, zero-derivative traps, and NaN exceptions on irregular cash flows.
+* **Interactive Series Multiplier (`× [count]`)**: One-off, Monthly, Quarterly, Half-Yearly, and Yearly recurring cash flow inputs with dedicated multiplier counters and live date range subtexts.
+* **Nominal vs Real Yields**: Calculates inflation-adjusted real XIRR alongside nominal annualized yields.
+
+### 8. 📊 AMFI Mutual Funds Screener & Detail Analyzer
+* **Official Daily NAV Integration**: Sourced directly from the official **Association of Mutual Funds in India (AMFI)** master database.
+* **Risk & Performance Analytics**: Evaluates 1Y, 3Y, 5Y CAGR, annualized Volatility (Standard Deviation), Sharpe Ratios, and Sortino Ratios.
+* **Rebased Interactive Charts**: Normalizes fund NAV history against benchmark indices on a common baseline of `100` for apples-to-apples visual comparison.
+* **Direct vs Regular TER Drag**: Calculates total wealth lost to distributor commissions over 10-30 year investing horizons.
+* **0ms Local Cache Search**: Word-tokenized client-side search engine matching scheme names in any token order instantaneously.
+
+### 9. 🗂️ Portfolio Intelligence & Statement Parser
+* **Multi-Format Ingestion**: Drag-and-drop parsing of PDF, Excel (XLSX/XLS), and CSV statements exported from Zerodha, Groww, CAMS, and KFintech.
+* **Prefix-Based Fuzzy Matching**: Matches uploaded holding names against AMFI master records despite variations, abbreviations, or missing spaces.
+* **Folio Number Sanitization**: Automatically filters out account and folio numbers to prevent contamination of unit counts and valuations.
+* **Asset Allocation & Overlap Analysis**: Quantifies category overlap, equity market-cap tilts (Large, Mid, Small Cap), and portfolio drawdown stress resistance.
+
+### 10. 🛡️ Sikkanam-Style Security OS & In-App Passcode Vault
+* **Client-Side Encrypted Digital Twin Vault**: AES-GCM 256-bit client-side encryption storing user financial records with zero-knowledge architecture.
+* **4-Digit In-App Tactile Passcode Lock**: Custom telephone-style numeric keypad with tactile audio/vibration feedback, PBKDF2/SHA-256 client-side hashing, and multi-user session state isolation.
+* **1-Click Google OAuth & Cloud Sync**: Supabase-powered authentication with automatic session restoration and cross-device syncing of Financial DNA and GoalX profiles.
+* **Session Guard**: Automatic session locking upon inactivity or app backgrounding.
+
+### 11. ⚖️ Tax Regime Hub (Union Budget Slabs)
+* **Budget Slabs**: Fully aligned with the revised **New Tax Regime** slabs:
   * Up to ₹4 Lakhs: NIL
   * ₹4L to ₹8L: 5%
   * ₹8L to ₹12L: 10%
@@ -78,29 +96,104 @@
   * ₹16L to ₹20L: 20%
   * ₹20L to ₹24L: 25%
   * Above ₹24L: 30%
-* **Standard Deductions**: Formulated to use the default **₹75,000** standard deduction for the New Regime and **₹50,000** for the Old Regime.
-* **Section 87A Rebate**: Rebates tax fully up to a taxable income of **₹12,00,000**, meaning salaried individuals earning up to **₹12.75 Lakhs** pay zero tax.
-* **Switch Guidelines Panel**: Explains the rules for switching regimes annually (for salaried individuals) versus once-in-a-lifetime (for business/professional income).
+* **Section 87A Rebate & Standard Deduction**: Salaried individuals earning up to **₹12.75 Lakhs** pay zero tax (₹12L income rebate + ₹75,000 standard deduction).
+* **Bracket Creep Simulator**: Quantifies how nominal salary increments push taxpayers into higher effective tax brackets when tax slabs are not indexed to inflation.
+* **HRA & TDS Calculators**: Section 10(13A) exemption optimization and TDS rate deductor with missing PAN penalty rate math.
 
-### 7. 📚 Beyond FDs & Learning Hub
-* Educational reference guides describing debt instruments, credit risk structures, interest rate mechanics, and yields.
+### 12. 📱 Progressive Web App (PWA) 2.0
+* **Direct Install Action**: Dedicated native browser PWA install trigger (`[⬇]`) on mobile and desktop headers.
+* **Uninstallation Detection**: Integrates `navigator.getInstalledRelatedApps()` to reactively clear stale cache upon app uninstallation.
+* **Offline Service Worker**: `/sw.js` caching enabling sub-second app loading and offline calculator access.
+
+---
+
+## 🎨 Universal High-Contrast Visual Design & Theme System
+
+* **Universal WCAG AA Compliance**: Meticulously designed high-contrast typography in both Dark Mode and Light Mode. Deep Slate-900 / Slate-800 text in light mode guarantees zero washed-out or unreadable characters.
+* **Zero Hardcoded Dark Blocks**: Every route across the platform (`/portfolio-intelligence`, `/decision-replay`, `/rent-vs-buy`, etc.) dynamically adapts to the selected theme.
+* **ValarchiX Squircle Brand Emblem**: Custom squircle brand mark with radiant emerald gradients, subtle obsidian borders, and tactile spring feedback (`active:scale-95`).
+* **Non-Inverting Navigation Menus**: Dropdown menu icon containers render with tinted badges and smooth scale animations, preventing dark blob artifacts on hover.
+* **Responsive 6-Tab Bottom Navigation**: Tailored mobile navigation bar (`Home`, `Engines`, `Tools`, `Calc`, `Vaathi`, `Profile`) designed for single-thumb mobile ergonomics with zero text clipping.
+
+---
+
+## 📜 Full Release Chronicle & Version History
+
+### 🚀 v2.6.1 (Current Live Release) — September 2026
+* **SIP vs FD Head-to-Head Comparative Simulator**: Real-time RBI repo rate (6.50%) & G-Sec yield benchmarking, tax-bracket drag modeling (10%/20%/30%), and senior citizen bonuses.
+* **Additional AMC Factsheets Vault (48 AMCs)**: One-click access to official monthly factsheets, scheme portfolio documents, and statutory disclosures for 48 Indian mutual fund houses with 5-pillar fund selection rules.
+* **Prudent 7.0% Baseline Inflation Default**: Universally calibrated 7.00% realistic Indian household baseline inflation default across all calculators and `/api/rates`, with real-time manual user controls.
+* **Universal UI Improvements & Contrast Architecture**: Universal WCAG AA contrast compliance across both Light and Dark themes, zero hardcoded dark blocks, radiant squircle brand mark, non-inverting dropdown badges, and responsive 6-tab mobile bottom navigation.
+
+### 🛡️ v2.5.0 — August 2026
+* **Sikkanam-Style Security OS**: AES-GCM 256-bit encrypted client-side Digital Twin Vault with zero-knowledge architecture.
+* **4-Digit In-App Passcode Lock**: Telephone-style numeric keypad with PBKDF2/SHA-256 client-side PIN hashing and session timeout triggers.
+* **Google OAuth & Cloud Sync**: Seamless 1-click authentication via Supabase with automatic session recovery and cloud profile synchronization.
+* **Progressive Web App (PWA) 2.0**: Native desktop & mobile install triggers with uninstallation detection and offline caching.
+
+### 🧬 v2.3.0 — July 2026
+* **Financial DNA Diagnostic Engine**: 8 deterministic mathematical pillars assessing Emergency Buffer, Needs, Wants, DTI, Insurance Adequacy, Equity Velocity, and Longevity.
+* **GoalX Multi-Tier Goal Planner**: Must-Have, Good-to-Have, and Dream goal priority matrix with inflation escalators and automated SIP allocation.
+* **Portfolio Intelligence**: Asset allocation diagnostics, equity style tilts, and historical stress-testing.
+* **Beyond Fixed Deposits Masterclass**: Educational module on inflation decay, real negative yields, and purchasing power preservation.
+
+### ⏪ v2.0.0 — June 2026
+* **Decision Replay (Financial Time Machine)**: Historical counterfactual simulator measuring the opportunity cost of past consumer spending vs index compounding.
+* **Rent vs Buy Actuarial 30-Year Engine**: Comprehensive capital allocation model comparing property ownership vs renting + index fund compounding.
+* **Brent-Dekker Robust XIRR Solver**: Numerical root-finder with multi-point logarithmic grid bracketing ($[-0.999999, +10000.0]$) and recurring cash flow multipliers (`× [count]`).
+* **Debt Funds & Yield Curve Analyzer**: Yield to Maturity (YTM), Macaulay Duration, Modified Duration, and interest rate cycle sensitivity.
+* **HLV & Child Legacy Planners**: Human Life Value term insurance calculator and higher education escalating inflation planner.
+
+### 📊 v1.8.0 — May 2026
+* **Official AMFI Master NAV Database**: Direct integration with AMFI daily master database and 0ms tokenized search engine.
+* **Mutual Fund Risk & Performance Analytics**: 1Y, 3Y, 5Y CAGR, Volatility, Sharpe Ratio, and Sortino Ratio analytics with rebased historical benchmark comparisons.
+* **Direct vs Regular TER Drag Calculator**: Quantified the compound wealth lost to distributor commissions.
+* **Multi-Format Broker Statement Parser**: Drag-and-drop parsing of PDF, Excel, and CSV statements from Zerodha, Groww, and CAMS with fuzzy matching.
+
+### ⚖️ v1.5.0 — April 2026
+* **Union Budget Revised Tax Regime Hub**: Side-by-side comparison of revised New Tax Regime slabs (FY 2025-26 & FY 2026-27), Section 87A rebate math, and bracket creep simulator.
+* **Sovereign Pension & Savings Suite**: Simulators for SSY (8.2%), EPF (12% splits & ₹1,250 EPS cap), PPF (7.1%), NPS (Tier I/II), NSC (7.7%), and POMIS (7.4%).
+* **FIRE & SWP Early Retirement Models**: Safe Withdrawal Rate (4% SWR) and sequence-of-returns risk visualization.
+* **Tax Deductions & Exemption Math**: Section 10(13A) HRA optimizer, Gratuity calculator, and TDS deductor.
+
+### 🤖 v1.2.0 — March 2026
+* **Vaathi (வாத்தி) Financial AI Mentor**: Single-Pass Sub-Second LLM Execution (~0.6s latency) reducing token overhead by 80%.
+* **0-Token Pre-LLM Guardrail Interceptor**: Edge-level classifier rejecting non-financial queries at 0 token cost.
+* **Zero-Latency Semantic Response Cache**: Instantaneous responses for common financial definitions.
+* **Resilient Multi-Model Failover**: Automatic routing across Llama 3.1 8B Instant, Llama 3.3 70B, and Google Gemini Flash.
+* **25+ Bound Financial Solvers**: Custom mathematical solvers with parameter safeguards against `₹0` anomalies.
+
+### 🪙 v1.0.0 (Genesis) — February 2026
+* **Birth of ValarchiX**: Established guiding mission: «We don't tell what to pick, we tell how to pick».
+* **Foundational Compounding Engines**: Multi-frequency SIP (Daily, Weekly, Monthly, Quarterly, Yearly), Lumpsum Compound Interest with RBI quarterly compounding rules, and Step-Up SIP.
+* **Fixed Income Simulators**: Bank Fixed Deposit (FD) and Recurring Deposit (RD) compounding simulators.
+* **Loan Amortization**: Home & Personal Loan EMI simulator with principal vs interest split and prepayment acceleration math.
+* **Formula Transparency Panels**: Mathematical proofs and Google Sheets formula replication (`FV`, `PMT`, `RATE`).
 
 ---
 
 ## 🛠️ Technology Stack
 
-* **Framework**: [Next.js (App Router)](https://nextjs.org/) (force-dynamic server rendering for daily updates)
-* **Language**: [TypeScript](https://www.typescriptlang.org/) (strict type-safe financial schemas)
+* **Framework**: [Next.js (App Router)](https://nextjs.org/) (force-dynamic server rendering for daily rates & AMFI master NAV updates)
+* **Language**: [TypeScript](https://www.typescriptlang.org/) (strict type-safe financial models and actuarial schemas)
+* **Authentication & Vault**: [Supabase](https://supabase.com/) (Google OAuth 2.0, session recovery, AES-GCM 256-bit encrypted client-side storage)
 * **PWA & Offline Engine**: Service Workers (`/sw.js`), Web App Manifest, real-time `getInstalledRelatedApps` & `beforeinstallprompt` status tracking
 * **AI Orchestration**: [LangChain](https://www.langchain.com/) & custom Single-Pass Tool-Binding Pipeline
 * **LLM Engine**: Groq ([Llama 3.1 8B Instant](https://groq.com/) / Llama 3.3 70B) & Google Gemini ([Gemini Flash](https://ai.google.dev/)) with dynamic automated failover
-* **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) (dynamic Dark/Light theme switching support)
-* **Charts**: [Recharts](https://recharts.org/) (smooth vector graphs, tooltips, and legends)
-* **Icons**: [Lucide React](https://lucide.dev/) (consistent design elements)
+* **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) (Universal WCAG AA compliance, dark/light theme tokens, responsive layouts)
+* **Mathematical Solvers**: Custom Brent-Dekker numerical solver, quarterly compounding algorithms, and actuarial cash flow engines
+* **Charts**: [Recharts](https://recharts.org/) (smooth vector graphs, rebased line charts, dynamic tooltips, and legends)
+* **Icons**: [Lucide React](https://lucide.dev/) (consistent design system)
 
 ---
 
 ## 🔒 Legal Disclaimer & SEBI Positioning
-valarchiX is built solely as an interactive simulator to help users understand business economics, tax regimes, compounding mathematics, and mutual fund valuation metrics. The platform never issues buy, sell, or hold recommendations for any security or asset class. valarchiX is not a registered investment advisor with SEBI. Always seek the services of a certified financial planner, tax consultant, or SEBI-registered investment advisor before making real-world investments. 
 
-Read our full disclosures at `/disclaimer`.
+**ValarchiX** is built strictly as an interactive educational simulator to help individuals understand business economics, compounding mathematics, taxation regimes, and portfolio analytics. 
+
+* ValarchiX never issues buy, sell, or hold recommendations for any stock, mutual fund, or asset class.
+* ValarchiX is not a registered investment advisor or research analyst with SEBI.
+* All calculations, projections, and simulations are for educational purposes only.
+* Always consult a certified financial planner, tax consultant, or SEBI-registered investment advisor before making real-world investment decisions.
+
+Read our complete legal disclosures at `/disclaimer`.

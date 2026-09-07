@@ -191,45 +191,45 @@ export default function RentVsBuyPage() {
 
           {/* Property Type Tabs */}
           <div>
-            <div className="text-xs font-semibold text-slate-400 uppercase mb-2">PROPERTY TYPE</div>
+            <div className="text-xs font-semibold text-muted-grey uppercase mb-2">PROPERTY TYPE</div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={() => setPropertyType("ready")}
-                className={`p-3 rounded-2xl border text-left transition ${
+                className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
                   propertyType === "ready"
-                    ? "bg-emerald-950/80 border-emerald-500 text-white"
-                    : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                    ? "bg-emerald/15 border-emerald text-heading font-bold shadow-sm"
+                    : "bg-navy-bg border-border-navy text-muted-grey hover:border-border-subtle"
                 }`}
               >
                 <div className="font-bold text-sm">Ready / Resale</div>
-                <div className="text-xs text-emerald-400 font-semibold mt-0.5">GST 0%</div>
-                <div className="text-[10px] text-slate-500 mt-1">GST exempt — completion certificate received</div>
+                <div className="text-xs text-emerald font-semibold mt-0.5">GST 0%</div>
+                <div className="text-[10px] text-muted-grey mt-1">GST exempt — completion certificate received</div>
               </button>
 
               <button
                 onClick={() => setPropertyType("under_construction")}
-                className={`p-3 rounded-2xl border text-left transition ${
+                className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
                   propertyType === "under_construction"
-                    ? "bg-emerald-950/80 border-emerald-500 text-white"
-                    : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                    ? "bg-emerald/15 border-emerald text-heading font-bold shadow-sm"
+                    : "bg-navy-bg border-border-navy text-muted-grey hover:border-border-subtle"
                 }`}
               >
                 <div className="font-bold text-sm">Under-construction</div>
-                <div className="text-xs text-emerald-400 font-semibold mt-0.5">GST 5%</div>
-                <div className="text-[10px] text-slate-500 mt-1">GST applies to under-construction property</div>
+                <div className="text-xs text-emerald font-semibold mt-0.5">GST 5%</div>
+                <div className="text-[10px] text-muted-grey mt-1">GST applies to under-construction property</div>
               </button>
 
               <button
                 onClick={() => setPropertyType("affordable")}
-                className={`p-3 rounded-2xl border text-left transition ${
+                className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
                   propertyType === "affordable"
-                    ? "bg-emerald-950/80 border-emerald-500 text-white"
-                    : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                    ? "bg-emerald/15 border-emerald text-heading font-bold shadow-sm"
+                    : "bg-navy-bg border-border-navy text-muted-grey hover:border-border-subtle"
                 }`}
               >
                 <div className="font-bold text-sm">Affordable</div>
-                <div className="text-xs text-emerald-400 font-semibold mt-0.5">GST 1%</div>
-                <div className="text-[10px] text-slate-500 mt-1">Under ₹45L value threshold</div>
+                <div className="text-xs text-emerald font-semibold mt-0.5">GST 1%</div>
+                <div className="text-[10px] text-muted-grey mt-1">Under ₹45L value threshold</div>
               </button>
             </div>
           </div>
@@ -237,10 +237,10 @@ export default function RentVsBuyPage() {
           {/* Upfront Cash Breakdown Table & Salary Needed Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Breakdown List */}
-            <div className="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-2 text-sm">
+            <div className="lg:col-span-6 bg-navy-bg border border-border-navy rounded-2xl p-5 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-400">Property Cost</span>
-                <span className="font-bold text-white">{formatINR(propertyPrice)}</span>
+                <span className="text-muted-grey">Property Cost</span>
+                <span className="font-bold text-heading">{formatINR(propertyPrice)}</span>
               </div>
               <div className="flex justify-between text-xs text-slate-400">
                 <span>+ Stamp Duty ({(calc.stampDutyRate * 100).toFixed(0)}%)</span>

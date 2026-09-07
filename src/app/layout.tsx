@@ -31,10 +31,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#081c3a",
+  themeColor: "#0b0f19",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -48,11 +47,29 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem('theme') || 'dark';
+                if (theme === 'light') {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.classList.add('light');
+                } else {
+                  document.documentElement.classList.add('dark');
+                  document.documentElement.classList.remove('light');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-navy-bg text-light-grey" suppressHydrationWarning>
         <Navigation />
         <div className="flex-1 flex flex-col min-w-0 w-full overflow-x-hidden">
           <AppLockGate>
-            <main className="flex-1 px-4 sm:px-6 md:px-8 lg:px-10 pt-4 sm:pt-6 pb-24 md:pb-12 max-w-[1680px] w-full mx-auto min-w-0 overflow-x-hidden">
+            <main className="flex-1 px-3 sm:px-6 md:px-8 lg:px-10 pt-3 sm:pt-6 pb-24 md:pb-12 max-w-[1680px] w-full mx-auto min-w-0 overflow-x-hidden">
               {children}
             </main>
           </AppLockGate>

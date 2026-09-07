@@ -37,6 +37,8 @@ import {
   ChevronRight,
   ChevronDown,
   Baby,
+  Scale,
+  GitCompare,
   Plane,
   Building,
   GraduationCap as BookIcon,
@@ -117,7 +119,9 @@ const NAV_ITEMS: NavGroup[] = [
   {
     category: "Wealth & Compounding",
     items: [
-      { name: "SIP & FD Simulator", href: "/sip", icon: Percent, desc: "Systematic investment plan compounding" },
+      { name: "SIP Simulator", href: "/sip", icon: Percent, desc: "Systematic investment plan compounding" },
+      { name: "Fixed Deposit (FD)", href: "/fd", icon: Landmark, desc: "Bank & corporate FD growth with 0%-30% tax slabs" },
+      { name: "SIP vs FD Comparison", href: "/sip-vs-fd", icon: Scale, desc: "Real purchasing power: Equity MF vs Bank FD" },
       { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight, desc: "Annual income increment compounding" },
       { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp, desc: "Exponential curve time simulator" },
       { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock, desc: "Wealth permanently lost by waiting" },
@@ -176,12 +180,12 @@ const ANALYZER_ITEMS = [
 ];
 
 const BOTTOM_TABS = [
-  { name: "Home", href: "/", icon: Home, type: "link" as const },
-  { name: "Engines", href: "#", icon: LayoutGrid, type: "drawer" as const },
-  { name: "Screeners", href: "#", icon: Layers, type: "drawer" as const },
-  { name: "Calculators", href: "#", icon: Calculator, type: "drawer" as const },
-  { name: "Vaathi", href: "/vaathi", icon: GraduationCap, type: "link" as const },
-  { name: "Profile", href: "/profile", icon: ShieldCheck, type: "link" as const },
+  { name: "Home", shortName: "Home", href: "/", icon: Home, type: "link" as const },
+  { name: "Engines", shortName: "Engines", href: "#", icon: LayoutGrid, type: "drawer" as const },
+  { name: "Screeners", shortName: "Tools", href: "#", icon: Layers, type: "drawer" as const },
+  { name: "Calculators", shortName: "Calc", href: "#", icon: Calculator, type: "drawer" as const },
+  { name: "Vaathi", shortName: "Vaathi", href: "/vaathi", icon: GraduationCap, type: "link" as const },
+  { name: "Profile", shortName: "Profile", href: "/profile", icon: ShieldCheck, type: "link" as const },
 ];
 
 export default function Navigation() {
@@ -357,12 +361,14 @@ export default function Navigation() {
           {/* Logo that navigates directly to Home Page */}
           <Link
             href="/"
-            className="flex items-center gap-3 group cursor-pointer text-left focus:outline-none shrink-0"
+            className="flex items-center gap-3 group cursor-pointer text-left focus:outline-none shrink-0 active:scale-95 transition-transform"
             title="ValarchiX Home"
           >
             <div className="relative">
-              <img src="/logo.svg" alt="ValarchiX" className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl shadow-sm group-hover:scale-105 transition-transform" />
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald border-2 border-navy-bg"></span>
+              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl overflow-hidden shadow-md ring-1 ring-border-navy/80 bg-slate-950 flex items-center justify-center group-hover:scale-105 group-hover:ring-emerald/40 transition-all duration-200">
+                <img src="/logo.svg" alt="ValarchiX" className="h-full w-full object-contain" />
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald ring-2 ring-navy-bg"></span>
             </div>
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-black tracking-tight text-heading flex items-center gap-1 group-hover:text-emerald transition-colors">
@@ -390,7 +396,7 @@ export default function Navigation() {
               </button>
 
               {openDropdown === "goals" && (
-                <div className="absolute top-full left-0 mt-1.5 w-[440px] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50">
+                <div className="absolute top-full left-0 mt-1.5 w-[440px] max-w-[calc(100vw-2rem)] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50">
                   <div className="grid grid-cols-2 gap-2">
                     {FUNDSINDIA_GOALS.map((item) => {
                       const Icon = item.icon;
@@ -401,7 +407,7 @@ export default function Navigation() {
                           onClick={() => setOpenDropdown(null)}
                           className="flex items-center gap-3 p-3 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
                         >
-                          <div className="p-2 rounded-xl bg-emerald/10 text-emerald group-hover:bg-emerald group-hover:text-slate-950 transition shrink-0">
+                          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald border border-emerald-500/20 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all shrink-0">
                             <Icon size={18} />
                           </div>
                           <div>
@@ -434,7 +440,7 @@ export default function Navigation() {
               </button>
 
               {openDropdown === "engines" && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[520px] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50 space-y-2.5">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[520px] max-w-[calc(100vw-2rem)] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50 space-y-2.5">
                   <div className="grid grid-cols-2 gap-2">
                     {engineItems.map((item) => {
                       const Icon = item.icon;
@@ -445,7 +451,7 @@ export default function Navigation() {
                           onClick={() => setOpenDropdown(null)}
                           className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
                         >
-                          <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition shrink-0 mt-0.5">
+                          <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 group-hover:scale-110 group-hover:bg-indigo-500/20 transition-all shrink-0 mt-0.5">
                             <Icon size={17} />
                           </div>
                           <div>
@@ -464,8 +470,8 @@ export default function Navigation() {
                     onClick={() => setOpenDropdown(null)}
                     className="flex items-center gap-3 p-3 rounded-2xl bg-emerald/10 border border-emerald/20 hover:bg-emerald/15 transition group cursor-pointer"
                   >
-                    <div className="p-2 rounded-xl bg-emerald text-slate-950 transition shrink-0">
-                      <GraduationCap size={18} />
+                    <div className="p-2.5 rounded-xl bg-emerald text-slate-950 font-bold transition-transform group-hover:scale-110 shrink-0">
+                      <GraduationCap size={18} className="text-slate-950" />
                     </div>
                     <div>
                       <div className="text-xs sm:text-sm font-black text-emerald transition">
@@ -496,7 +502,7 @@ export default function Navigation() {
               </button>
 
               {openDropdown === "analyzers" && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[560px] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50 space-y-2.5">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[560px] max-w-[calc(100vw-2rem)] rounded-3xl mega-menu-dropdown p-4 shadow-2xl animate-slideDown z-50 space-y-2.5">
                   <div className="flex items-center justify-between px-2 pb-1 border-b border-border-navy/60">
                     <span className="text-xs font-black uppercase tracking-wider text-heading flex items-center gap-1.5">
                       <Layers size={14} className="text-emerald" />
@@ -517,7 +523,7 @@ export default function Navigation() {
                           onClick={() => setOpenDropdown(null)}
                           className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-navy-light transition group cursor-pointer"
                         >
-                          <div className={`p-2 rounded-xl ${item.bg} ${item.color} group-hover:scale-105 transition shrink-0 mt-0.5`}>
+                          <div className={`p-2.5 rounded-xl ${item.bg} ${item.color} border border-border-navy/60 group-hover:scale-110 transition-transform shrink-0 mt-0.5`}>
                             <Icon size={17} />
                           </div>
                           <div>
@@ -550,7 +556,7 @@ export default function Navigation() {
               </button>
 
               {openDropdown === "calculators" && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[940px] max-w-[95vw] rounded-3xl mega-menu-dropdown p-5 shadow-2xl animate-slideDown z-50">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[940px] max-w-[calc(100vw-2rem)] rounded-3xl mega-menu-dropdown p-5 shadow-2xl animate-slideDown z-50">
                   <div className="grid grid-cols-4 gap-4">
                     
                     {/* Column 1: Wealth & Compounding */}
@@ -561,6 +567,8 @@ export default function Navigation() {
                       <div className="space-y-0.5">
                         {[
                           { name: "SIP & FD Simulator", href: "/sip", icon: Percent },
+                          { name: "SIP vs FD Comparison", href: "/sip-vs-fd", icon: Scale },
+                          { name: "Fixed Deposit (FD)", href: "/fd", icon: Landmark },
                           { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight },
                           { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp },
                           { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock },
@@ -937,8 +945,8 @@ export default function Navigation() {
                 }`}
               >
                 <Icon size={18} className="sm:w-5 sm:h-5 shrink-0" strokeWidth={isActive || isDrawerOpen ? 2.5 : 1.8} />
-                <span className="text-[10px] sm:text-[11px] font-bold truncate max-w-full text-center leading-tight">
-                  {tab.name}
+                <span className="text-[10px] sm:text-[11px] font-bold text-center leading-tight whitespace-nowrap">
+                  {tab.shortName || tab.name}
                 </span>
               </button>
             );
@@ -989,7 +997,7 @@ export default function Navigation() {
                           : "card-tile-neutral hover:bg-navy-light"
                       }`}
                     >
-                      <div className={`p-2.5 rounded-xl ${isActive ? "bg-slate-950/15 text-slate-950" : "bg-indigo-500/10 text-indigo-400"} shrink-0 mt-0.5`}>
+                      <div className={`p-2.5 rounded-xl ${isActive ? "bg-slate-950/15 text-slate-950" : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"} shrink-0 mt-0.5`}>
                         <Icon size={20} />
                       </div>
                       <div className="min-w-0">
@@ -999,7 +1007,9 @@ export default function Navigation() {
                           </span>
                           {item.badge && (
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                              isActive ? "bg-slate-950 text-emerald" : "bg-indigo-950 text-indigo-300"
+                              isActive 
+                                ? "bg-slate-950 text-emerald" 
+                                : "bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50"
                             }`}>
                               {item.badge}
                             </span>
@@ -1078,6 +1088,8 @@ export default function Navigation() {
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       { name: "SIP & FD", href: "/sip", icon: Percent },
+                      { name: "SIP vs FD", href: "/sip-vs-fd", icon: Scale },
+                      { name: "Fixed Deposit", href: "/fd", icon: Landmark },
                       { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight },
                       { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp },
                       { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock },

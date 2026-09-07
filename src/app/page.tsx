@@ -27,7 +27,8 @@ import {
   Zap,
   Sparkles,
   ChevronRight,
-  Baby
+  Baby,
+  Scale
 } from "lucide-react";
 import { formatINR, formatINRWords } from "@/lib/engine/numeric";
 
@@ -35,12 +36,14 @@ const SUITE_CATEGORIES = [
   {
     id: "wealth",
     title: "Wealth & Compounding",
-    badge: "8 Tools",
-    color: "text-emerald",
-    bg: "bg-emerald/10 border-emerald/30",
+    badge: "10 Tools",
+    color: "text-emerald-700 dark:text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800",
     desc: "Exponential growth, SIP step-up solvers, and irregular cash flow metrics.",
     items: [
-      { name: "SIP & FD Simulator", href: "/sip", icon: Percent, desc: "Systematic monthly investing compounding" },
+      { name: "SIP Simulator", href: "/sip", icon: Percent, desc: "Systematic monthly investing compounding" },
+      { name: "Fixed Deposit (FD)", href: "/fd", icon: Landmark, desc: "Bank & corporate FD growth with 0%-30% tax slabs" },
+      { name: "SIP vs FD Comparison", href: "/sip-vs-fd", icon: Scale, desc: "Real purchasing power: Equity MF vs Bank FD" },
       { name: "Step Up SIP", href: "/step-up-sip", icon: ArrowUpRight, desc: "Annual income increment compounding" },
       { name: "Compound Interest", href: "/compound-interest", icon: TrendingUp, desc: "Exponential curve time simulator" },
       { name: "Cost of Delay", href: "/cost-of-delay", icon: Clock, desc: "Wealth permanently lost by waiting" },
@@ -54,8 +57,8 @@ const SUITE_CATEGORIES = [
     id: "budgeting",
     title: "Budgeting & Daily Cash Flow",
     badge: "8 Tools",
-    color: "text-teal-400",
-    bg: "bg-teal-500/10 border-teal-500/30",
+    color: "text-teal-700 dark:text-teal-400",
+    bg: "bg-teal-50 dark:bg-teal-950/60 border-teal-300 dark:border-teal-800",
     desc: "Leakage detection, emergency buffer shields, and loan payoff plans.",
     items: [
       { name: "Latte Factor Spends", href: "/latte-factor", icon: Coffee, desc: "Small daily leak compounding to wealth" },
@@ -72,8 +75,8 @@ const SUITE_CATEGORIES = [
     id: "retirement",
     title: "Retirement & Sovereign Schemes",
     badge: "8 Tools",
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10 border-indigo-500/30",
+    color: "text-indigo-700 dark:text-indigo-400",
+    bg: "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-800",
     desc: "Government-backed sovereign compounding and retirement drawdown plans.",
     items: [
       { name: "PPF (15-Yr Sovereign)", href: "/ppf", icon: Coins, desc: "15-year tax-free government compounding" },
@@ -90,8 +93,8 @@ const SUITE_CATEGORIES = [
     id: "tax",
     title: "Tax, Debt & Analyzers",
     badge: "8 Tools",
-    color: "text-amber-400",
-    bg: "bg-amber-500/10 border-amber-500/30",
+    color: "text-amber-700 dark:text-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-800",
     desc: "Direct tax regime optimization, fund screeners, and loan amortizations.",
     items: [
       { name: "Tax Regime Hub (Old vs New)", href: "/tax", icon: Calculator, desc: "Comparative deduction & surcharge math" },
@@ -135,21 +138,21 @@ export default function HomePage() {
           HERO PRESENTATION SECTION
           ========================================================================= */}
       <section className="bg-navy-card border border-border-navy rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl relative overflow-hidden space-y-6">
-        <div className="absolute -top-24 -right-24 w-80 h-80 bg-emerald/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-emerald-500/5 dark:bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-500/5 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           {/* Left Column: Headline & CTAs */}
           <div className="lg:col-span-7 space-y-5">
-            <div className="inline-flex items-center gap-2 bg-emerald/10 border border-emerald/30 text-emerald px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
-              <Sparkles size={14} />
+            <div className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-sm">
+              <Sparkles size={14} className="text-emerald-600 dark:text-emerald-400" />
               <span>Next-Gen Financial Knowledge OS</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-heading tracking-tight leading-tight">
               Invest with clarity.<br />
-              Plan for your <span className="text-emerald">Financial DNA</span> &amp; Goals.
+              Plan for your <span className="text-emerald-700 dark:text-emerald-400 font-black">Financial DNA</span> &amp; Goals.
             </h1>
 
             <p className="text-sm sm:text-base text-muted-grey leading-relaxed">
@@ -183,35 +186,35 @@ export default function HomePage() {
 
           {/* Right Column: 3 Live Proof Pillars */}
           <div className="lg:col-span-5 space-y-3">
-            <div className="card-tile-neutral p-4 rounded-2xl border flex items-center justify-between">
+            <div className="card-tile-neutral p-4 rounded-2xl border flex items-center justify-between shadow-sm">
               <div>
                 <span className="text-[10px] text-muted-grey uppercase font-bold block">100% Client-Side Vault</span>
-                <h4 className="text-sm font-black text-emerald">₹0 Data Leakage Risk</h4>
+                <h4 className="text-sm font-black text-emerald-700 dark:text-emerald-400">₹0 Data Leakage Risk</h4>
                 <p className="text-[11px] text-muted-grey mt-0.5">AES-GCM 256-bit encrypted before storage</p>
               </div>
-              <span className="text-[10px] font-bold px-2 py-1 bg-emerald/10 text-emerald rounded-full border border-emerald/30">
+              <span className="text-[10px] font-bold px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-full border border-emerald-200 dark:border-emerald-800/60 shrink-0">
                 Zero-Knowledge
               </span>
             </div>
 
-            <div className="card-tile-neutral p-4 rounded-2xl border flex items-center justify-between">
+            <div className="card-tile-neutral p-4 rounded-2xl border flex items-center justify-between shadow-sm">
               <div>
                 <span className="text-[10px] text-muted-grey uppercase font-bold block">8 Deterministic Pillars</span>
-                <h4 className="text-sm font-black text-indigo-400">Scientific DNA Scoring</h4>
+                <h4 className="text-sm font-black text-indigo-700 dark:text-indigo-400">Scientific DNA Scoring</h4>
                 <p className="text-[11px] text-muted-grey mt-0.5">Emergency, needs, wants, term &amp; equity velocity</p>
               </div>
-              <span className="text-[10px] font-bold px-2 py-1 bg-indigo-500/10 text-indigo-400 rounded-full border border-indigo-500/30">
+              <span className="text-[10px] font-bold px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 rounded-full border border-indigo-200 dark:border-indigo-800/60 shrink-0">
                 Objective Math
               </span>
             </div>
 
-            <div className="card-tile-neutral p-4 rounded-2xl border flex items-center justify-between">
+            <div className="card-tile-neutral p-4 rounded-2xl border flex items-center justify-between shadow-sm">
               <div>
                 <span className="text-[10px] text-muted-grey uppercase font-bold block">56+ Calculators &amp; Engines</span>
-                <h4 className="text-sm font-black text-amber-500">Instant Financial Clarity</h4>
+                <h4 className="text-sm font-black text-amber-700 dark:text-amber-400">Instant Financial Clarity</h4>
                 <p className="text-[11px] text-muted-grey mt-0.5">Category inflation, step-up roadmaps &amp; tax hubs</p>
               </div>
-              <span className="text-[10px] font-bold px-2 py-1 bg-amber-500/10 text-amber-500 rounded-full border border-amber-500/30">
+              <span className="text-[10px] font-bold px-2.5 py-1 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 rounded-full border border-amber-200 dark:border-amber-800/60 shrink-0">
                 Full Suite
               </span>
             </div>

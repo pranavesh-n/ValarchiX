@@ -91,9 +91,9 @@ export default function NumericInput({
   const hasCustomWidth = className.includes("w-");
 
   return (
-    <div className={`flex items-center gap-1 bg-navy-bg/75 border border-border-navy/60 focus-within:border-emerald/60 rounded-lg px-2 py-1 text-xs text-emerald font-bold transition-all ${hasCustomWidth ? "" : "w-28 sm:w-32 md:w-36 shrink-0"} ${className}`}>
+    <div className={`flex items-center gap-1 bg-navy-bg border border-border-navy focus-within:border-emerald rounded-lg px-2 sm:px-2.5 py-1 text-xs text-emerald font-bold transition-all shadow-sm ${hasCustomWidth ? "" : "w-24 sm:w-28 md:w-36 shrink-0"} ${className}`}>
       {type === "currency" && (
-        <span className="text-muted-grey/60 text-[10px] sm:text-xs select-none shrink-0">₹</span>
+        <span className="text-muted-grey text-xs select-none shrink-0 font-bold">₹</span>
       )}
       <input
         type="text"
@@ -106,10 +106,10 @@ export default function NumericInput({
         className="w-full bg-transparent text-emerald font-mono font-bold text-right text-xs sm:text-sm outline-none min-w-0"
       />
       {type === "percent" && (
-        <span className="text-muted-grey/60 text-[10px] sm:text-xs ml-0.5 select-none shrink-0">%</span>
+        <span className="text-muted-grey text-xs ml-0.5 select-none shrink-0 font-bold">%</span>
       )}
       {type === "years" && (
-        <span className="text-muted-grey/60 text-[10px] sm:text-xs ml-0.5 select-none shrink-0">Yr{value !== 1 ? "s" : ""}</span>
+        <span className="text-muted-grey text-xs ml-0.5 select-none shrink-0 font-bold">Yr{value !== 1 ? "s" : ""}</span>
       )}
     </div>
   );
