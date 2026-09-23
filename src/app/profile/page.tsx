@@ -27,13 +27,16 @@ import {
   Award,
   TrendingUp,
   Layers,
-  Calendar
+  Calendar,
+  Eye
 } from "lucide-react";
 import {
   getCurrentUserSession,
   signInWithGoogle,
   signOutUser,
-  loadDigitalTwinFromVault
+  loadDigitalTwinFromVault,
+  loadFinancialDnaSessions,
+  loadUserGoals
 } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -132,7 +135,7 @@ const VALARCHIX_RELEASES: ReleaseMilestone[] = [
       {
         category: "Client-Side Zero-Knowledge Encryption",
         items: [
-          "AES-GCM 256-bit encrypted Digital Twin vault storing personal financial metrics, goals, and DNA scores with ₹0 data leakage risk.",
+          "Military-grade zero-knowledge encrypted vault storing personal financial metrics, goals, and diagnostic scores with ₹0 data leakage risk.",
           "End-to-end cryptographic privacy where sensitive financial figures are never stored in plain text."
         ]
       },
@@ -140,14 +143,14 @@ const VALARCHIX_RELEASES: ReleaseMilestone[] = [
         category: "4-Digit In-App Passcode Locking",
         items: [
           "Custom telephone-style numeric keypad with tactile sound and vibration feedback for rapid 4-digit passcode entry.",
-          "PBKDF2/SHA-256 client-side PIN hashing with strictly isolated per-user session storage keys.",
+          "Hardware-grade client-side PIN encryption with strictly isolated per-user session storage keys.",
           "Automatic session lock triggers on inactivity and app backgrounding."
         ]
       },
       {
         category: "Google OAuth & Cross-Device Cloud Sync",
         items: [
-          "1-Click Google OAuth authentication via Supabase with seamless session recovery from URL tokens and query parameters.",
+          "1-Click Google authentication with seamless session recovery from secure cloud tokens.",
           "Automatic cloud sync of user's Financial DNA diagnostics, GoalX targets, and profile metadata.",
           "Guest mode feature unlock modals gracefully onboarding visitors to authenticated cloud profiles."
         ]
@@ -157,7 +160,7 @@ const VALARCHIX_RELEASES: ReleaseMilestone[] = [
         items: [
           "Native install prompt trigger ([⬇]) directly accessible from desktop and mobile headers.",
           "Real-time uninstallation detection using navigator.getInstalledRelatedApps() to clear stale cache.",
-          "Offline service worker caching (/sw.js) for sub-second offline app launching."
+          "Offline edge caching for sub-second offline app launching."
         ]
       }
     ]
@@ -330,7 +333,7 @@ const VALARCHIX_RELEASES: ReleaseMilestone[] = [
       {
         category: "Dynamic Multi-Model Failover & Solvers",
         items: [
-          "Zero-downtime resilient failover routing requests across Llama 3.1 8B Instant, Llama 3.3 70B, and Google Gemini Flash.",
+          "Zero-downtime resilient failover routing requests across high-performance financial intelligence models.",
           "Direct integration with 25+ internal financial math solvers with robust parameter safeguards against ₹0 anomaly outputs."
         ]
       }
@@ -377,6 +380,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [dnaScore, setDnaScore] = useState<number | null>(null);
+  const [dnaSessions, setDnaSessions] = useState<any[]>([]);
   const [goalsCount, setGoalsCount] = useState<number>(0);
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
   const [passcodeEnabled, setPasscodeEnabled] = useState(false);
@@ -450,27 +454,24 @@ export default function ProfilePage() {
         setPasscodeEnabled(false);
       }
 
-      // Load saved DNA & Goals in real time
+      // Load saved DNA sessions & Goals in real time
       try {
-        const twin = await loadDigitalTwinFromVault();
-        if (twin) {
-          if (twin.dnaScore?.overallScore) {
-            setDnaScore(twin.dnaScore.overallScore);
-          }
-          if (twin.goals?.length) {
-            setGoalsCount(twin.goals.length);
-          }
+        const sessions = await loadFinancialDnaSessions();
+        setDnaSessions(sessions);
+
+        const goals = await loadUserGoals();
+        setGoalsCount(goals.length);
+
+        if (sessions.length > 0 && sessions[0].dnaScore?.overallScore) {
+          setDnaScore(sessions[0].dnaScore.overallScore);
         } else {
-          const localTwinRaw = localStorage.getItem("VALARCHIX_DIGITAL_TWIN");
-          if (localTwinRaw) {
-            const parsed = JSON.parse(localTwinRaw);
-            if (parsed.dnaScore?.overallScore || parsed.score?.overallScore) {
-              setDnaScore(parsed.dnaScore?.overallScore || parsed.score?.overallScore);
-            }
+          const twin = await loadDigitalTwinFromVault();
+          if (twin && twin.dnaScore?.overallScore) {
+            setDnaScore(twin.dnaScore.overallScore);
           }
         }
       } catch (err) {
-        console.warn("Failed to load DNA record:", err);
+        console.warn("Failed to load DNA & goals records:", err);
       }
 
       // Check PWA Installation
@@ -721,7 +722,7 @@ export default function ProfilePage() {
                 {dnaScore ? `${dnaScore} / 100 Score` : "DNA Score"}
               </div>
               <div className="text-xs text-muted-grey">
-                {dnaScore ? "Financial DNA Health" : "Start Assessment"}
+                {dnaSessions.length ? `${dnaSessions.length} Analysis Sessions` : "Start Assessment"}
               </div>
             </div>
           </Link>
@@ -735,7 +736,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <div className="text-sm font-black text-heading">
-                {goalsCount ? `${goalsCount} Goals Active` : "GoalX Roadmaps"}
+                {goalsCount ? `${goalsCount} Goals Active` : "0 Goals Active"}
               </div>
               <div className="text-xs text-muted-grey">
                 {goalsCount ? "Active Targets" : "Plan Your Goals"}
@@ -743,6 +744,174 @@ export default function ProfilePage() {
             </div>
           </Link>
         </div>
+
+        {/* Financial DNA Sessions History */}
+        <section className="space-y-2">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xs font-black uppercase tracking-wider text-muted-grey flex items-center gap-1.5">
+              <HeartPulse className="w-3.5 h-3.5 text-emerald" /> Financial DNA Session History ({dnaSessions.length})
+            </h2>
+            <Link
+              href="/financial-dna"
+              className="text-[11px] font-bold text-emerald hover:underline flex items-center gap-1"
+            >
+              + New Analysis
+            </Link>
+          </div>
+
+          {dnaSessions.length === 0 ? (
+            <div className="bg-navy-card border border-border-navy rounded-2xl p-5 text-center space-y-2">
+              <p className="text-xs text-muted-grey">No Financial DNA sessions saved yet.</p>
+              <Link
+                href="/financial-dna"
+                className="inline-flex items-center gap-1.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl transition"
+              >
+                <Zap className="w-3.5 h-3.5" /> Start First Assessment
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-navy-card border border-border-navy rounded-3xl divide-y divide-border-navy/60 overflow-hidden shadow-sm">
+              {dnaSessions.map((s, idx) => {
+                const score = s.dnaScore?.overallScore ?? "--";
+                const grade = s.dnaScore?.grade ?? "--";
+                const surplus = s.dnaScore?.snapshot?.monthlySurplus ?? 0;
+                const dateStr = s.createdAt
+                  ? new Date(s.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+                  : "Saved Session";
+                return (
+                  <div
+                    key={s.id || idx}
+                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-navy-light/30 transition"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className="p-2.5 rounded-2xl bg-emerald/10 text-emerald shrink-0">
+                        <span className="font-black text-sm">{score}</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-heading">
+                            Grade {grade} Analysis
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-navy-bg border border-border-navy text-muted-grey font-mono">
+                            {dateStr}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-grey mt-0.5">
+                          Surplus: <strong className="text-emerald">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(surplus)}/mo</strong> • {s.dnaScore?.status || "Verified Diagnostic"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <Link
+                        href={`/financial-dna?sessionId=${s.id}`}
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-navy-bg hover:bg-navy-light border border-border-navy text-heading text-xs font-bold transition"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-indigo-400" /> View Insights
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const dna = s.dnaScore;
+                          if (!dna) return;
+                          const snapshot = dna.snapshot || {};
+                          const fmtINR = (v: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(v || 0);
+                          const reportHtml = `
+                            <!DOCTYPE html>
+                            <html>
+                              <head>
+                                <title>ValarchiX Financial DNA Report - ${dna.overallScore}/100</title>
+                                <style>
+                                  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0B0F19; color: #F1F5F9; padding: 40px; margin: 0; }
+                                  .container { max-width: 820px; margin: 0 auto; background: #111827; border: 1px solid #1F2937; border-radius: 20px; padding: 36px; }
+                                  .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1F2937; padding-bottom: 20px; margin-bottom: 24px; }
+                                  .logo { font-size: 24px; font-weight: 900; color: #10B981; }
+                                  .badge { background: #064E3B; color: #34D399; padding: 6px 14px; border-radius: 9999px; font-weight: 800; font-size: 13px; }
+                                  .score-box { background: #1E293B; border-radius: 16px; padding: 28px; text-align: center; margin-bottom: 24px; }
+                                  .score-num { font-size: 68px; font-weight: 900; color: #F8FAFC; margin: 8px 0; }
+                                  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+                                  .card { background: #1E293B; border-radius: 12px; padding: 16px; }
+                                  .card-title { font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 800; margin-bottom: 6px; }
+                                  .card-val { font-size: 22px; font-weight: 800; color: #F1F5F9; }
+                                  .pillar-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #1F2937; }
+                                  .btn-print { background: #10B981; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 800; cursor: pointer; margin-top: 24px; }
+                                  @media print {
+                                    .btn-print { display: none; }
+                                    body { background: white !important; color: #0f172a !important; padding: 0 !important; }
+                                    .container { border: none !important; background: white !important; color: #0f172a !important; }
+                                    .card, .score-box { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+                                    .score-num, .card-val, .logo { color: #0f172a !important; }
+                                    .card-title { color: #64748b !important; }
+                                    .pillar-row { border-bottom: 1px solid #e2e8f0 !important; }
+                                  }
+                                </style>
+                              </head>
+                              <body>
+                                <div class="container">
+                                  <div class="header">
+                                    <div>
+                                      <div class="logo">ValarchiX Financial DNA Diagnostic</div>
+                                      <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">Historical Session Analysis</div>
+                                    </div>
+                                    <div class="badge">Grade ${dna.grade} • Score ${dna.overallScore}/100</div>
+                                  </div>
+                                  <div class="score-box">
+                                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #94A3B8; font-weight: 800;">Diagnostic Result</div>
+                                    <div class="score-num">${dna.overallScore}<span style="font-size: 24px; color: #64748B;"> / 100</span></div>
+                                    <div style="display: inline-block; background: #312E81; color: #A5B4FC; font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 8px;">${dna.status}</div>
+                                    <p style="color: #CBD5E1; font-size: 13px; max-width: 620px; margin: 8px auto 0;">${dna.summaryText}</p>
+                                  </div>
+                                  <h3 style="font-size: 12px; text-transform: uppercase; color: #94A3B8; letter-spacing: 1px; font-weight: 800; margin-bottom: 12px;">Verified Monthly Cash Flow</h3>
+                                  <div class="grid">
+                                    <div class="card"><div class="card-title">Monthly Take-Home</div><div class="card-val">${fmtINR(snapshot.monthlyIncome)}</div></div>
+                                    <div class="card"><div class="card-title">Essential Needs</div><div class="card-val" style="color: #F87171;">${fmtINR(snapshot.monthlyNeeds)}</div></div>
+                                    <div class="card"><div class="card-title">Discretionary Wants</div><div class="card-val" style="color: #FBBF24;">${fmtINR(snapshot.monthlyWants)}</div></div>
+                                    <div class="card"><div class="card-title">Monthly Cash Surplus</div><div class="card-val" style="color: #34D399;">${fmtINR(snapshot.monthlySurplus)}</div></div>
+                                  </div>
+                                  ${dna.pillars && Array.isArray(dna.pillars) ? `
+                                    <h3 style="font-size: 12px; text-transform: uppercase; color: #94A3B8; letter-spacing: 1px; font-weight: 800; margin-bottom: 12px;">8 Mathematical Pillars</h3>
+                                    <div>
+                                      ${dna.pillars.map((p: any) => `
+                                        <div class="pillar-row">
+                                          <div>
+                                            <strong style="font-size: 14px;">${p.name}</strong>
+                                            <div style="font-size: 12px; color: #94A3B8;">${p.statusText} • ${p.keyMetricLabel}: <strong>${p.keyMetricValue}</strong></div>
+                                          </div>
+                                          <div style="text-align: right;">
+                                            <span style="font-weight: 900; font-size: 16px; color: ${p.score >= 80 ? '#34D399' : p.score >= 60 ? '#FBBF24' : '#F87171'}">${p.score} pts</span>
+                                          </div>
+                                        </div>
+                                      `).join('')}
+                                    </div>
+                                  ` : ''}
+                                  <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #1F2937; text-align: center; font-size: 11px; color: #64748B;">
+                                    Analyzed on ${new Date(s.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                                  </div>
+                                  <div style="text-align: center;">
+                                    <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
+                                  </div>
+                                </div>
+                              </body>
+                            </html>
+                          `;
+                          const printWindow = window.open('', '_blank');
+                          if (printWindow) {
+                            printWindow.document.write(reportHtml);
+                            printWindow.document.close();
+                          }
+                        }}
+                        className="p-1.5 rounded-xl bg-navy-bg hover:bg-navy-light border border-border-navy text-muted-grey hover:text-emerald transition cursor-pointer"
+                        title="Download Session Report"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
       {/* =========================================================================
           SECTION 1: SECURITY & PRIVACY

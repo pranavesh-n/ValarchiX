@@ -260,6 +260,15 @@ export interface TimeMachineUniverse {
   }[];
 }
 
+export interface FinancialDnaSessionRecord {
+  id: string;
+  userId?: string;
+  createdAt: string;
+  title?: string;
+  dnaScore: FinancialDnaScore;
+  assessmentData: FinancialAssessmentData;
+}
+
 export interface FinancialDigitalTwin {
   userId?: string;
   updatedAt: string;
@@ -274,6 +283,8 @@ export interface FinancialDigitalTwin {
   goals: GoalItem[];
   dnaScore?: FinancialDnaScore;
   dnaHistory: { date: string; score: number; notes: string; pillarDeltas?: Record<string, number> }[];
+  dnaSessions?: FinancialDnaSessionRecord[];
   decisions: DecisionLogEntry[];
   universes: TimeMachineUniverse[];
 }
+

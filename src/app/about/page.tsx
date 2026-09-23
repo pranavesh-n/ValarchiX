@@ -75,7 +75,7 @@ export default function AboutPage() {
             </div>
             <h3 className="text-base sm:text-lg font-black text-heading">100% Zero-Knowledge Privacy</h3>
             <p className="text-xs sm:text-sm text-muted-grey leading-relaxed">
-              Your financial data is encrypted on your device using client-side AES-GCM-256 before storage. We have zero access to your net worth, income, or investment details.
+              Your financial data is encrypted on your device using client-side zero-knowledge security before storage. We have zero access to your net worth, income, or investment details.
             </p>
           </div>
 

@@ -39,7 +39,11 @@ import {
   saveDigitalTwinToVault,
   getCurrentUserSession,
   signInWithGoogle,
+  saveFinancialDnaSession,
+  loadFinancialDnaSessions,
+  loadFinancialDnaSessionById,
 } from "@/lib/supabase/auth";
+import { Download, History, Printer } from "lucide-react";
 
 // Baseline benchmark ghost values for transparent calculation
 const GHOST_BENCHMARKS = {
@@ -314,11 +318,49 @@ export default function FinancialDnaPage() {
   const [newIncType, setNewIncType] = useState<IncomeSourceItem["type"]>("Freelance");
   const [newIncAmount, setNewIncAmount] = useState<number>(0);
 
+  // Past session & DB saving states
+  const [isViewingPastSession, setIsViewingPastSession] = useState<boolean>(false);
+  const [pastSessionInfo, setPastSessionInfo] = useState<{ id: string; createdAt: string } | null>(null);
+  const [allPastSessions, setAllPastSessions] = useState<any[]>([]);
+  const [isSavingSession, setIsSavingSession] = useState<boolean>(false);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+
   useEffect(() => {
     async function loadData() {
       const session = await getCurrentUserSession();
-      setIsSignedIn(!!session?.user);
-      // Always start fresh from Step 1 on a clean slate with transparent benchmark previews
+      const signedIn = !!session?.user;
+      setIsSignedIn(signedIn);
+
+      // Load all available sessions
+      const sessions = await loadFinancialDnaSessions();
+      setAllPastSessions(sessions);
+
+      // Check if URL specifies a past session to inspect in read-only mode
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const querySessionId = urlParams.get("sessionId") || urlParams.get("session");
+        if (querySessionId) {
+          if (!signedIn) {
+            setShowAuthModal(true);
+            return;
+          }
+          const found = await loadFinancialDnaSessionById(querySessionId);
+          if (found) {
+            setTwin({
+              ...DEFAULT_TWIN,
+              assessmentData: found.assessmentData,
+              dnaScore: found.dnaScore,
+            });
+            setIsViewingPastSession(true);
+            setPastSessionInfo({ id: found.id, createdAt: found.createdAt });
+            setViewMode("results");
+            return;
+          }
+        }
+      }
+
+      // Default: start fresh from Step 1 on a clean slate with transparent benchmark previews
       setTwin({
         ...DEFAULT_TWIN,
         assessmentData: INITIAL_ASSESSMENT,
@@ -391,21 +433,137 @@ export default function FinancialDnaPage() {
   const handleResetToClean = () => {
     handleUpdateAssessment(INITIAL_ASSESSMENT);
     setCurrentStep(1);
+    setIsViewingPastSession(false);
+    setPastSessionInfo(null);
+  };
+
+  const handleProceedToResults = () => {
+    if (!isSignedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+    handleSaveCompletedSession();
+    setViewMode("results");
+  };
+
+  const handleSaveCompletedSession = async () => {
+    if (!isSignedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+    setIsSavingSession(true);
+    try {
+      const sessionId = "dna_" + Date.now();
+      const sessionRecord = {
+        id: sessionId,
+        createdAt: new Date().toISOString(),
+        title: `Financial DNA Assessment (${dna.overallScore}/100)`,
+        dnaScore: dna,
+        assessmentData: assessmentData,
+      };
+      await saveFinancialDnaSession(sessionRecord);
+      const updated = await loadFinancialDnaSessions();
+      setAllPastSessions(updated);
+      setSaveSuccessMsg("Session saved to your secure cloud account! ✅");
+      setTimeout(() => setSaveSuccessMsg(null), 4000);
+    } catch (e) {
+      console.warn("Failed to save session:", e);
+    } finally {
+      setIsSavingSession(false);
+    }
+  };
+
+  const handleDownloadReport = () => {
+    if (!isSignedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+    const reportHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>ValarchiX Financial DNA Report - ${dna.overallScore}/100</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0B0F19; color: #F1F5F9; padding: 40px; margin: 0; }
+            .container { max-width: 820px; margin: 0 auto; background: #111827; border: 1px solid #1F2937; border-radius: 20px; padding: 36px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1F2937; padding-bottom: 20px; margin-bottom: 24px; }
+            .logo { font-size: 24px; font-weight: 900; color: #10B981; letter-spacing: -0.5px; }
+            .badge { background: #064E3B; color: #34D399; padding: 6px 14px; border-radius: 9999px; font-weight: 800; font-size: 13px; border: 1px solid rgba(52, 211, 153, 0.3); }
+            .score-box { background: #1E293B; border-radius: 16px; padding: 28px; text-align: center; margin-bottom: 24px; border: 1px solid #334155; }
+            .score-num { font-size: 68px; font-weight: 900; color: #F8FAFC; line-height: 1; margin: 8px 0; }
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+            .card { background: #1E293B; border-radius: 12px; padding: 16px; border: 1px solid #334155; }
+            .card-title { font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 6px; }
+            .card-val { font-size: 22px; font-weight: 800; color: #F1F5F9; }
+            .pillar-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #1F2937; }
+            .btn-print { background: #10B981; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 800; cursor: pointer; margin-top: 24px; font-size: 14px; }
+            @media print {
+              .btn-print { display: none; }
+              body { background: white !important; color: #0f172a !important; padding: 0 !important; }
+              .container { border: none !important; background: white !important; color: #0f172a !important; box-shadow: none !important; padding: 0 !important; }
+              .card, .score-box { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+              .score-num, .card-val, .logo { color: #0f172a !important; }
+              .card-title { color: #64748b !important; }
+              .pillar-row { border-bottom: 1px solid #e2e8f0 !important; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div>
+                <div class="logo">ValarchiX Financial DNA Diagnostic</div>
+                <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">Zero-Commission Pure Actuarial Intelligence</div>
+              </div>
+              <div class="badge">Grade ${dna.grade} • Score ${dna.overallScore}/100</div>
+            </div>
+            <div class="score-box">
+              <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #94A3B8; font-weight: 800;">Verified Health Diagnostic</div>
+              <div class="score-num">${dna.overallScore}<span style="font-size: 24px; color: #64748B; font-weight: 600;"> / 100</span></div>
+              <div style="display: inline-block; background: #312E81; color: #A5B4FC; font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 8px; margin-bottom: 8px;">${dna.status}</div>
+              <p style="color: #CBD5E1; font-size: 13px; max-width: 620px; margin: 8px auto 0; line-height: 1.5;">${dna.summaryText}</p>
+            </div>
+            <h3 style="font-size: 12px; text-transform: uppercase; color: #94A3B8; letter-spacing: 1px; font-weight: 800; margin-bottom: 12px;">Verified Monthly Cash Flow Snapshot</h3>
+            <div class="grid">
+              <div class="card"><div class="card-title">Monthly Take-Home Income</div><div class="card-val">${fmt(snapshot.monthlyIncome)}</div></div>
+              <div class="card"><div class="card-title">Essential Needs</div><div class="card-val" style="color: #F87171;">${fmt(snapshot.monthlyNeeds)}</div></div>
+              <div class="card"><div class="card-title">Discretionary Wants</div><div class="card-val" style="color: #FBBF24;">${fmt(snapshot.monthlyWants)}</div></div>
+              <div class="card"><div class="card-title">True Monthly Cash Surplus</div><div class="card-val" style="color: #34D399;">${fmt(snapshot.monthlySurplus)}</div></div>
+            </div>
+            <h3 style="font-size: 12px; text-transform: uppercase; color: #94A3B8; letter-spacing: 1px; font-weight: 800; margin-bottom: 12px;">8 Mathematical Pillars Diagnostic Breakdown</h3>
+            <div>
+              ${dna.pillars.map((p) => `
+                <div class="pillar-row">
+                  <div>
+                    <strong style="font-size: 14px; color: inherit;">${p.name}</strong>
+                    <div style="font-size: 12px; color: #94A3B8; margin-top: 2px;">${p.statusText} • ${p.keyMetricLabel}: <strong>${p.keyMetricValue}</strong></div>
+                  </div>
+                  <div style="text-align: right;">
+                    <span style="font-weight: 900; font-size: 16px; color: ${p.score >= 80 ? '#34D399' : p.score >= 60 ? '#FBBF24' : '#F87171'}">${p.score} pts</span>
+                    <div style="font-size: 11px; color: #64748B;">Weight: ${p.weight}%</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #1F2937; text-align: center; font-size: 11px; color: #64748B;">
+              Analyzed by ValarchiX Financial Knowledge OS • Generated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </div>
+            <div style="text-align: center;">
+              <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(reportHtml);
+      printWindow.document.close();
+    }
   };
 
   const handleSaveToHistory = () => {
-    const today = new Date().toISOString().split("T")[0];
-    const newEntry = {
-      date: today,
-      score: dna.overallScore,
-      notes: `Financial Assessment Score: ${dna.overallScore} (${dna.grade})`,
-    };
-    const updated = {
-      ...twin,
-      dnaHistory: [newEntry, ...(twin.dnaHistory || [])].slice(0, 10),
-    };
-    setTwin(updated);
-    saveDigitalTwinToVault(updated).catch(console.error);
+    handleSaveCompletedSession();
   };
 
   const fmt = (v: number) =>
@@ -1703,10 +1861,7 @@ export default function FinancialDnaPage() {
                 <button
                   type="button"
                   disabled={isDeficit && !acknowledgedDeficit}
-                  onClick={() => {
-                    handleSaveToHistory();
-                    setViewMode("results");
-                  }}
+                  onClick={handleProceedToResults}
                   className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-extrabold shadow-xl transition cursor-pointer ${
                     isDeficit && !acknowledgedDeficit
                       ? "bg-muted-grey/30 text-muted-grey cursor-not-allowed"
@@ -1745,10 +1900,7 @@ export default function FinancialDnaPage() {
             ) : (
               <button
                 type="button"
-                onClick={() => {
-                  handleSaveToHistory();
-                  setViewMode("results");
-                }}
+                onClick={handleProceedToResults}
                 className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-emerald text-white px-7 py-3 rounded-xl text-xs sm:text-sm font-extrabold shadow-lg shadow-emerald/30 transition cursor-pointer"
               >
                 View DNA Results <ChevronRight className="w-4 h-4" />
@@ -1762,7 +1914,99 @@ export default function FinancialDnaPage() {
           MODE 2: FINANCIAL DNA RESULTS & INTELLIGENCE DASHBOARD
          ========================================================================= */}
       {viewMode === "results" && (
-        <div className="w-full max-w-[1560px] mx-auto space-y-8 animate-fadeIn">
+        <div className="w-full max-w-[1560px] mx-auto space-y-6 animate-fadeIn">
+          {/* Historical Session Banner (When viewing past analysis) */}
+          {isViewingPastSession && (
+            <div className="bg-indigo-950/80 border border-indigo-500/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+              <div className="flex items-center gap-3.5">
+                <div className="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400 shrink-0">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-indigo-300">
+                      Historical DNA Session Analysis
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 font-mono font-bold">
+                      READ-ONLY INSIGHTS
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-grey mt-0.5">
+                    Viewing session recorded on {pastSessionInfo?.createdAt ? new Date(pastSessionInfo.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "Saved Date"}. Showing final page insights about past financial condition.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleDownloadReport}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-navy-bg hover:bg-navy-light border border-border-navy text-heading text-xs font-bold transition cursor-pointer shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5 text-emerald" /> Download Report
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsViewingPastSession(false);
+                    setPastSessionInfo(null);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    handleResetToClean();
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-emerald hover:opacity-95 text-white text-xs font-extrabold transition cursor-pointer shadow-md"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Start New Assessment
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Active Session Action Header Bar */}
+          {!isViewingPastSession && (
+            <div className="bg-navy-card border border-border-navy rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-emerald/15 text-emerald">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-heading">Financial DNA Assessment Completed</h4>
+                  <p className="text-[11px] text-muted-grey">
+                    All 8 pillars calculated deterministically. Monthly surplus ready for GoalX roadmaps.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {saveSuccessMsg && (
+                  <span className="text-xs font-bold text-emerald animate-fadeIn px-2">
+                    {saveSuccessMsg}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  disabled={isSavingSession}
+                  onClick={handleSaveCompletedSession}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  <Save className="w-3.5 h-3.5" /> {isSavingSession ? "Saving..." : "Save Session to Cloud"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadReport}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-navy-bg hover:bg-navy-light border border-border-navy text-heading text-xs font-bold transition cursor-pointer shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5 text-emerald" /> Download Report
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("assessment")}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-navy-bg hover:bg-navy-light border border-border-navy text-muted-grey hover:text-heading text-xs font-semibold transition cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Edit Assessment
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Top Row: Hero DNA Score Card & Financial Snapshot */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Main Score Hero Card */}
@@ -2325,6 +2569,53 @@ export default function FinancialDnaPage() {
                 className="w-full bg-emerald hover:bg-emerald/90 text-slate-950 font-black text-sm py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
               >
                 <Save className="w-4 h-4" /> Save Profile & Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Auth Gate Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 bg-navy-bg/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-navy-card border border-border-navy rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative space-y-5">
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 p-2 text-muted-grey hover:text-heading rounded-xl hover:bg-navy-light/40 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-emerald/10 border border-emerald/30 flex items-center justify-center mx-auto text-emerald">
+                <Lock className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-black text-heading">Sign In to Generate Report</h3>
+              <p className="text-xs text-muted-grey leading-relaxed">
+                Only verified logged-in users can generate the official Financial DNA diagnostic report, save historical analysis insights, and unlock dynamic GoalX cash flow roadmaps.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <button
+                type="button"
+                onClick={() => signInWithGoogle("/financial-dna")}
+                className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-sm transition flex items-center justify-center gap-3 shadow-lg cursor-pointer"
+              >
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+                <span>Continue with Google</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(false)}
+                className="w-full py-2.5 text-xs text-muted-grey hover:text-heading font-semibold transition cursor-pointer"
+              >
+                Dismiss
               </button>
             </div>
           </div>

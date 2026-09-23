@@ -8,7 +8,7 @@ import {
   Save, Lock, Check, Plus, Trash2, Calendar, HelpCircle, ArrowUpRight,
   TrendingDown, RefreshCw, Eye, PieChart, ShieldAlert, Award, Clock,
   ChevronDown, HeartPulse, Building, GraduationCap, Car, Plane, Sunset,
-  Coins, Zap
+  Coins, Zap, X
 } from "lucide-react";
 import FinancialInput from "@/components/FinancialInput";
 import {
@@ -22,6 +22,9 @@ import {
   getCurrentUserSession,
   loadDigitalTwinFromVault,
   saveDigitalTwinToVault,
+  loadUserGoals,
+  saveUserGoals,
+  signInWithGoogle,
 } from "@/lib/supabase/auth";
 import { calculateFinancialDna } from "@/lib/engine/dna";
 
@@ -35,52 +38,10 @@ const CATEGORY_ICONS: Record<GoalCategory, any> = {
   custom: Target,
 };
 
-const DEFAULT_SAMPLE_GOALS: GoalItem[] = [
-  {
-    id: "g1",
-    name: "Buy Dream Home",
-    category: "house",
-    targetAmountToday: 6000000,
-    targetYear: new Date().getFullYear() + 7,
-    currentAllocatedCorpus: 500000,
-    currentMonthlySip: 25000,
-    priority: 1,
-    expectedReturnPct: 12,
-    customInflationPct: 7.0,
-    annualStepUpPct: 10,
-  },
-  {
-    id: "g2",
-    name: "Child Higher Education",
-    category: "education",
-    targetAmountToday: 3000000,
-    targetYear: new Date().getFullYear() + 10,
-    currentAllocatedCorpus: 200000,
-    currentMonthlySip: 10000,
-    priority: 2,
-    expectedReturnPct: 12,
-    customInflationPct: 10.0,
-    annualStepUpPct: 10,
-  },
-  {
-    id: "g3",
-    name: "Electric SUV Upgrade",
-    category: "vehicle",
-    targetAmountToday: 1800000,
-    targetYear: new Date().getFullYear() + 4,
-    currentAllocatedCorpus: 100000,
-    currentMonthlySip: 15000,
-    priority: 3,
-    expectedReturnPct: 12,
-    customInflationPct: 5.0,
-    annualStepUpPct: 10,
-  },
-];
-
 export default function GoalXPage() {
   const [twin, setTwin] = useState<FinancialDigitalTwin | null>(null);
-  const [goals, setGoals] = useState<GoalItem[]>(DEFAULT_SAMPLE_GOALS);
-  const [activeGoalId, setActiveGoalId] = useState<string>("g1");
+  const [goals, setGoals] = useState<GoalItem[]>([]);
+  const [activeGoalId, setActiveGoalId] = useState<string>("");
   const [viewTab, setViewTab] = useState<"navigator" | "portfolio">("navigator");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -92,6 +53,8 @@ export default function GoalXPage() {
   const [newGoalCategory, setNewGoalCategory] = useState<GoalCategory>("house");
   const [newGoalCostToday, setNewGoalCostToday] = useState<number>(0);
   const [newGoalTenureYears, setNewGoalTenureYears] = useState<number>(5);
+  const [newGoalCustomInflation, setNewGoalCustomInflation] = useState<number>(6.0);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
   const currentYear = new Date().getFullYear();
 
@@ -99,29 +62,43 @@ export default function GoalXPage() {
     async function loadData() {
       const session = await getCurrentUserSession();
       setIsSignedIn(!!session?.user);
+      const userGoals = await loadUserGoals();
       const loadedTwin = await loadDigitalTwinFromVault();
+      const goalsToUse = (userGoals && userGoals.length > 0)
+        ? userGoals
+        : (loadedTwin?.goals && loadedTwin.goals.length > 0 ? loadedTwin.goals : []);
+
       if (loadedTwin) {
         setTwin(loadedTwin);
-        if (loadedTwin.goals && loadedTwin.goals.length > 0) {
-          setGoals(loadedTwin.goals);
-          setActiveGoalId(loadedTwin.goals[0].id);
-        }
+      }
+      setGoals(goalsToUse);
+      if (goalsToUse.length > 0) {
+        setActiveGoalId(goalsToUse[0].id);
       }
     }
     loadData();
   }, []);
 
-  const activeGoal = goals.find((g) => g.id === activeGoalId) || goals[0] || DEFAULT_SAMPLE_GOALS[0];
-  const activeCalc: GoalXCalculationResult = useMemo(() => {
+  const activeGoal = goals.find((g) => g.id === activeGoalId) || goals[0] || null;
+  const activeCalc: GoalXCalculationResult | null = useMemo(() => {
+    if (!activeGoal) return null;
     return calculateGoalX(activeGoal);
   }, [activeGoal]);
 
-  // Compute Financial DNA Monthly Surplus if twin is available
-  const dnaMonthlySurplus = useMemo(() => {
-    if (!twin || !twin.assessmentData) return 25000; // Benchmark fallback
+  // Compute Financial DNA Monthly Surplus ONLY if verified DNA analysis exists
+  const dnaAnalysisRecord = useMemo(() => {
+    if (!twin || !twin.assessmentData) return null;
+    const hasIncome = (twin.assessmentData.income?.primaryMonthlyTakeHome || 0) > 0 || (twin.income?.monthlySalary || 0) > 0;
+    if (!hasIncome) return null;
     const dnaScore = calculateFinancialDna(twin);
-    return dnaScore.snapshot.monthlySurplus;
+    return {
+      score: dnaScore,
+      surplus: dnaScore.snapshot.monthlySurplus,
+    };
   }, [twin]);
+
+  const hasDnaAnalysis = !!dnaAnalysisRecord;
+  const dnaMonthlySurplus = dnaAnalysisRecord ? dnaAnalysisRecord.surplus : 0;
 
   const multiGoalSummary = useMemo(() => {
     return optimizeMultiGoals(goals, dnaMonthlySurplus);
@@ -144,6 +121,7 @@ export default function GoalXPage() {
   };
 
   const syncToVault = async (updatedGoals: GoalItem[]) => {
+    saveUserGoals(updatedGoals).catch(console.warn);
     const currentTwin = twin || {
       updatedAt: new Date().toISOString(),
       income: { monthlySalary: 100000, secondaryMonthlyIncome: 0, expectedAnnualGrowthPct: 10, stabilityRating: "high" },
@@ -159,6 +137,7 @@ export default function GoalXPage() {
   };
 
   const handleApplyStrategy = (path: any) => {
+    if (!activeGoal) return;
     const updated = { ...activeGoal };
     if (path.requiredMonthlySip !== undefined) {
       updated.currentMonthlySip = path.requiredMonthlySip;
@@ -178,7 +157,15 @@ export default function GoalXPage() {
   };
 
   const handleCreateNewGoal = () => {
+    if (!isSignedIn) {
+      setShowAuthModal(true);
+      return;
+    }
     if (!newGoalName.trim() || newGoalCostToday <= 0) return;
+    const inflationRate = newGoalCategory === "custom"
+      ? (newGoalCustomInflation || 6.0)
+      : (CATEGORY_INFLATION_DEFAULTS[newGoalCategory] || 6.0);
+
     const newGoal: GoalItem = {
       id: `goal_${Date.now()}`,
       name: newGoalName.trim(),
@@ -189,7 +176,7 @@ export default function GoalXPage() {
       currentMonthlySip: 0,
       priority: goals.length + 1,
       expectedReturnPct: 12,
-      customInflationPct: CATEGORY_INFLATION_DEFAULTS[newGoalCategory] || 6.0,
+      customInflationPct: inflationRate,
       annualStepUpPct: 10,
     };
     const updated = [...goals, newGoal];
@@ -199,27 +186,38 @@ export default function GoalXPage() {
     setNewGoalName("");
     setNewGoalCostToday(0);
     setNewGoalTenureYears(5);
+    setNewGoalCustomInflation(6.0);
     syncToVault(updated);
     setToastMessage(`🎯 New Goal "${newGoal.name}" added to your navigation deck!`);
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const handleDeleteGoal = (id: string) => {
-    if (goals.length <= 1) {
-      setToastMessage("At least one goal is required in your navigation deck.");
-      setTimeout(() => setToastMessage(null), 3000);
+  const handleTriggerAddGoal = (category: GoalCategory = "house", name = "", cost = 0, tenure = 5, inflation = 6.0) => {
+    if (!isSignedIn) {
+      setShowAuthModal(true);
       return;
     }
+    setNewGoalCategory(category);
+    setNewGoalName(name);
+    setNewGoalCostToday(cost);
+    setNewGoalTenureYears(tenure);
+    setNewGoalCustomInflation(inflation);
+    setIsAddingNewGoal(true);
+  };
+
+  const handleDeleteGoal = (id: string) => {
     const updated = goals.filter((g) => g.id !== id);
     setGoals(updated);
     if (activeGoalId === id) {
-      setActiveGoalId(updated[0].id);
+      setActiveGoalId(updated[0]?.id || "");
     }
     syncToVault(updated);
+    setToastMessage("Goal removed from your deck.");
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const tenureYears = Math.max(1, activeGoal.targetYear - currentYear);
-  const ActiveCategoryIcon = CATEGORY_ICONS[activeGoal.category] || Target;
+  const tenureYears = activeGoal ? Math.max(1, activeGoal.targetYear - currentYear) : 5;
+  const ActiveCategoryIcon = activeGoal ? (CATEGORY_ICONS[activeGoal.category] || Target) : Target;
 
   return (
     <div className="w-full space-y-4">
@@ -273,7 +271,7 @@ export default function GoalXPage() {
 
           <button
             type="button"
-            onClick={() => setIsAddingNewGoal(true)}
+            onClick={() => handleTriggerAddGoal("house", "", 0, 5, 6.0)}
             className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-emerald hover:opacity-95 !text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-emerald/20 transition cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Goal
@@ -281,53 +279,105 @@ export default function GoalXPage() {
         </div>
       </div>
 
-      {/* Goal Switcher Carousel / Tab Bar */}
-      <div className="max-w-7xl mx-auto mb-6 flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-        {goals.map((g) => {
-          const Icon = CATEGORY_ICONS[g.category] || Target;
-          const isActive = g.id === activeGoalId;
-          const calc = calculateGoalX(g);
-          return (
+      {/* Empty State When No Goals Exist */}
+      {goals.length === 0 && (
+        <div className="max-w-3xl mx-auto my-10 bg-navy-card border border-border-navy rounded-3xl p-8 sm:p-12 text-center shadow-2xl relative overflow-hidden animate-fadeIn">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-600/15 border border-indigo-500/30 flex items-center justify-center mx-auto mb-5 text-indigo-400">
+            <Target className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-heading mb-2">Build Your Goals from Scratch</h2>
+          <p className="text-xs sm:text-sm text-muted-grey max-w-md mx-auto mb-8 leading-relaxed">
+            Every investor's journey is unique. Add your personal financial milestones and GoalX will calculate inflation drag, required SIPs, and dynamic step-up roadmaps.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2.5 mb-8">
             <button
-              key={g.id}
               type="button"
-              onClick={() => {
-                setActiveGoalId(g.id);
-                setViewTab("navigator");
-              }}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border text-xs font-bold transition cursor-pointer shrink-0 shadow-sm ${
-                isActive
-                  ? "bg-navy-card border-emerald text-heading ring-2 ring-emerald/30 shadow-emerald/5"
-                  : "bg-navy-card/60 hover:bg-navy-card border-border-navy text-muted-grey hover:text-heading"
-              }`}
+              onClick={() => handleTriggerAddGoal("house", "Buy Dream Home", 5000000, 7, 7.0)}
+              className="px-4 py-2.5 rounded-xl bg-navy-bg hover:bg-navy-light border border-border-navy text-xs font-bold text-heading flex items-center gap-2 transition cursor-pointer shadow-sm"
             >
-              <div className={`p-1.5 rounded-xl ${isActive ? "bg-emerald/15 text-emerald" : "bg-navy-bg text-muted-grey"}`}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <div className="text-left">
-                <span className="block text-heading font-extrabold truncate max-w-[140px]">{g.name}</span>
-                <span className="block text-[10px] text-muted-grey font-mono">
-                  {fmtL(g.targetAmountToday)} in {Math.max(1, g.targetYear - currentYear)} yrs
-                </span>
-              </div>
-              <span
-                className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ml-1 ${
-                  calc.status === "Ahead" || calc.status === "On Track"
-                    ? "bg-emerald/15 text-emerald"
-                    : "bg-amber-500/15 text-amber-400"
+              <Building className="w-3.5 h-3.5 text-emerald" /> House (7% Infl)
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTriggerAddGoal("education", "Child Higher Education", 2500000, 10, 10.0)}
+              className="px-4 py-2.5 rounded-xl bg-navy-bg hover:bg-navy-light border border-border-navy text-xs font-bold text-heading flex items-center gap-2 transition cursor-pointer shadow-sm"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-indigo-400" /> Education (10% Infl)
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTriggerAddGoal("vehicle", "New Car Upgrade", 1500000, 4, 5.0)}
+              className="px-4 py-2.5 rounded-xl bg-navy-bg hover:bg-navy-light border border-border-navy text-xs font-bold text-heading flex items-center gap-2 transition cursor-pointer shadow-sm"
+            >
+              <Car className="w-3.5 h-3.5 text-amber-400" /> Vehicle (5% Infl)
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTriggerAddGoal("custom", "Custom Life Milestone", 1000000, 5, 6.0)}
+              className="px-4 py-2.5 rounded-xl bg-navy-bg hover:bg-navy-light border border-border-navy text-xs font-bold text-heading flex items-center gap-2 transition cursor-pointer shadow-sm"
+            >
+              <Target className="w-3.5 h-3.5 text-rose-400" /> Custom Inflation
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleTriggerAddGoal("house", "", 0, 5, 6.0)}
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-emerald hover:opacity-95 text-white font-extrabold text-sm shadow-xl shadow-emerald/20 transition cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Add Your First Goal
+          </button>
+        </div>
+      )}
+
+      {/* Goal Switcher Carousel / Tab Bar */}
+      {goals.length > 0 && (
+        <div className="max-w-7xl mx-auto mb-6 flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+          {goals.map((g) => {
+            const Icon = CATEGORY_ICONS[g.category] || Target;
+            const isActive = g.id === activeGoalId;
+            const calc = calculateGoalX(g);
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => {
+                  setActiveGoalId(g.id);
+                  setViewTab("navigator");
+                }}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border text-xs font-bold transition cursor-pointer shrink-0 shadow-sm ${
+                  isActive
+                    ? "bg-navy-card border-emerald text-heading ring-2 ring-emerald/30 shadow-emerald/5"
+                    : "bg-navy-card/60 hover:bg-navy-card border-border-navy text-muted-grey hover:text-heading"
                 }`}
               >
-                {calc.status}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                <div className={`p-1.5 rounded-xl ${isActive ? "bg-emerald/15 text-emerald" : "bg-navy-bg text-muted-grey"}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <span className="block text-heading font-extrabold truncate max-w-[140px]">{g.name}</span>
+                  <span className="block text-[10px] text-muted-grey font-mono">
+                    {fmtL(g.targetAmountToday)} in {Math.max(1, g.targetYear - currentYear)} yrs
+                  </span>
+                </div>
+                <span
+                  className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ml-1 ${
+                    calc.status === "Ahead" || calc.status === "On Track"
+                      ? "bg-emerald/15 text-emerald"
+                      : "bg-amber-500/15 text-amber-400"
+                  }`}
+                >
+                  {calc.status}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* =========================================================================
           VIEW TAB 1: INDIVIDUAL GOAL NAVIGATOR
          ========================================================================= */}
-      {viewTab === "navigator" && (
+      {goals.length > 0 && activeGoal && activeCalc && viewTab === "navigator" && (
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 animate-fadeIn">
           {/* Left Column: Ultra-Simple Inputs (Amount to Buy Now + Tenure) */}
           <div className="lg:col-span-5 bg-navy-card border border-border-navy rounded-2xl md:rounded-3xl p-5 sm:p-7 shadow-xl space-y-6 flex flex-col justify-between">
@@ -411,7 +461,7 @@ export default function GoalXPage() {
               </div>
 
               {/* Category Benchmark Inflation Selector */}
-              <div className="bg-navy-bg p-3.5 rounded-2xl border border-border-navy space-y-2">
+              <div className="bg-navy-bg p-3.5 rounded-2xl border border-border-navy space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-heading">Category Specific Inflation Rate</span>
                   <span className="font-extrabold text-emerald">{activeCalc.inflationPctUsed}% / year</span>
@@ -425,7 +475,9 @@ export default function GoalXPage() {
                         handleUpdateActiveGoal({
                           ...activeGoal,
                           category: cat,
-                          customInflationPct: CATEGORY_INFLATION_DEFAULTS[cat] || 6.0,
+                          customInflationPct: cat === "custom"
+                            ? (activeGoal.customInflationPct || 6.0)
+                            : (CATEGORY_INFLATION_DEFAULTS[cat] || 6.0),
                         })
                       }
                       className={`capitalize py-1.5 px-2 rounded-lg border transition font-bold ${
@@ -434,10 +486,75 @@ export default function GoalXPage() {
                           : "bg-navy-card text-muted-grey border-border-navy/60 hover:text-heading"
                       }`}
                     >
-                      {cat} ({CATEGORY_INFLATION_DEFAULTS[cat]}%)
+                      {cat} ({cat === "custom" ? `${activeGoal.customInflationPct ?? 6}%` : `${CATEGORY_INFLATION_DEFAULTS[cat]}%`})
                     </button>
                   ))}
                 </div>
+
+                {/* Interactive Custom Inflation Rate Input & Presets */}
+                {activeGoal.category === "custom" && (
+                  <div className="pt-2 border-t border-border-navy/60 space-y-2 animate-fadeIn">
+                    <div className="flex items-center justify-between text-xs">
+                      <label className="text-[11px] font-bold text-muted-grey uppercase">
+                        Edit Custom Inflation Rate (%/yr)
+                      </label>
+                      <span className="font-mono font-black text-emerald text-xs">
+                        {activeGoal.customInflationPct ?? 6.0}%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="30"
+                        value={activeGoal.customInflationPct ?? 6.0}
+                        onChange={(e) =>
+                          handleUpdateActiveGoal({
+                            ...activeGoal,
+                            customInflationPct: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="w-24 bg-navy-card border border-border-navy rounded-xl px-3 py-1.5 text-heading font-mono text-xs font-bold focus:outline-none focus:border-emerald"
+                      />
+                      <div className="flex items-center gap-1 overflow-x-auto">
+                        {[5, 6, 7, 8, 10, 12].map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() =>
+                              handleUpdateActiveGoal({
+                                ...activeGoal,
+                                customInflationPct: pct,
+                              })
+                            }
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition ${
+                              (activeGoal.customInflationPct ?? 6.0) === pct
+                                ? "bg-emerald text-navy-bg border-emerald"
+                                : "bg-navy-card text-muted-grey border-border-navy hover:text-heading"
+                            }`}
+                          >
+                            {pct}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={20}
+                      step={0.5}
+                      value={activeGoal.customInflationPct ?? 6.0}
+                      onChange={(e) =>
+                        handleUpdateActiveGoal({
+                          ...activeGoal,
+                          customInflationPct: parseFloat(e.target.value),
+                        })
+                      }
+                      className="w-full accent-emerald h-1.5 rounded-lg cursor-pointer my-1"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Optional Existing Savings / Current SIP (Collapsed / Clean) */}
@@ -475,13 +592,26 @@ export default function GoalXPage() {
             </div>
 
             {/* Financial DNA Cross-Check Note */}
-            <div className="card-stat-indigo rounded-xl p-3 flex items-start gap-2.5 text-xs">
-              <HeartPulse className="w-4 h-4 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold">Financial DNA Synergy: </span>
-                Your available monthly cash surplus is <strong className="text-emerald">{fmt(dnaMonthlySurplus)}/mo</strong>.
+            {hasDnaAnalysis ? (
+              <div className="card-stat-indigo rounded-xl p-3 flex items-start gap-2.5 text-xs">
+                <HeartPulse className="w-4 h-4 shrink-0 mt-0.5 text-emerald" />
+                <div>
+                  <span className="font-bold">Financial DNA Verified Surplus: </span>
+                  Your available monthly cash surplus is <strong className="text-emerald">{fmt(dnaMonthlySurplus)}/mo</strong>.
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2.5 text-xs text-amber-200">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+                <div>
+                  <span className="font-bold text-amber-300">Financial DNA Analysis Required: </span>
+                  Surplus cash calculation requires at least 1 completed Financial DNA assessment.{" "}
+                  <Link href="/financial-dna" className="underline font-bold text-amber-400 hover:text-amber-300">
+                    Analyze Financial DNA →
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column: Engine Automatic Output Dashboard */}
@@ -630,7 +760,7 @@ export default function GoalXPage() {
       {/* =========================================================================
           VIEW TAB 2: ALL GOALS PORTFOLIO AGGREGATE
          ========================================================================= */}
-      {viewTab === "portfolio" && (
+      {goals.length > 0 && viewTab === "portfolio" && (
         <div className="max-w-7xl mx-auto space-y-6 animate-fadeIn">
           {/* Aggregate Overview Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -666,11 +796,31 @@ export default function GoalXPage() {
                 <HeartPulse className="w-4 h-4 text-emerald" /> Portfolio Monthly Cash Flow Feasibility
               </span>
               <span className="text-muted-grey">
-                Surplus: <strong className="text-heading">{fmt(dnaMonthlySurplus)}/mo</strong>
+                {hasDnaAnalysis ? (
+                  <>Surplus: <strong className="text-heading">{fmt(dnaMonthlySurplus)}/mo</strong></>
+                ) : (
+                  <span className="text-amber-400 font-mono text-[11px]">Analysis Required</span>
+                )}
               </span>
             </div>
 
-            {multiGoalSummary.isDeficit ? (
+            {!hasDnaAnalysis ? (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-200">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+                  <div>
+                    <span className="font-bold text-amber-300">Financial DNA Analysis Required: </span>
+                    Total required SIP across all goals is <strong className="font-black text-heading">{fmt(multiGoalSummary.totalRequiredSip)}/mo</strong>. To verify whether your take-home surplus comfortably finances these goals, complete your Financial DNA assessment.
+                  </div>
+                </div>
+                <Link
+                  href="/financial-dna"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold transition shrink-0"
+                >
+                  <Zap className="w-3.5 h-3.5" /> Analyze DNA
+                </Link>
+              </div>
+            ) : multiGoalSummary.isDeficit ? (
               <div className="banner-alert-rose rounded-xl p-3.5 flex items-start gap-3 text-xs">
                 <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                 <div>
@@ -815,19 +965,59 @@ export default function GoalXPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-muted-grey uppercase block mb-1">
-                  Cost to Buy Today (₹)
-                </label>
-                <FinancialInput
-                  size="lg"
-                  prefix="₹"
-                  placeholder="e.g. 20,00,000"
-                  value={newGoalCostToday}
-                  onChange={(v) => setNewGoalCostToday(v)}
-                />
+                <div>
+                  <label className="text-xs font-bold text-muted-grey uppercase block mb-1">
+                    Cost to Buy Today (₹)
+                  </label>
+                  <FinancialInput
+                    size="lg"
+                    prefix="₹"
+                    placeholder="e.g. 20,00,000"
+                    value={newGoalCostToday}
+                    onChange={(v) => setNewGoalCostToday(v)}
+                  />
+                </div>
+
+                {newGoalCategory === "custom" && (
+                  <div className="pt-2 border-t border-border-navy/60 space-y-2 animate-fadeIn">
+                    <div className="flex items-center justify-between text-xs">
+                      <label className="text-[11px] font-bold text-muted-grey uppercase">
+                        Custom Inflation Rate (% / year)
+                      </label>
+                      <span className="font-mono font-black text-emerald text-xs">
+                        {newGoalCustomInflation}%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="30"
+                        value={newGoalCustomInflation}
+                        onChange={(e) => setNewGoalCustomInflation(parseFloat(e.target.value) || 0)}
+                        className="w-24 bg-navy-bg border border-border-navy rounded-xl px-3 py-1.5 text-heading font-mono text-xs font-bold focus:outline-none focus:border-emerald"
+                      />
+                      <div className="flex items-center gap-1 overflow-x-auto">
+                        {[5, 6, 7, 8, 10, 12].map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => setNewGoalCustomInflation(pct)}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition ${
+                              newGoalCustomInflation === pct
+                                ? "bg-emerald text-navy-bg border-emerald"
+                                : "bg-navy-bg text-muted-grey border-border-navy hover:text-heading"
+                            }`}
+                          >
+                            {pct}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
 
             <div className="flex gap-3 pt-3 border-t border-border-navy">
               <button
@@ -848,6 +1038,55 @@ export default function GoalXPage() {
                 }`}
               >
                 Launch Goal Navigation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Google Auth Modal Gate */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-navy-card border border-border-navy rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative space-y-5">
+            <button
+              type="button"
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 p-2 text-muted-grey hover:text-heading rounded-full hover:bg-navy-bg transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-emerald/10 border border-emerald/30 flex items-center justify-center mx-auto text-emerald">
+                <Lock className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-black text-heading">Sign In to Save &amp; Track Goals</h3>
+              <p className="text-xs text-muted-grey leading-relaxed">
+                Only logged-in users can add custom financial goals, persist their roadmaps in their personal cloud account, and track goal trajectories.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <button
+                type="button"
+                onClick={() => signInWithGoogle("/goalx")}
+                className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-sm transition flex items-center justify-center gap-3 shadow-lg cursor-pointer"
+              >
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+                <span>Continue with Google</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(false)}
+                className="w-full py-2.5 text-xs text-muted-grey hover:text-heading font-semibold transition cursor-pointer"
+              >
+                Dismiss
               </button>
             </div>
           </div>

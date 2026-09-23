@@ -190,7 +190,7 @@ export default function HomePage() {
               <div>
                 <span className="text-[10px] text-muted-grey uppercase font-bold block">100% Client-Side Vault</span>
                 <h4 className="text-sm font-black text-emerald-700 dark:text-emerald-400">₹0 Data Leakage Risk</h4>
-                <p className="text-[11px] text-muted-grey mt-0.5">AES-GCM 256-bit encrypted before storage</p>
+                <p className="text-[11px] text-muted-grey mt-0.5">Zero-knowledge encrypted before storage</p>
               </div>
               <span className="text-[10px] font-bold px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-full border border-emerald-200 dark:border-emerald-800/60 shrink-0">
                 Zero-Knowledge
