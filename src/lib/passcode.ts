@@ -159,46 +159,28 @@ export function checkIsAppLockedSync(): boolean {
   if (typeof window === "undefined") return false;
 
   try {
+    // If user has dismissed or disabled lock, NEVER lock
+    if (
+      localStorage.getItem("valarchix_app_lock_disabled_by_user") === "true" ||
+      localStorage.getItem("valarchix_vault_unlocked") === "true"
+    ) {
+      return false;
+    }
+
     const activeUserId = localStorage.getItem("valarchix_active_user_id");
-
-    // Check if active user has a PIN and lock is enabled
-    if (activeUserId) {
-      const isLockExplicitlyEnabled =
-        localStorage.getItem(getUserLockEnabledKey(activeUserId)) === "true" ||
-        localStorage.getItem("valarchix_app_lock_enabled") === "true";
-      const userPin = localStorage.getItem(getUserPasscodeKey(activeUserId));
-      if (userPin && isLockExplicitlyEnabled) {
-        const isUnlocked =
-          sessionStorage.getItem(getUserSessionUnlockedKey(activeUserId)) === "true" ||
-          sessionStorage.getItem("valarchix_session_unlocked") === "true";
-        return !isUnlocked;
-      }
+    if (!activeUserId) {
+      return false;
     }
 
-    // Check legacy global PIN
-    const legacyPin = localStorage.getItem("valarchix_app_pin");
-    const isLegacyLockEnabled = localStorage.getItem("valarchix_app_lock_enabled") === "true";
-    if (legacyPin && isLegacyLockEnabled) {
-      const isLegacyUnlocked = sessionStorage.getItem("valarchix_session_unlocked") === "true";
-      if (!isLegacyUnlocked) return true;
-    }
+    const isLockExplicitlyEnabled =
+      localStorage.getItem(getUserLockEnabledKey(activeUserId)) === "true";
+    const userPin = localStorage.getItem(getUserPasscodeKey(activeUserId));
 
-    // Check if any user-specific PIN key exists in localStorage with lock enabled
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith("valarchix_app_pin_")) {
-        const pinVal = localStorage.getItem(key);
-        const uId = key.replace("valarchix_app_pin_", "");
-        const isEnabled =
-          localStorage.getItem(getUserLockEnabledKey(uId)) === "true" ||
-          localStorage.getItem("valarchix_app_lock_enabled") === "true";
-        if (pinVal && isEnabled) {
-          const isUnlocked =
-            sessionStorage.getItem(getUserSessionUnlockedKey(uId)) === "true" ||
-            sessionStorage.getItem("valarchix_session_unlocked") === "true";
-          if (!isUnlocked) return true;
-        }
-      }
+    if (isLockExplicitlyEnabled && userPin) {
+      const isUnlocked =
+        sessionStorage.getItem(getUserSessionUnlockedKey(activeUserId)) === "true" ||
+        sessionStorage.getItem("valarchix_session_unlocked") === "true";
+      return !isUnlocked;
     }
   } catch (err) {
     console.warn("Sync lock check error:", err);
@@ -213,15 +195,18 @@ export function checkIsAppLockedSync(): boolean {
 export function disableAllPasscodes(): void {
   if (typeof window === "undefined") return;
   try {
+    localStorage.setItem("valarchix_app_lock_disabled_by_user", "true");
+    localStorage.setItem("valarchix_vault_unlocked", "true");
+    localStorage.removeItem("valarchix_app_pin");
+    localStorage.removeItem("valarchix_app_lock_enabled");
+    sessionStorage.setItem("valarchix_session_unlocked", "true");
+
     const activeUserId = localStorage.getItem("valarchix_active_user_id");
     if (activeUserId) {
       localStorage.removeItem(getUserPasscodeKey(activeUserId));
       localStorage.removeItem(getUserLockEnabledKey(activeUserId));
       sessionStorage.setItem(getUserSessionUnlockedKey(activeUserId), "true");
     }
-    localStorage.removeItem("valarchix_app_pin");
-    localStorage.removeItem("valarchix_app_lock_enabled");
-    sessionStorage.setItem("valarchix_session_unlocked", "true");
 
     // Remove any user-specific pin keys
     const keysToRemove: string[] = [];
@@ -229,8 +214,8 @@ export function disableAllPasscodes(): void {
       const k = localStorage.key(i);
       if (
         k &&
-        (k.startsWith("valarchix_app_pin_") ||
-          k.startsWith("valarchix_app_lock_enabled_"))
+        (k.startsWith("valarchix_app_pin") ||
+          k.startsWith("valarchix_app_lock_enabled"))
       ) {
         keysToRemove.push(k);
       }

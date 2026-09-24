@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Lock, Delete, LogOut, ShieldCheck, Unlock } from "lucide-react";
 import { signOutUser, getCurrentUserSession } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
@@ -33,7 +33,6 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
 
-  // Synchronous instant lock check (0 latency)
   const [isLocked, setIsLocked] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       return checkIsAppLockedSync();
@@ -41,40 +40,15 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     return false;
   });
 
-  const [hasChecked, setHasChecked] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return true;
-    }
-    return false;
-  });
-
   const [pinInput, setPinInput] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-  const [failedAttempts, setFailedAttempts] = useState(0);
   const [shake, setShake] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-
-  const hiddenStartTimeRef = useRef<number | null>(null);
-  const isVerifyingRef = useRef(false);
-  const hiddenInputRef = useRef<HTMLInputElement>(null);
-
-  // Focus hidden input on lock
-  useEffect(() => {
-    if (isLocked) {
-      const timer = setTimeout(() => {
-        hiddenInputRef.current?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isLocked]);
 
   // Synchronous lock evaluation whenever session is known
   const checkUserLockState = useCallback((currentUserSession: any) => {
     if (!currentUserSession?.user) {
-      // If user signed out, check if lock applies
-      const isSyncLocked = checkIsAppLockedSync();
-      setIsLocked(isSyncLocked);
-      setHasChecked(true);
+      setIsLocked(checkIsAppLockedSync());
       return;
     }
 
@@ -86,10 +60,8 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     const unlockKey = getUserSessionUnlockedKey(userId);
 
     const isLockExplicitlyEnabled =
-      localStorage.getItem(lockEnabledKey) === "true" ||
-      localStorage.getItem("valarchix_app_lock_enabled") === "true";
-    const savedPinHash =
-      localStorage.getItem(pinKey) || localStorage.getItem("valarchix_app_pin");
+      localStorage.getItem(lockEnabledKey) === "true";
+    const savedPinHash = localStorage.getItem(pinKey);
     const isUnlockedInSession =
       sessionStorage.getItem(unlockKey) === "true" ||
       sessionStorage.getItem("valarchix_session_unlocked") === "true";
@@ -99,18 +71,13 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     } else {
       setIsLocked(false);
     }
-    setHasChecked(true);
   }, []);
 
   useEffect(() => {
-    // 1. Instant check on mount
-    const syncLock = checkIsAppLockedSync();
-    setIsLocked(syncLock);
-    setHasChecked(true);
+    setIsLocked(checkIsAppLockedSync());
 
     const supabase = createClient();
 
-    // 2. Async session verification in background without blocking UI
     async function initAuth() {
       const s = await getCurrentUserSession();
       setSession(s);
@@ -128,74 +95,19 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       if (event === "SIGNED_OUT" || !newSession?.user) {
         setIsLocked(false);
         setPinInput("");
-        setFailedAttempts(0);
       } else {
         setCachedUserInfo(newSession.user);
         checkUserLockState(newSession);
       }
     });
 
-    // 3. 25-Second Background Tab Lockout
-    const handleVisibilityChange = async () => {
-      if (document.hidden) {
-        hiddenStartTimeRef.current = Date.now();
-      } else {
-        if (hiddenStartTimeRef.current) {
-          const elapsed = Date.now() - hiddenStartTimeRef.current;
-          hiddenStartTimeRef.current = null;
-
-          // If tab was backgrounded for 25 seconds or more, lock the app
-          if (elapsed >= 25000) {
-            const currentS = session || (await getCurrentUserSession());
-            if (currentS?.user) {
-              const activeUserId = currentS.user.id;
-              const pinKey = getUserPasscodeKey(activeUserId);
-              const lockEnabledKey = getUserLockEnabledKey(activeUserId);
-              const unlockKey = getUserSessionUnlockedKey(activeUserId);
-
-              const isEnabled =
-                localStorage.getItem(lockEnabledKey) === "true" ||
-                localStorage.getItem("valarchix_app_lock_enabled") === "true";
-              const savedPin =
-                localStorage.getItem(pinKey) ||
-                localStorage.getItem("valarchix_app_pin");
-
-              if (isEnabled && savedPin) {
-                sessionStorage.removeItem(unlockKey);
-                sessionStorage.removeItem("valarchix_session_unlocked");
-                setIsLocked(true);
-                setPinInput("");
-                setErrorMsg("");
-              }
-            } else {
-              const isEnabled =
-                localStorage.getItem("valarchix_app_lock_enabled") === "true";
-              const savedPin = localStorage.getItem("valarchix_app_pin");
-              if (isEnabled && savedPin) {
-                sessionStorage.removeItem("valarchix_session_unlocked");
-                setIsLocked(true);
-                setPinInput("");
-                setErrorMsg("");
-              }
-            }
-          }
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
     return () => {
       subscription.unsubscribe();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [checkUserLockState, session]);
+  }, [checkUserLockState]);
 
   const processPinEntry = useCallback(
     async (enteredPin: string) => {
-      if (isVerifyingRef.current) return;
-      isVerifyingRef.current = true;
-
       try {
         const currentS = session || (await getCurrentUserSession());
         const activeUserId =
@@ -218,71 +130,76 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
 
         const hashedInput = await hashPin(enteredPin);
 
-        // Verify against SHA-256 hash or plaintext fallback
         if (savedPinHash && (hashedInput === savedPinHash || enteredPin === savedPinHash)) {
           sessionStorage.setItem(unlockKey, "true");
           sessionStorage.setItem("valarchix_session_unlocked", "true");
           setIsSuccess(true);
-          setFailedAttempts(0);
           setErrorMsg("");
 
           setTimeout(() => {
             setIsLocked(false);
             setPinInput("");
             setIsSuccess(false);
-            isVerifyingRef.current = false;
           }, 200);
           return;
         } else {
-          setFailedAttempts((prevAttempts) => {
-            const nextAttempts = prevAttempts + 1;
-            setShake(true);
-            setTimeout(() => setShake(false), 500);
-
-            setTimeout(() => {
-              setErrorMsg(
-                nextAttempts >= 2
-                  ? "Incorrect PIN. You can reset your lock below."
-                  : "Incorrect PIN. Please try again."
-              );
-              setPinInput("");
-              isVerifyingRef.current = false;
-            }, 180);
-            return nextAttempts;
-          });
+          setShake(true);
+          setTimeout(() => setShake(false), 500);
+          setErrorMsg("Incorrect PIN. Click 'Reset Lock & Enter' below if forgotten.");
+          setPinInput("");
         }
       } catch (err) {
         console.error("PIN verification error:", err);
-        setErrorMsg("Verification error. Click 'Reset Lock & Enter' below.");
+        setErrorMsg("Error verifying. Click 'Reset Lock & Enter' below.");
         setPinInput("");
-        isVerifyingRef.current = false;
       }
     },
     [session]
   );
 
-  const handleKeyPress = useCallback(
-    (num: string) => {
-      if (isVerifyingRef.current || isSuccess) return;
+  const handleDigitClick = useCallback(
+    (digit: string) => {
       setPinInput((prev) => {
         if (prev.length >= 4) return prev;
-        const nextPin = prev + num;
+        const next = prev + digit;
         setErrorMsg("");
-
-        if (nextPin.length === 4) {
-          processPinEntry(nextPin);
+        if (next.length === 4) {
+          processPinEntry(next);
         }
-        return nextPin;
+        return next;
       });
     },
-    [processPinEntry, isSuccess]
+    [processPinEntry]
   );
 
   const handleDelete = useCallback(() => {
-    if (isVerifyingRef.current || isSuccess) return;
     setPinInput((prev) => prev.slice(0, -1));
     setErrorMsg("");
-  }, [isSuccess]);
+  }, []);
+
+  const handleResetAndUnlock = useCallback(() => {
+    disableAllPasscodes();
+    setIsLocked(false);
+    setPinInput("");
+    setErrorMsg("");
+    setIsSuccess(false);
+  }, []);
+
+  const handleResetAndSignOut = useCallback(async () => {
+    disableAllPasscodes();
+    localStorage.removeItem("valarchix_active_user_id");
+    localStorage.removeItem("valarchix_cached_first_name");
+    sessionStorage.removeItem("valarchix_login_toast_shown");
+
+    setIsLocked(false);
+    setPinInput("");
+    setErrorMsg("");
+    setIsSuccess(false);
+
+    await signOutUser();
+    setSession(null);
+    router.push("/");
+  }, [router]);
 
   // Physical Keyboard Listener
   useEffect(() => {
@@ -294,66 +211,22 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       const key = e.key;
       if (/^[0-9]$/.test(key)) {
         e.preventDefault();
-        handleKeyPress(key);
+        handleDigitClick(key);
       } else if (key === "Backspace" || key === "Delete") {
         e.preventDefault();
         handleDelete();
+      } else if (key === "Escape") {
+        e.preventDefault();
+        handleResetAndUnlock();
       } else if (key.length === 1 && /^[a-zA-Z]$/.test(key)) {
-        // Helpful feedback when user types letters (expecting a text password)
-        setErrorMsg("This lock uses a 4-digit numeric PIN. Click 'Reset Lock' below if needed.");
+        setErrorMsg("PIN uses 4 digits (0-9). Tap 'Reset Lock & Enter' below if needed.");
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLocked, handleKeyPress, handleDelete]);
+  }, [isLocked, handleDigitClick, handleDelete, handleResetAndUnlock]);
 
-  const handleResetAndUnlock = () => {
-    disableAllPasscodes();
-    setIsLocked(false);
-    setPinInput("");
-    setFailedAttempts(0);
-    setErrorMsg("");
-    setIsSuccess(false);
-  };
-
-  const handleResetAndSignOut = async () => {
-    disableAllPasscodes();
-    localStorage.removeItem("valarchix_active_user_id");
-    localStorage.removeItem("valarchix_cached_first_name");
-    sessionStorage.removeItem("valarchix_login_toast_shown");
-
-    setIsLocked(false);
-    setPinInput("");
-    setFailedAttempts(0);
-    setErrorMsg("");
-    setIsSuccess(false);
-
-    await signOutUser();
-    setSession(null);
-    router.push("/");
-  };
-
-  const lastPressTimeRef = useRef(0);
-
-  const handleKeyTrigger = useCallback(
-    (num: string) => {
-      const now = Date.now();
-      if (now - lastPressTimeRef.current < 80) return;
-      lastPressTimeRef.current = now;
-      handleKeyPress(num);
-    },
-    [handleKeyPress]
-  );
-
-  const handleDeleteTrigger = useCallback(() => {
-    const now = Date.now();
-    if (now - lastPressTimeRef.current < 80) return;
-    lastPressTimeRef.current = now;
-    handleDelete();
-  }, [handleDelete]);
-
-  // Safe client check: Never leak children if locked
   if (isLocked) {
     const rawName =
       session?.user?.user_metadata?.full_name ||
@@ -362,44 +235,18 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     const displayName = getPrimaryFirstName(rawName);
 
     return (
-      <div
-        className="fixed inset-0 z-[99999] bg-[#020817]/95 backdrop-blur-xl text-white flex flex-col items-center justify-center p-4 overflow-y-auto"
-        onClick={() => hiddenInputRef.current?.focus()}
-      >
-        {/* Top-Right Instant Escape / Emergency Unlock Button */}
+      <div className="fixed inset-0 z-[99999] bg-[#020817]/95 backdrop-blur-xl text-white flex flex-col items-center justify-center p-4 overflow-y-auto">
+        {/* Top-Right Instant Escape / Unlock Button */}
         <div className="absolute top-4 right-4 z-50">
           <button
             type="button"
             onClick={handleResetAndUnlock}
-            onPointerDown={handleResetAndUnlock}
-            className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/15 text-xs font-semibold text-slate-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-lg backdrop-blur-md"
-            title="Bypass Lock & Enter Workspace"
+            className="px-4 py-2 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-bold text-emerald-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95"
           >
-            <Unlock size={13} />
+            <Unlock size={14} />
             <span>Close Lock &amp; Enter</span>
           </button>
         </div>
-
-        {/* Hidden input for physical keyboard focus, mobile keyboards & autofill */}
-        <input
-          ref={hiddenInputRef}
-          type="password"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={4}
-          value={pinInput}
-          onChange={(e) => {
-            const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-            setPinInput(val);
-            setErrorMsg("");
-            if (val.length === 4) {
-              processPinEntry(val);
-            }
-          }}
-          className="opacity-0 absolute -z-10 w-0 h-0 pointer-events-none"
-          autoFocus
-          aria-label="4-digit PIN Input"
-        />
 
         {/* Ambient background glow accents */}
         <div className="absolute top-1/4 -left-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
@@ -432,7 +279,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
               <span>ValarchiX Vault Protection</span>
             </div>
             <h1
-              className="text-xl sm:text-2xl font-black !text-white tracking-tight"
+              className="text-xl sm:text-2xl font-black text-white tracking-tight"
               style={{ color: "#ffffff" }}
             >
               Welcome Back, {displayName} 👋
@@ -477,22 +324,14 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             )}
           </div>
 
-          {/* Tactile Keypad - with touch & pointer down support */}
+          {/* Keypad */}
           <div className="grid grid-cols-3 gap-2.5 sm:gap-3 w-full max-w-[280px]">
             {KEYPAD_DIGITS.map((item) => (
               <button
                 key={item.num}
                 type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  handleKeyTrigger(item.num);
-                }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleKeyTrigger(item.num);
-                }}
-                disabled={isSuccess}
-                className="h-13 sm:h-14 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] active:bg-emerald-500/20 active:scale-95 border border-white/[0.08] transition-all duration-150 flex flex-col items-center justify-center cursor-pointer shadow-sm select-none"
+                onClick={() => handleDigitClick(item.num)}
+                className="h-13 sm:h-14 rounded-2xl bg-white/[0.07] hover:bg-white/[0.14] active:bg-emerald-500/25 active:scale-95 border border-white/10 transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm select-none"
               >
                 <span
                   className="text-xl font-bold tracking-tight leading-none pointer-events-none"
@@ -519,16 +358,8 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             {/* Row 4: Digit 0 */}
             <button
               type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                handleKeyTrigger("0");
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                handleKeyTrigger("0");
-              }}
-              disabled={isSuccess}
-              className="h-13 sm:h-14 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] active:bg-emerald-500/20 active:scale-95 border border-white/[0.08] transition-all duration-150 flex flex-col items-center justify-center cursor-pointer shadow-sm select-none"
+              onClick={() => handleDigitClick("0")}
+              className="h-13 sm:h-14 rounded-2xl bg-white/[0.07] hover:bg-white/[0.14] active:bg-emerald-500/25 active:scale-95 border border-white/10 transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm select-none"
             >
               <span
                 className="text-xl font-bold tracking-tight leading-none pointer-events-none"
@@ -547,16 +378,8 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             {/* Row 4: Backspace Button */}
             <button
               type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                handleDeleteTrigger();
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                handleDeleteTrigger();
-              }}
-              disabled={isSuccess}
-              className="h-13 sm:h-14 rounded-2xl bg-white/[0.04] hover:bg-rose-500/20 active:scale-95 border border-white/[0.08] transition-all duration-150 flex items-center justify-center cursor-pointer shadow-sm select-none"
+              onClick={handleDelete}
+              className="h-13 sm:h-14 rounded-2xl bg-white/[0.05] hover:bg-rose-500/20 active:scale-95 border border-white/10 transition-all flex items-center justify-center cursor-pointer shadow-sm select-none"
               style={{ color: "#cbd5e1" }}
               title="Delete digit"
             >
@@ -564,13 +387,12 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             </button>
           </div>
 
-          {/* Action Row - Always accessible recovery */}
+          {/* Action Row */}
           <div className="pt-2 w-full space-y-2">
             <button
               type="button"
-              onPointerDown={handleResetAndUnlock}
               onClick={handleResetAndUnlock}
-              className="w-full py-2.5 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 font-semibold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-98"
+              className="w-full py-2.5 px-4 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-98"
             >
               <Unlock size={14} className="pointer-events-none" />
               <span className="pointer-events-none">Forgot PIN? Reset Lock &amp; Enter</span>
@@ -580,7 +402,6 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
               <span>Need to switch account?</span>
               <button
                 type="button"
-                onPointerDown={handleResetAndSignOut}
                 onClick={handleResetAndSignOut}
                 className="text-rose-400 hover:text-rose-300 underline font-medium cursor-pointer inline-flex items-center gap-1"
               >
@@ -594,6 +415,5 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     );
   }
 
-  // If not locked and checked, render children directly
   return <>{children}</>;
 }
