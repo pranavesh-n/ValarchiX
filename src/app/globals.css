@@ -82,9 +82,56 @@ body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-
 
 /* =========================================================================
    LIGHT MODE TYPOGRAPHY CONTRAST
+   Ensures all numbers, values, headings and labels have deep, crisp contrast
+   in Light Mode while preserving solid buttons and badges
    ========================================================================= */
 .light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
   color: var(--heading-color);
+}
+
+.light p.text-white,
+.light span.text-white,
+.light strong.text-white,
+.light b.text-white,
+.light div.text-white:not([class*="bg-"]):not([class*="bg-[#"]),
+.light .text-white:not(button):not([class*="bg-"]):not([class*="bg-[#"]):not(.keep-white) {
+  color: var(--heading-color);
+}
+
+/* Light pastel color adjustments for high contrast on light backgrounds */
+.light .text-cyan-300, .light .text-cyan-200 {
+  color: #0284c7; /* Sky-600 */
+}
+.light .text-amber-400, .light .text-amber-300, .light .text-amber-200 {
+  color: #d97706; /* Amber-600 */
+}
+.light .text-emerald-400, .light .text-emerald-300, .light .text-emerald-200 {
+  color: #059669; /* Emerald-600 */
+}
+
+/* Saturated buttons and solid brand chips in Light Mode MUST keep pure white text */
+.light button[class*="bg-emerald"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+.light button[class*="bg-indigo"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+.light button[class*="bg-blue"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+.light button[class*="bg-violet"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+.light button[class*="bg-rose"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+.light button[class*="bg-red"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+.light button[class*="bg-amber"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+.light .bg-emerald:not([class*="/"]),
+.light [class*="bg-[#"]:not([class*="/"]),
+.light [class*="bg-slate-900"],
+.light [class*="bg-slate-950"],
+.light [class*="bg-black"],
+.light .keep-white,
+.light .keep-white * {
+  color: #ffffff !important;
+}
+
+.light button[class*="bg-emerald"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+.light button[class*="bg-indigo"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+.light button[class*="bg-blue"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+.light [class*="bg-[#"]:not([class*="/"]) * {
+  color: inherit;
 }
 
 .light input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
@@ -636,14 +683,14 @@ label,
   box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
 }
 
-/* Light theme headings on light surfaces */
-.light h1:not([class*="text-white"]):not([class*="!text-white"]),
-.light h2:not([class*="text-white"]):not([class*="!text-white"]),
-.light h3:not([class*="text-white"]):not([class*="!text-white"]),
-.light h4:not([class*="text-white"]):not([class*="!text-white"]),
-.light h5:not([class*="text-white"]):not([class*="!text-white"]),
-.light h6:not([class*="text-white"]):not([class*="!text-white"]) {
-  color: var(--heading-color);
+/* Universal Light theme headings: ensures all headings on light surfaces have deep contrast */
+.light h1:not(.keep-white),
+.light h2:not(.keep-white),
+.light h3:not(.keep-white),
+.light h4:not(.keep-white),
+.light h5:not(.keep-white),
+.light h6:not(.keep-white) {
+  color: var(--heading-color) !important;
 }
 
 /* Light Mode Input & Form Elements Contrast */

@@ -247,7 +247,7 @@ export default function VaathiPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7.5rem)] md:h-[calc(100vh-8rem)] max-w-5xl mx-auto">
+    <div className="flex flex-col h-[calc(100dvh-11rem)] md:h-[calc(100vh-8rem)] max-w-5xl mx-auto">
       {/* Header Bar */}
       <div className="flex items-center justify-between border-b border-border-navy pb-3 pt-1 px-2 shrink-0">
         <div className="flex items-center gap-3">

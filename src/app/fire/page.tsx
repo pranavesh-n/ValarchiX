@@ -425,7 +425,7 @@ export default function FireCalculator() {
         {/* Results and Visual Chart */}
         <div className="lg:col-span-2 space-y-6">
           {/* Key Metrics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
               <span className="text-[10px] uppercase font-bold text-muted-grey block">Target FIRE Corpus</span>
               <p className="text-xl font-bold text-emerald mt-1">
@@ -446,7 +446,7 @@ export default function FireCalculator() {
               </span>
             </div>
 
-            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45 col-span-2 md:col-span-1">
+            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45 col-span-1 sm:col-span-2 md:col-span-1">
               <span className="text-[10px] uppercase font-bold text-muted-grey block">Projected Savings Growth</span>
               <p className="text-xl font-bold text-blue-400 mt-1">
                 {formatCurrency(calculations.projectedSavingsOnly)}

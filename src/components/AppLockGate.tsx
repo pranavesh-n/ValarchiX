@@ -247,7 +247,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     const displayName = getPrimaryFirstName(rawName);
 
     return (
-      <div className="fixed inset-0 z-[99999] bg-slate-50/95 dark:bg-[#020817]/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 min-h-screen overflow-y-auto transition-colors duration-200">
+      <div className="fixed inset-0 z-[99999] bg-slate-50/95 dark:bg-[#020817]/95 backdrop-blur-2xl flex flex-col items-center justify-start sm:justify-center p-4 py-8 sm:py-6 min-h-[100dvh] overflow-y-auto transition-colors duration-200">
         {/* Top-Right Theme Toggle */}
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
           <button
@@ -266,7 +266,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
         <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Security Vault Card Container - Flawless Light & Dark adaptive */}
-        <div className="relative z-10 w-full max-w-sm mx-auto bg-white dark:bg-[#0c1322] border border-slate-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl text-center flex flex-col items-center space-y-4 transition-colors duration-200">
+        <div className="relative z-10 w-full max-w-sm mx-auto my-auto bg-white dark:bg-[#0c1322] border border-slate-200/90 dark:border-white/10 rounded-3xl p-5 sm:p-8 shadow-2xl text-center flex flex-col items-center space-y-3.5 sm:space-y-4 transition-colors duration-200">
           {/* ValarchiX Official Security Emblem */}
           <div className="relative">
             <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-[#060b17] border border-emerald-500/40 p-2.5 shadow-xl shadow-emerald-500/10 flex items-center justify-center">

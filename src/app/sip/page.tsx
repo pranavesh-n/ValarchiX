@@ -672,7 +672,7 @@ export default function SipCalculator() {
         {/* Results and Visual Chart */}
         <div className="lg:col-span-2 space-y-6">
           {/* Statistics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             <div className="p-4 sm:p-5 rounded-2xl border border-border-navy bg-navy-card shadow-sm">
               <span className="text-xs uppercase font-bold text-muted-grey block">
                 {calcMode === "fd" ? "Deposit Principal" : "Total Invested"}
@@ -701,7 +701,7 @@ export default function SipCalculator() {
               )}
             </div>
 
-            <div className="p-4 sm:p-5 rounded-2xl border border-border-navy bg-navy-card shadow-sm col-span-2 md:col-span-1">
+            <div className="p-4 sm:p-5 rounded-2xl border border-border-navy bg-navy-card shadow-sm col-span-1 sm:col-span-2 md:col-span-1">
               <span className="text-xs uppercase font-bold text-muted-grey block">
                 Inflation Adjusted Value
               </span>

@@ -601,7 +601,7 @@ export default function SipVsFdCalculator() {
                 <TrendingUp size={12} />
                 <span>Mutual Fund Final (Post-Tax)</span>
               </span>
-              <p className="text-xl sm:text-2xl font-extrabold text-white mt-1">
+              <p className="text-xl sm:text-2xl font-extrabold text-heading mt-1">
                 {formatCurrency(calculations.mfFinalPostTax)}
               </p>
               <div className="text-[10px] text-muted-grey pt-1">
@@ -610,38 +610,38 @@ export default function SipVsFdCalculator() {
             </div>
 
             <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-1">
-              <span className="text-[10px] uppercase font-bold text-amber-400 flex items-center gap-1">
+              <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
                 <Landmark size={12} />
                 <span>Fixed Deposit Final (Post-Tax)</span>
               </span>
-              <p className="text-xl sm:text-2xl font-extrabold text-white mt-1">
+              <p className="text-xl sm:text-2xl font-extrabold text-heading mt-1">
                 {formatCurrency(calculations.fdFinalPostTax)}
               </p>
               <div className="text-[10px] text-muted-grey pt-1">
                 Real Purchasing Power:{" "}
-                <strong className={calculations.fdFinalReal < calculations.totalInvested ? "text-red-400" : "text-amber-400"}>
+                <strong className={calculations.fdFinalReal < calculations.totalInvested ? "text-red-500 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}>
                   {formatCurrency(calculations.fdFinalReal)}
                 </strong>
               </div>
             </div>
 
             <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 space-y-1 col-span-2 md:col-span-1">
-              <span className="text-[10px] uppercase font-bold text-cyan-400 flex items-center gap-1">
+              <span className="text-[10px] uppercase font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1">
                 <Scale size={12} />
                 <span>Wealth Gap (Opportunity Cost)</span>
               </span>
-              <p className="text-xl sm:text-2xl font-extrabold text-cyan-300 mt-1">
+              <p className="text-xl sm:text-2xl font-extrabold text-cyan-600 dark:text-cyan-300 mt-1">
                 +{formatCurrency(calculations.wealthGapNominal)}
               </p>
               <div className="text-[10px] text-muted-grey pt-1">
-                Mutual Funds created <strong className="text-cyan-300">{calculations.mfMultiplier}x</strong> the wealth of FD!
+                Mutual Funds created <strong className="text-cyan-600 dark:text-cyan-300">{calculations.mfMultiplier}x</strong> the wealth of FD!
               </div>
             </div>
           </div>
 
           {/* Key Insight Alert */}
           <div className="p-4 rounded-xl border border-border-navy bg-navy-card/40 text-xs leading-relaxed space-y-2">
-            <div className="flex items-center gap-2 text-white font-bold">
+            <div className="flex items-center gap-2 text-heading font-bold">
               <ShieldCheck size={16} className="text-emerald" />
               <span>The Mathematics of Real Wealth Divergence</span>
             </div>

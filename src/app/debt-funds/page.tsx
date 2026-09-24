@@ -477,7 +477,7 @@ export default function DebtFundExplorer() {
           {/* Results & Visuals */}
           <div className="lg:col-span-2 space-y-4">
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               <div className="p-4 rounded-xl border border-emerald/30 bg-emerald/5 space-y-1">
                 <span className="text-[10px] uppercase font-bold text-emerald flex items-center gap-1">
                   <ShieldCheck size={12} />
@@ -506,7 +506,7 @@ export default function DebtFundExplorer() {
                 </span>
               </div>
 
-              <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 space-y-1 col-span-2 md:col-span-1">
+              <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 space-y-1 col-span-1 sm:col-span-2 md:col-span-1">
                 <span className="text-[10px] uppercase font-bold text-cyan-400 flex items-center gap-1">
                   <Scale size={12} />
                   <span>Tax Deferral Benefit</span>

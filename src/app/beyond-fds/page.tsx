@@ -548,7 +548,7 @@ export default function BeyondFdsPage() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* Destroyer stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
                 <span className="text-[10px] uppercase font-bold text-muted-grey block">Nominal Statement</span>
                 <p className="text-lg font-bold text-white mt-1">
@@ -565,7 +565,7 @@ export default function BeyondFdsPage() {
                 <span className="text-[9px] text-red-400 block mt-0.5">- {formatCurrency(fdDestroyerData.taxLoss)} lost to taxes</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 col-span-2 md:col-span-1">
+              <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 col-span-1 sm:col-span-2 md:col-span-1">
                 <span className="text-[10px] uppercase font-bold text-red-400 block">Real Purchasing Power</span>
                 <p className="text-lg font-bold text-white mt-1">
                   {formatCurrency(fdDestroyerData.finalReal)}

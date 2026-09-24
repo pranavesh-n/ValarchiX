@@ -248,7 +248,7 @@ export default function HLVCalculator() {
           </div>
 
           {/* Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
               <span className="text-[10px] uppercase font-bold text-muted-grey block">Years to Retirement</span>
               <p className="text-2xl font-bold text-white mt-1">{yearsToRetire}</p>
@@ -257,7 +257,7 @@ export default function HLVCalculator() {
               <span className="text-[10px] uppercase font-bold text-muted-grey block">Existing Insurance</span>
               <p className="text-lg font-bold text-emerald mt-1">{fmtL(existingInsurance)}</p>
             </div>
-            <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/5 col-span-2 md:col-span-1">
+            <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/5 col-span-1 sm:col-span-2 md:col-span-1">
               <span className="text-[10px] uppercase font-bold text-red-400 block">Coverage Gap</span>
               <p className="text-lg font-bold text-red-400 mt-1">{fmtL(coverageGap)}</p>
             </div>

@@ -216,7 +216,7 @@ export default function PpfCalculator() {
         {/* Results Panel */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45">
               <span className="text-[10px] uppercase font-bold text-muted-grey block">Total Principal</span>
               <p className="text-xl font-bold text-white mt-1">
@@ -229,7 +229,7 @@ export default function PpfCalculator() {
                 {formatCurrency(calculations.maturityValue)}
               </p>
             </div>
-            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45 col-span-2 md:col-span-1">
+            <div className="p-4 rounded-xl border border-border-navy bg-navy-card/45 col-span-1 sm:col-span-2 md:col-span-1">
               <span className="text-[10px] uppercase font-bold text-muted-grey block">Maturity Value (Real Value)</span>
               <p className="text-xl font-bold text-amber-500 mt-1">
                 {formatCurrency(adjustInflation ? calculations.realMaturityValue : calculations.maturityValue)}

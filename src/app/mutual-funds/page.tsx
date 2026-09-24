@@ -499,11 +499,11 @@ export default function MutualFundAnalyzer() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border-navy pb-5 sm:pb-6 gap-4 min-w-0 w-full">
         <div className="space-y-1.5 min-w-0 w-full">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-heading tracking-tight flex items-center gap-2">
               <Layers className="text-emerald shrink-0" />
               <span>Mutual Funds Screener & Analyzer</span>
             </h1>
-            <span className="text-[10px] uppercase tracking-wider font-extrabold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-amber-500 dark:text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
               👑 ValarchiX Flagship Model
             </span>
           </div>
@@ -534,7 +534,7 @@ export default function MutualFundAnalyzer() {
             onClick={() => setViewMode("screener")}
             className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${viewMode === "screener"
               ? "border-emerald text-emerald bg-emerald/5"
-              : "border-transparent text-muted-grey hover:text-white"
+              : "border-transparent text-muted-grey hover:text-heading"
               }`}
           >
             <Filter size={15} />
@@ -544,7 +544,7 @@ export default function MutualFundAnalyzer() {
             onClick={() => setViewMode("analyzer")}
             className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${viewMode === "analyzer"
               ? "border-emerald text-emerald bg-emerald/5"
-              : "border-transparent text-muted-grey hover:text-white"
+              : "border-transparent text-muted-grey hover:text-heading"
               }`}
           >
             <Layers size={15} />
@@ -554,7 +554,7 @@ export default function MutualFundAnalyzer() {
             onClick={() => setViewMode("factsheets")}
             className={`flex items-center gap-2 px-4 sm:px-6 py-3 border-b-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${viewMode === "factsheets"
               ? "border-emerald text-emerald bg-emerald/5"
-              : "border-transparent text-muted-grey hover:text-white"
+              : "border-transparent text-muted-grey hover:text-heading"
               }`}
           >
             <BookOpen size={15} />
@@ -626,7 +626,7 @@ export default function MutualFundAnalyzer() {
                     onClick={() => setScreenerFilterCategory(filterKey)}
                     className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 text-xs font-semibold ${isActive
                       ? "bg-emerald text-navy-bg shadow-md font-bold scale-[1.02]"
-                      : "bg-navy-bg/80 border border-border-navy text-muted-grey hover:text-white hover:border-emerald/40"
+                      : "bg-navy-bg/80 border border-border-navy text-muted-grey hover:text-heading hover:border-emerald/40"
                       }`}
                   >
                     <span>{tab.label}</span>
@@ -651,7 +651,7 @@ export default function MutualFundAnalyzer() {
               {screenerSearch && (
                 <button
                   onClick={() => setScreenerSearch("")}
-                  className="text-muted-grey hover:text-white p-0.5"
+                  className="text-muted-grey hover:text-heading p-0.5"
                   title="Clear search"
                 >
                   <X size={14} />
