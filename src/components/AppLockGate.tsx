@@ -179,6 +179,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
 
   const handleResetAndUnlock = useCallback(() => {
     disableAllPasscodes();
+    if (typeof window !== "undefined") {
+      localStorage.setItem("valarchix_app_lock_disabled_by_user", "true");
+      localStorage.setItem("valarchix_vault_unlocked", "true");
+      sessionStorage.setItem("valarchix_session_unlocked", "true");
+    }
     setIsLocked(false);
     setPinInput("");
     setErrorMsg("");
@@ -241,7 +246,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
           <button
             type="button"
             onClick={handleResetAndUnlock}
-            className="px-4 py-2 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-bold text-emerald-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95"
+            className="px-4 py-2 rounded-full text-xs font-bold text-emerald-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95"
+            style={{
+              backgroundColor: "rgba(16, 185, 129, 0.2)",
+              border: "1px solid rgba(16, 185, 129, 0.4)",
+            }}
           >
             <Unlock size={14} />
             <span>Close Lock &amp; Enter</span>
@@ -331,7 +340,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
                 key={item.num}
                 type="button"
                 onClick={() => handleDigitClick(item.num)}
-                className="h-13 sm:h-14 rounded-2xl bg-white/[0.07] hover:bg-white/[0.14] active:bg-emerald-500/25 active:scale-95 border border-white/10 transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm select-none"
+                className="h-13 sm:h-14 rounded-2xl transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm select-none active:scale-95"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                }}
               >
                 <span
                   className="text-xl font-bold tracking-tight leading-none pointer-events-none"
@@ -359,7 +372,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             <button
               type="button"
               onClick={() => handleDigitClick("0")}
-              className="h-13 sm:h-14 rounded-2xl bg-white/[0.07] hover:bg-white/[0.14] active:bg-emerald-500/25 active:scale-95 border border-white/10 transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm select-none"
+              className="h-13 sm:h-14 rounded-2xl transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm select-none active:scale-95"
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+              }}
             >
               <span
                 className="text-xl font-bold tracking-tight leading-none pointer-events-none"
@@ -379,8 +396,12 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             <button
               type="button"
               onClick={handleDelete}
-              className="h-13 sm:h-14 rounded-2xl bg-white/[0.05] hover:bg-rose-500/20 active:scale-95 border border-white/10 transition-all flex items-center justify-center cursor-pointer shadow-sm select-none"
-              style={{ color: "#cbd5e1" }}
+              className="h-13 sm:h-14 rounded-2xl transition-all flex items-center justify-center cursor-pointer shadow-sm select-none active:scale-95"
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.06)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: "#cbd5e1",
+              }}
               title="Delete digit"
             >
               <Delete size={20} className="pointer-events-none" />
@@ -392,7 +413,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             <button
               type="button"
               onClick={handleResetAndUnlock}
-              className="w-full py-2.5 px-4 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-98"
+              className="w-full py-2.5 px-4 rounded-xl text-emerald-300 hover:text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-98"
+              style={{
+                backgroundColor: "rgba(16, 185, 129, 0.2)",
+                border: "1px solid rgba(16, 185, 129, 0.4)",
+              }}
             >
               <Unlock size={14} className="pointer-events-none" />
               <span className="pointer-events-none">Forgot PIN? Reset Lock &amp; Enter</span>

@@ -646,7 +646,7 @@ export default function MutualFundAnalyzer() {
                 value={screenerSearch}
                 onChange={(e) => setScreenerSearch(e.target.value)}
                 placeholder="Search fund name, code, category..."
-                className="w-full bg-transparent outline-none text-white text-xs placeholder:text-muted-grey/60"
+                className="w-full bg-transparent outline-none text-heading text-xs placeholder:text-muted-grey/60"
               />
               {screenerSearch && (
                 <button

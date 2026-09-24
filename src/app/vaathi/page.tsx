@@ -257,7 +257,7 @@ export default function VaathiPage() {
             className="h-10 w-10 rounded-xl object-cover border border-emerald/40 shadow-lg shadow-emerald/20"
           />
           <div>
-            <h1 className="text-lg md:text-xl font-extrabold text-white tracking-tight">
+            <h1 className="text-lg md:text-xl font-extrabold text-heading tracking-tight">
               Valarchi Vaathi
             </h1>
             <p className="text-[11px] text-muted-grey">
@@ -287,7 +287,7 @@ export default function VaathiPage() {
               className="h-16 w-16 md:h-20 md:w-20 rounded-2xl object-cover border-2 border-emerald/40 shadow-xl shadow-emerald/20 ring-4 ring-emerald/10 shrink-0"
             />
             <div className="space-y-1.5 max-w-lg">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-heading tracking-tight">
                 Vanakkam! 🙏
               </h2>
               <p className="text-xs md:text-sm text-muted-grey leading-relaxed">
@@ -335,7 +335,7 @@ export default function VaathiPage() {
               <div
                 className={`max-w-[92%] sm:max-w-[85%] md:max-w-[78%] rounded-2xl px-5 py-4 text-xs md:text-sm leading-relaxed shadow-sm ${
                   msg.role === "user"
-                    ? "bg-emerald/15 border border-emerald/30 text-white rounded-tr-none"
+                    ? "bg-emerald/15 border border-emerald/30 text-heading font-medium rounded-tr-none"
                     : "bg-navy-card border border-border-navy text-light-grey rounded-tl-none"
                 }`}
               >
@@ -345,7 +345,7 @@ export default function VaathiPage() {
                     <span className="text-xs font-semibold">Vaathi is calculating response...</span>
                   </div>
                 ) : (
-                  <div className="prose prose-invert max-w-none space-y-3 text-light-grey leading-normal">
+                  <div className="prose dark:prose-invert max-w-none space-y-3 text-light-grey leading-normal">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
@@ -366,10 +366,10 @@ export default function VaathiPage() {
                         ),
                         // Typography styling
                         h1: ({ node, ...props }) => (
-                          <h1 className="text-lg md:text-xl font-extrabold text-white mt-4 mb-2 border-b border-border-navy/50 pb-1" {...props} />
+                          <h1 className="text-lg md:text-xl font-extrabold text-heading mt-4 mb-2 border-b border-border-navy/50 pb-1" {...props} />
                         ),
                         h2: ({ node, ...props }) => (
-                          <h2 className="text-base md:text-lg font-bold text-white mt-3.5 mb-1.5" {...props} />
+                          <h2 className="text-base md:text-lg font-bold text-heading mt-3.5 mb-1.5" {...props} />
                         ),
                         h3: ({ node, ...props }) => (
                           <h3 className="text-sm md:text-base font-semibold text-emerald mt-3 mb-1" {...props} />
@@ -461,7 +461,7 @@ export default function VaathiPage() {
               onKeyDown={handleKeyDown}
               placeholder="Ask Vaathi a personal finance question..."
               rows={1}
-              className="w-full resize-none bg-navy-card border border-border-navy rounded-xl px-4 py-3 pr-12 text-xs md:text-sm text-white placeholder:text-muted-grey outline-none focus:border-emerald/60 focus:ring-1 focus:ring-emerald/20 transition-all shadow-inner"
+              className="w-full resize-none bg-navy-card border border-border-navy rounded-xl px-4 py-3 pr-12 text-xs md:text-sm text-heading placeholder:text-muted-grey outline-none focus:border-emerald/60 focus:ring-1 focus:ring-emerald/20 transition-all shadow-inner"
               style={{ minHeight: "46px", maxHeight: "120px" }}
               disabled={isLoading}
             />

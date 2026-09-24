@@ -66,6 +66,38 @@
   --input-border-filled: #059669;
 }
 
+/* =========================================================================
+   UNIVERSAL THEME TRANSITIONS (Smooth 200ms background & color interpolations)
+   ========================================================================= */
+html.light, html.dark {
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-card, .bg-navy-light {
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =========================================================================
+   HIGH-CONTRAST LIGHT MODE SAFEGUARD
+   Guarantees that headings, titles, and text on light cards are never white
+   ========================================================================= */
+.light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+  color: var(--heading-color);
+}
+
+.light input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.light textarea,
+.light select {
+  color: var(--heading-color) !important;
+}
+
+.light .text-white:not(.badge-content):not(.btn-primary-text):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-cyan"]):not([class*="bg-indigo"]):not([class*="bg-slate-9"]):not([class*="bg-black"]) {
+  color: var(--heading-color) !important;
+}
+
 /* Financial Input Theme-Aware Classes */
 .financial-input-unfilled {
   background-color: var(--input-bg-unfilled);
