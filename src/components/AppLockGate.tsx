@@ -32,7 +32,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
 
-  // Synchronous instant lock check (0.001ms latency, 0 waiting for async network)
+  // Synchronous instant lock check (0 latency)
   const [isLocked, setIsLocked] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       return checkIsAppLockedSync();
@@ -59,7 +59,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
   // Synchronous lock evaluation whenever session is known
   const checkUserLockState = useCallback((currentUserSession: any) => {
     if (!currentUserSession?.user) {
-      // If user signed out, check if legacy lock applies
+      // If user signed out, check if lock applies
       const isSyncLocked = checkIsAppLockedSync();
       setIsLocked(isSyncLocked);
       setHasChecked(true);
@@ -70,13 +70,19 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     setCachedUserInfo(currentUserSession.user);
 
     const pinKey = getUserPasscodeKey(userId);
+    const lockEnabledKey = getUserLockEnabledKey(userId);
     const unlockKey = getUserSessionUnlockedKey(userId);
 
-    const savedPinHash = localStorage.getItem(pinKey) || localStorage.getItem("valarchix_app_pin");
-    const isUnlockedInSession = sessionStorage.getItem(unlockKey) === "true" ||
-                               sessionStorage.getItem("valarchix_session_unlocked") === "true";
+    const isLockExplicitlyEnabled =
+      localStorage.getItem(lockEnabledKey) === "true" ||
+      localStorage.getItem("valarchix_app_lock_enabled") === "true";
+    const savedPinHash =
+      localStorage.getItem(pinKey) || localStorage.getItem("valarchix_app_pin");
+    const isUnlockedInSession =
+      sessionStorage.getItem(unlockKey) === "true" ||
+      sessionStorage.getItem("valarchix_session_unlocked") === "true";
 
-    if (savedPinHash && !isUnlockedInSession) {
+    if (isLockExplicitlyEnabled && savedPinHash && !isUnlockedInSession) {
       setIsLocked(true);
     } else {
       setIsLocked(false);
@@ -85,14 +91,14 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    // 1. Instant check on mount (frame 0)
+    // 1. Instant check on mount
     const syncLock = checkIsAppLockedSync();
     setIsLocked(syncLock);
     setHasChecked(true);
 
     const supabase = createClient();
 
-    // 2. Async session verification in background without blocking frame-0 UI
+    // 2. Async session verification in background without blocking UI
     async function initAuth() {
       const s = await getCurrentUserSession();
       setSession(s);
@@ -103,7 +109,9 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     }
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, newSession: any) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event: any, newSession: any) => {
       setSession(newSession);
       if (event === "SIGNED_OUT" || !newSession?.user) {
         setIsLocked(false);
@@ -115,32 +123,51 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       }
     });
 
-    // 25-Second Background Inactivity Lock
+    // 3. 25-Second Background Tab Lockout
     const handleVisibilityChange = async () => {
-      const currentS = await getCurrentUserSession();
-      if (!currentS?.user) return;
-
-      const userId = currentS.user.id;
-      const pinKey = getUserPasscodeKey(userId);
-      const savedPin = localStorage.getItem(pinKey) || localStorage.getItem("valarchix_app_pin");
-      if (!savedPin) return;
-
       if (document.hidden) {
         hiddenStartTimeRef.current = Date.now();
       } else {
         if (hiddenStartTimeRef.current) {
           const elapsed = Date.now() - hiddenStartTimeRef.current;
+          hiddenStartTimeRef.current = null;
+
+          // If tab was backgrounded for 25 seconds or more, lock the app
           if (elapsed >= 25000) {
-            sessionStorage.removeItem(getUserSessionUnlockedKey(userId));
-            sessionStorage.removeItem("valarchix_session_unlocked");
-            setIsLocked(true);
-            setPinInput("");
-            setErrorMsg("");
-            setFailedAttempts(0);
-            setIsSuccess(false);
+            const currentS = session || (await getCurrentUserSession());
+            if (currentS?.user) {
+              const activeUserId = currentS.user.id;
+              const pinKey = getUserPasscodeKey(activeUserId);
+              const lockEnabledKey = getUserLockEnabledKey(activeUserId);
+              const unlockKey = getUserSessionUnlockedKey(activeUserId);
+
+              const isEnabled =
+                localStorage.getItem(lockEnabledKey) === "true" ||
+                localStorage.getItem("valarchix_app_lock_enabled") === "true";
+              const savedPin =
+                localStorage.getItem(pinKey) ||
+                localStorage.getItem("valarchix_app_pin");
+
+              if (isEnabled && savedPin) {
+                sessionStorage.removeItem(unlockKey);
+                sessionStorage.removeItem("valarchix_session_unlocked");
+                setIsLocked(true);
+                setPinInput("");
+                setErrorMsg("");
+              }
+            } else {
+              const isEnabled =
+                localStorage.getItem("valarchix_app_lock_enabled") === "true";
+              const savedPin = localStorage.getItem("valarchix_app_pin");
+              if (isEnabled && savedPin) {
+                sessionStorage.removeItem("valarchix_session_unlocked");
+                setIsLocked(true);
+                setPinInput("");
+                setErrorMsg("");
+              }
+            }
           }
         }
-        hiddenStartTimeRef.current = null;
       }
     };
 
@@ -150,7 +177,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       subscription.unsubscribe();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [checkUserLockState]);
+  }, [checkUserLockState, session]);
 
   const processPinEntry = useCallback(
     async (enteredPin: string) => {
@@ -158,7 +185,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       isVerifyingRef.current = true;
 
       const currentS = session || (await getCurrentUserSession());
-      const activeUserId = currentS?.user?.id || (typeof window !== "undefined" ? localStorage.getItem("valarchix_active_user_id") : null);
+      const activeUserId =
+        currentS?.user?.id ||
+        (typeof window !== "undefined"
+          ? localStorage.getItem("valarchix_active_user_id")
+          : null);
 
       let savedPinHash: string | null = null;
       let unlockKey = "valarchix_session_unlocked";
@@ -252,7 +283,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
   }, [isLocked, handleKeyPress, handleDelete]);
 
   const handleResetAndSignOut = async () => {
-    const activeUserId = session?.user?.id || (typeof window !== "undefined" ? localStorage.getItem("valarchix_active_user_id") : null);
+    const activeUserId =
+      session?.user?.id ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("valarchix_active_user_id")
+        : null);
 
     if (activeUserId) {
       localStorage.removeItem(getUserPasscodeKey(activeUserId));
@@ -260,6 +295,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       sessionStorage.removeItem(getUserSessionUnlockedKey(activeUserId));
     }
     localStorage.removeItem("valarchix_app_pin");
+    localStorage.removeItem("valarchix_app_lock_enabled");
     localStorage.removeItem("valarchix_active_user_id");
     localStorage.removeItem("valarchix_cached_first_name");
     sessionStorage.removeItem("valarchix_session_unlocked");
@@ -278,20 +314,23 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
 
   // Safe client check: Never leak children if locked
   if (isLocked) {
-    const rawName = session?.user?.user_metadata?.full_name ||
-                    session?.user?.email?.split("@")[0] ||
-                    getCachedUserFirstName();
+    const rawName =
+      session?.user?.user_metadata?.full_name ||
+      session?.user?.email?.split("@")[0] ||
+      getCachedUserFirstName();
     const displayName = getPrimaryFirstName(rawName);
 
     return (
-      <div className="fixed inset-0 z-[99999] bg-[#050b17] text-white flex flex-col items-center justify-center p-4 select-none overflow-y-auto">
+      <div className="fixed inset-0 z-[99999] bg-[#020817]/95 backdrop-blur-xl text-white flex flex-col items-center justify-center p-4 select-none overflow-y-auto">
         {/* Ambient background glow accents */}
         <div className="absolute top-1/4 -left-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-        {/* Security Vault Card Container */}
-        <div className="relative z-10 w-full max-w-sm mx-auto bg-[#091428]/95 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] text-center flex flex-col items-center space-y-5">
-          
+        {/* Security Vault Card Container (Always high-contrast dark vault) */}
+        <div
+          className="relative z-10 w-full max-w-sm mx-auto bg-[#091428] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl text-center flex flex-col items-center space-y-4"
+          style={{ backgroundColor: "#091428", borderColor: "rgba(255,255,255,0.12)" }}
+        >
           {/* ValarchiX Official Security Emblem */}
           <div className="relative">
             <div className="w-16 h-16 rounded-2xl bg-[#030914] border border-emerald-500/40 p-2.5 shadow-xl shadow-emerald-500/20 flex items-center justify-center group">
@@ -313,16 +352,26 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
               <ShieldCheck size={13} />
               <span>ValarchiX Vault Protection</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h1
+              className="text-xl sm:text-2xl font-black !text-white tracking-tight"
+              style={{ color: "#ffffff" }}
+            >
               Welcome Back, {displayName} 👋
             </h1>
-            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+            <p
+              className="text-xs font-medium leading-relaxed"
+              style={{ color: "#cbd5e1" }}
+            >
               Enter your 4-digit PIN to securely unlock your financial workspace
             </p>
           </div>
 
           {/* 4 PIN Dots */}
-          <div className={`flex items-center justify-center gap-4 py-2 ${shake ? "animate-shake" : ""}`}>
+          <div
+            className={`flex items-center justify-center gap-4 py-1.5 ${
+              shake ? "animate-shake" : ""
+            }`}
+          >
             {[0, 1, 2, 3].map((index) => {
               const filled = pinInput.length > index;
               return (
@@ -330,10 +379,10 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
                   key={index}
                   className={`transition-all duration-200 ${
                     isSuccess
-                      ? "w-4 h-4 rounded-full bg-emerald-400 border border-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.8)] scale-110"
+                      ? "w-4 h-4 rounded-full bg-emerald-500 border border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.8)] scale-110"
                       : filled
-                      ? "w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-500 border border-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.6)] scale-110"
-                      : "w-3.5 h-3.5 rounded-full border-2 border-slate-600 bg-slate-800/40"
+                      ? "w-4 h-4 rounded-full bg-emerald-500 border border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.6)] scale-110"
+                      : "w-3.5 h-3.5 rounded-full border border-slate-600 bg-slate-800/80"
                   }`}
                 />
               );
@@ -350,20 +399,26 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
           </div>
 
           {/* Tactile Keypad */}
-          <div className="grid grid-cols-3 gap-3 w-full max-w-[280px]">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-3 w-full max-w-[280px]">
             {KEYPAD_DIGITS.map((item) => (
               <button
                 key={item.num}
                 type="button"
                 onClick={() => handleKeyPress(item.num)}
                 disabled={isSuccess}
-                className="h-14 sm:h-15 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-emerald-500/20 active:scale-95 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-150 flex flex-col items-center justify-center cursor-pointer shadow-sm touch-manipulation select-none"
+                className="h-13 sm:h-14 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] active:bg-emerald-500/20 active:scale-95 border border-white/[0.08] transition-all duration-150 flex flex-col items-center justify-center cursor-pointer shadow-sm touch-manipulation select-none"
               >
-                <span className="text-xl font-bold text-white tracking-tight leading-none">
+                <span
+                  className="text-xl font-bold tracking-tight leading-none"
+                  style={{ color: "#ffffff" }}
+                >
                   {item.num}
                 </span>
                 {item.sub && (
-                  <span className="text-[9px] font-semibold tracking-widest text-slate-400 uppercase mt-0.5 leading-none">
+                  <span
+                    className="text-[9px] font-semibold tracking-widest uppercase mt-0.5 leading-none"
+                    style={{ color: "#94a3b8" }}
+                  >
                     {item.sub}
                   </span>
                 )}
@@ -371,8 +426,8 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             ))}
 
             {/* Row 4: Biometric/Vault indicator */}
-            <div className="h-14 sm:h-15 flex items-center justify-center text-slate-500 rounded-2xl">
-              <Lock size={18} className="text-slate-500/80" />
+            <div className="h-13 sm:h-14 flex items-center justify-center text-slate-500 rounded-2xl">
+              <Lock size={18} />
             </div>
 
             {/* Row 4: Digit 0 */}
@@ -380,12 +435,18 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
               type="button"
               onClick={() => handleKeyPress("0")}
               disabled={isSuccess}
-              className="h-14 sm:h-15 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-emerald-500/20 active:scale-95 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-150 flex flex-col items-center justify-center cursor-pointer shadow-sm touch-manipulation select-none"
+              className="h-13 sm:h-14 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] active:bg-emerald-500/20 active:scale-95 border border-white/[0.08] transition-all duration-150 flex flex-col items-center justify-center cursor-pointer shadow-sm touch-manipulation select-none"
             >
-              <span className="text-xl font-bold text-white tracking-tight leading-none">
+              <span
+                className="text-xl font-bold tracking-tight leading-none"
+                style={{ color: "#ffffff" }}
+              >
                 0
               </span>
-              <span className="text-[9px] font-semibold tracking-widest text-slate-400 uppercase mt-0.5 leading-none">
+              <span
+                className="text-[9px] font-semibold tracking-widest uppercase mt-0.5 leading-none"
+                style={{ color: "#94a3b8" }}
+              >
                 +
               </span>
             </button>
@@ -395,31 +456,34 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
               type="button"
               onClick={handleDelete}
               disabled={isSuccess}
-              className="h-14 sm:h-15 rounded-2xl bg-white/[0.03] hover:bg-rose-500/15 text-slate-400 hover:text-rose-400 active:scale-95 border border-white/[0.06] transition-all duration-150 flex items-center justify-center cursor-pointer shadow-sm touch-manipulation select-none"
+              className="h-13 sm:h-14 rounded-2xl bg-white/[0.04] hover:bg-rose-500/20 active:scale-95 border border-white/[0.08] transition-all duration-150 flex items-center justify-center cursor-pointer shadow-sm touch-manipulation select-none"
+              style={{ color: "#cbd5e1" }}
               title="Delete digit"
             >
               <Delete size={20} />
             </button>
           </div>
 
-          {/* Bottom Forgot PIN Action */}
-          <div className="pt-2 w-full flex items-center justify-center min-h-[44px]">
+          {/* Action Row */}
+          <div className="pt-2 w-full">
             {failedAttempts >= 2 ? (
               <button
                 type="button"
                 onClick={handleResetAndSignOut}
-                className="text-xs font-bold text-rose-300 hover:text-rose-200 flex items-center gap-1.5 cursor-pointer bg-rose-500/15 px-4 py-2 rounded-full border border-rose-500/30 transition-all hover:bg-rose-500/25"
+                className="w-full py-2.5 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:text-rose-300 font-semibold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-98"
               >
                 <LogOut size={14} />
                 <span>Forgot PIN? Sign out &amp; Reset</span>
               </button>
             ) : (
-              <p className="text-[11px] text-slate-500 font-medium">
+              <p
+                className="text-[11px] font-medium tracking-tight"
+                style={{ color: "#94a3b8" }}
+              >
                 Forgot PIN? Enter incorrectly 2 times to reset
               </p>
             )}
           </div>
-
         </div>
       </div>
     );

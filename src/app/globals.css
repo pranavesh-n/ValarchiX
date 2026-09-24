@@ -259,37 +259,66 @@
 }
 
 /* =========================================================================
-   UNIVERSAL TEXT-WHITE CONVERSION IN LIGHT MODE
-   Turns unreadable white text on light buttons/cards to dark slate-900
+   COLORED BUTTONS & DARK ELEMENTS (ALWAYS CRISP WHITE TEXT IN BOTH THEMES)
+   Prevents buttons, gradients, dark cards, and badges from turning black in Light Mode
    ========================================================================= */
-.light .text-white,
-.light [class~="text-white"] {
-  color: #0f172a !important;
-}
-
-.light .hover\:text-white:hover {
-  color: #0f172a !important;
-}
-
-/* Solid dark elements strictly keep pure white text */
-.light .bg-slate-900,
-.light .bg-slate-800,
-.light .bg-slate-950,
-.light .bg-black,
-.light [class~="bg-slate-900"],
-.light [class~="bg-slate-800"],
-.light [class~="bg-slate-950"],
-.light [class~="bg-black"],
+.bg-gradient-to-r,
+[class*="bg-gradient-to-r"],
+[class*="from-indigo-"],
+[class*="from-emerald-"],
+.bg-indigo-600,
+.bg-indigo-700,
+.bg-indigo-800,
+.bg-indigo-500,
+[class*="bg-indigo-600"],
+[class*="bg-indigo-700"],
+[class*="bg-indigo-500"],
+.bg-emerald-600,
+.bg-emerald-700,
+.bg-teal-600,
+.bg-teal-700,
+.bg-rose-600,
+.bg-rose-700,
+.bg-red-600,
+.bg-slate-900,
+.bg-slate-800,
+.bg-slate-950,
+.bg-black,
+[class~="bg-slate-900"],
+[class~="bg-slate-800"],
+[class~="bg-slate-950"],
+[class~="bg-black"],
+.light .bg-indigo-600,
+.light .bg-indigo-700,
+.light .bg-teal-600,
+.light .bg-rose-600,
+.light [class*="bg-indigo-600"],
+.light [class*="bg-teal-600"],
+.light [class*="bg-rose-600"],
+.light [class*="bg-gradient-to-r"],
+.light [class*="from-indigo-"],
 .light .text-pure-white,
 .light .btn-dark,
-.light [class*="!text-white"] {
+[class*="!text-white"] {
   color: #ffffff !important;
 }
 
-.light [class~="bg-slate-900"] > *,
-.light [class~="bg-slate-800"] > *,
-.light [class~="bg-slate-950"] > *,
-.light [class~="bg-black"] > * {
+.bg-gradient-to-r *,
+[class*="bg-gradient-to-r"] *,
+[class*="from-indigo-"] *,
+[class*="from-emerald-"] *,
+.bg-indigo-600 *,
+.bg-indigo-700 *,
+.bg-teal-600 *,
+.bg-rose-600 *,
+.light .bg-indigo-600 *,
+.light [class*="bg-indigo-600"] *,
+.light [class*="bg-gradient-to-r"] *,
+.light [class*="from-indigo-"] *,
+.light [class~="bg-slate-900"] *,
+.light [class~="bg-slate-800"] *,
+.light [class~="bg-slate-950"] *,
+.light [class~="bg-black"] * {
   color: #ffffff;
 }
 
@@ -580,8 +609,13 @@ label,
   box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
 }
 
-/* Light theme headings */
-.light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+/* Light theme headings on light surfaces */
+.light h1:not([class*="text-white"]):not([class*="!text-white"]),
+.light h2:not([class*="text-white"]):not([class*="!text-white"]),
+.light h3:not([class*="text-white"]):not([class*="!text-white"]),
+.light h4:not([class*="text-white"]):not([class*="!text-white"]),
+.light h5:not([class*="text-white"]):not([class*="!text-white"]),
+.light h6:not([class*="text-white"]):not([class*="!text-white"]) {
   color: var(--heading-color);
 }
 

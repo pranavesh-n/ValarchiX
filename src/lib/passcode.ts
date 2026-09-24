@@ -52,7 +52,7 @@ export function getPrimaryFirstName(nameOrEmail?: string | null): string {
 
 /**
  * Synchronously checks if the app is currently locked by inspecting browser storage immediately (0.001ms latency)
- * This prevents any flash or delay of the home page before the PIN screen mounts.
+ * Only locks if the user has EXPLICITLY enabled app lock in their settings.
  */
 export function checkIsAppLockedSync(): boolean {
   if (typeof window === "undefined") return false;
@@ -95,6 +95,36 @@ export function checkIsAppLockedSync(): boolean {
   }
 
   return false;
+}
+
+/**
+ * Completely disables all passcode locks and removes all related keys from storage
+ */
+export function disableAllPasscodes(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const activeUserId = localStorage.getItem("valarchix_active_user_id");
+    if (activeUserId) {
+      localStorage.removeItem(getUserPasscodeKey(activeUserId));
+      localStorage.removeItem(getUserLockEnabledKey(activeUserId));
+      sessionStorage.removeItem(getUserSessionUnlockedKey(activeUserId));
+    }
+    localStorage.removeItem("valarchix_app_pin");
+    localStorage.removeItem("valarchix_app_lock_enabled");
+    sessionStorage.setItem("valarchix_session_unlocked", "true");
+
+    // Remove any user-specific pin keys
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith("valarchix_app_pin_") || k.startsWith("valarchix_app_lock_enabled_"))) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch (err) {
+    console.warn("Error disabling passcodes:", err);
+  }
 }
 
 /**

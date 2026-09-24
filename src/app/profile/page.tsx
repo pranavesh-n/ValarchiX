@@ -28,7 +28,9 @@ import {
   TrendingUp,
   Layers,
   Calendar,
-  Eye
+  Eye,
+  Sun,
+  Moon
 } from "lucide-react";
 import {
   getCurrentUserSession,
@@ -396,10 +398,20 @@ export default function ProfilePage() {
   const [confirmClearCacheOpen, setConfirmClearCacheOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
+
+    const currentTheme = (typeof window !== "undefined" ? localStorage.getItem("theme") : "dark") as "dark" | "light" || "dark";
+    setTheme(currentTheme);
+
+    const handleThemeEvent = (e: any) => {
+      const next = e.detail || (localStorage.getItem("theme") as "dark" | "light") || "dark";
+      setTheme(next);
+    };
+    window.addEventListener("valarchix_theme_changed", handleThemeEvent);
 
     async function loadData() {
       if (typeof window !== "undefined") {
@@ -502,8 +514,24 @@ export default function ProfilePage() {
 
     return () => {
       subscription.unsubscribe();
+      window.removeEventListener("valarchix_theme_changed", handleThemeEvent);
     };
   }, []);
+
+  const handleToggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("theme", nextTheme);
+    if (nextTheme === "light") {
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+    }
+    window.dispatchEvent(new CustomEvent("valarchix_theme_changed", { detail: nextTheme }));
+    showToast(`Switched to ${nextTheme === "light" ? "Light Mode ☀️" : "Dark Mode 🌙"}`);
+  };
 
   const handlePinKeyPress = async (digit: string) => {
     if (currentPin.length >= 4) return;
@@ -998,6 +1026,31 @@ export default function ProfilePage() {
         </h2>
         <div className="bg-navy-card border border-border-navy rounded-3xl divide-y divide-border-navy/60 overflow-hidden shadow-sm">
           
+          {/* Appearance & Theme Toggle (Whole Row Clickable) */}
+          <button
+            type="button"
+            onClick={handleToggleTheme}
+            className="w-full p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-navy-light/40 transition text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 shrink-0">
+                {theme === "dark" ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-slate-700 dark:text-amber-400" />}
+              </div>
+              <div>
+                <div className="text-sm font-bold text-heading">Appearance &amp; Theme</div>
+                <div className="text-xs text-muted-grey">
+                  {theme === "dark" ? "Currently using Dark Mode (Tap to switch to Light)" : "Currently using Light Mode (Tap to switch to Dark)"}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-xs font-black bg-navy-bg border border-border-navy text-heading">
+                {theme === "dark" ? "Dark 🌙" : "Light ☀️"}
+              </span>
+              <ChevronRight size={16} className="text-muted-grey" />
+            </div>
+          </button>
+
           {/* ValarchiX App PWA (Whole Row Clickable) */}
           <div
             onClick={() => {

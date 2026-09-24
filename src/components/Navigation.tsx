@@ -284,17 +284,29 @@ export default function Navigation() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Theme on mount
+  // Theme sync & listener
   useEffect(() => {
+    const applyTheme = (targetTheme: "dark" | "light") => {
+      setTheme(targetTheme);
+      if (targetTheme === "light") {
+        document.documentElement.classList.add("light");
+        document.documentElement.classList.remove("dark");
+      } else {
+        document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
+      }
+    };
+
     const savedTheme = (localStorage.getItem("theme") as "dark" | "light") || "dark";
-    setTheme(savedTheme);
-    if (savedTheme === "light") {
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-    } else {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    }
+    applyTheme(savedTheme);
+
+    const handleThemeEvent = (e: any) => {
+      const next = e.detail || (localStorage.getItem("theme") as "dark" | "light") || "dark";
+      applyTheme(next);
+    };
+
+    window.addEventListener("valarchix_theme_changed", handleThemeEvent);
+    return () => window.removeEventListener("valarchix_theme_changed", handleThemeEvent);
   }, []);
 
   const toggleTheme = () => {
@@ -308,6 +320,7 @@ export default function Navigation() {
       document.documentElement.classList.add("dark");
       document.documentElement.classList.remove("light");
     }
+    window.dispatchEvent(new CustomEvent("valarchix_theme_changed", { detail: newTheme }));
   };
 
   const handleDropdownHover = (name: string) => {
@@ -728,11 +741,13 @@ export default function Navigation() {
             
             {/* Theme Toggle Button */}
             <button
+              type="button"
               onClick={toggleTheme}
-              className="p-2 sm:p-2.5 rounded-full border border-border-navy bg-navy-card/50 text-emerald hover:text-heading hover:border-emerald/40 transition-all cursor-pointer shadow-sm shrink-0"
-              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              className="p-2 sm:p-2.5 rounded-full border border-slate-300 dark:border-border-navy bg-slate-100 hover:bg-slate-200 dark:bg-navy-card/60 dark:hover:bg-navy-light text-slate-800 dark:text-emerald transition-all cursor-pointer shadow-sm shrink-0 flex items-center justify-center"
+              title={theme === "dark" ? "Switch to Light Theme" : "Switch to Dark Theme"}
+              aria-label={theme === "dark" ? "Switch to Light Theme" : "Switch to Dark Theme"}
             >
-              {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+              {theme === "dark" ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-slate-700" />}
             </button>
 
             {/* Mobile / Tablet Full Suite Menu Button */}
