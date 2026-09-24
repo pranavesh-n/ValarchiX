@@ -81,8 +81,7 @@ body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-
 }
 
 /* =========================================================================
-   HIGH-CONTRAST LIGHT MODE SAFEGUARD
-   Guarantees that headings, titles, and text on light cards are never white
+   LIGHT MODE TYPOGRAPHY CONTRAST
    ========================================================================= */
 .light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
   color: var(--heading-color);
@@ -91,11 +90,7 @@ body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-
 .light input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 .light textarea,
 .light select {
-  color: var(--heading-color) !important;
-}
-
-.light .text-white:not(.badge-content):not(.btn-primary-text):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-cyan"]):not([class*="bg-indigo"]):not([class*="bg-slate-9"]):not([class*="bg-black"]) {
-  color: var(--heading-color) !important;
+  color: var(--heading-color);
 }
 
 /* Financial Input Theme-Aware Classes */

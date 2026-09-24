@@ -153,34 +153,37 @@ export function getPrimaryFirstName(nameOrEmail?: string | null): string {
 
 /**
  * Synchronously checks if the app is currently locked by inspecting browser storage immediately (0.001ms latency)
- * Only locks if the user has EXPLICITLY enabled app lock in their settings and has a PIN.
+ * Only locks if the user has explicitly enabled app lock in their settings and has a PIN.
  */
 export function checkIsAppLockedSync(): boolean {
   if (typeof window === "undefined") return false;
 
   try {
-    // If user has dismissed or disabled lock, NEVER lock
-    if (
-      localStorage.getItem("valarchix_app_lock_disabled_by_user") === "true" ||
-      localStorage.getItem("valarchix_vault_unlocked") === "true"
-    ) {
-      return false;
-    }
-
     const activeUserId = localStorage.getItem("valarchix_active_user_id");
-    if (!activeUserId) {
-      return false;
+
+    // Check active user's PIN lock
+    if (activeUserId) {
+      const isLockExplicitlyEnabled =
+        localStorage.getItem(getUserLockEnabledKey(activeUserId)) === "true" ||
+        localStorage.getItem("valarchix_app_lock_enabled") === "true";
+      const userPin =
+        localStorage.getItem(getUserPasscodeKey(activeUserId)) ||
+        localStorage.getItem("valarchix_app_pin");
+
+      if (userPin && isLockExplicitlyEnabled) {
+        const isUnlocked =
+          sessionStorage.getItem(getUserSessionUnlockedKey(activeUserId)) === "true" ||
+          sessionStorage.getItem("valarchix_session_unlocked") === "true";
+        return !isUnlocked;
+      }
     }
 
-    const isLockExplicitlyEnabled =
-      localStorage.getItem(getUserLockEnabledKey(activeUserId)) === "true";
-    const userPin = localStorage.getItem(getUserPasscodeKey(activeUserId));
-
-    if (isLockExplicitlyEnabled && userPin) {
-      const isUnlocked =
-        sessionStorage.getItem(getUserSessionUnlockedKey(activeUserId)) === "true" ||
-        sessionStorage.getItem("valarchix_session_unlocked") === "true";
-      return !isUnlocked;
+    // Check global fallback PIN
+    const legacyPin = localStorage.getItem("valarchix_app_pin");
+    const isLegacyLockEnabled = localStorage.getItem("valarchix_app_lock_enabled") === "true";
+    if (legacyPin && isLegacyLockEnabled) {
+      const isLegacyUnlocked = sessionStorage.getItem("valarchix_session_unlocked") === "true";
+      return !isLegacyUnlocked;
     }
   } catch (err) {
     console.warn("Sync lock check error:", err);

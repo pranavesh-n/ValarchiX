@@ -60,8 +60,10 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     const unlockKey = getUserSessionUnlockedKey(userId);
 
     const isLockExplicitlyEnabled =
-      localStorage.getItem(lockEnabledKey) === "true";
-    const savedPinHash = localStorage.getItem(pinKey);
+      localStorage.getItem(lockEnabledKey) === "true" ||
+      localStorage.getItem("valarchix_app_lock_enabled") === "true";
+    const savedPinHash =
+      localStorage.getItem(pinKey) || localStorage.getItem("valarchix_app_pin");
     const isUnlockedInSession =
       sessionStorage.getItem(unlockKey) === "true" ||
       sessionStorage.getItem("valarchix_session_unlocked") === "true";
@@ -145,12 +147,12 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
         } else {
           setShake(true);
           setTimeout(() => setShake(false), 500);
-          setErrorMsg("Incorrect PIN. Click 'Reset Lock & Enter' below if forgotten.");
+          setErrorMsg("Incorrect PIN. Try again or reset below.");
           setPinInput("");
         }
       } catch (err) {
         console.error("PIN verification error:", err);
-        setErrorMsg("Error verifying. Click 'Reset Lock & Enter' below.");
+        setErrorMsg("Error verifying PIN. Please try again.");
         setPinInput("");
       }
     },
@@ -179,11 +181,6 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
 
   const handleResetAndUnlock = useCallback(() => {
     disableAllPasscodes();
-    if (typeof window !== "undefined") {
-      localStorage.setItem("valarchix_app_lock_disabled_by_user", "true");
-      localStorage.setItem("valarchix_vault_unlocked", "true");
-      sessionStorage.setItem("valarchix_session_unlocked", "true");
-    }
     setIsLocked(false);
     setPinInput("");
     setErrorMsg("");
@@ -223,8 +220,6 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
       } else if (key === "Escape") {
         e.preventDefault();
         handleResetAndUnlock();
-      } else if (key.length === 1 && /^[a-zA-Z]$/.test(key)) {
-        setErrorMsg("PIN uses 4 digits (0-9). Tap 'Reset Lock & Enter' below if needed.");
       }
     };
 
@@ -240,19 +235,16 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
     const displayName = getPrimaryFirstName(rawName);
 
     return (
-      <div className="fixed inset-0 z-[99999] bg-[#020817]/95 backdrop-blur-xl text-white flex flex-col items-center justify-center p-4 overflow-y-auto">
-        {/* Top-Right Instant Escape / Unlock Button */}
+      <div className="fixed inset-0 z-[99999] bg-slate-900/90 dark:bg-[#020817]/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 overflow-y-auto transition-colors duration-200">
+        {/* Top-Right Instant Bypass / Unlock Button */}
         <div className="absolute top-4 right-4 z-50">
           <button
             type="button"
             onClick={handleResetAndUnlock}
-            className="px-4 py-2 rounded-full text-xs font-bold text-emerald-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95"
-            style={{
-              backgroundColor: "rgba(16, 185, 129, 0.2)",
-              border: "1px solid rgba(16, 185, 129, 0.4)",
-            }}
+            className="px-3.5 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700/80 dark:bg-white/10 dark:hover:bg-white/20 border border-slate-700 dark:border-white/15 text-xs font-semibold text-slate-200 dark:text-slate-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-lg backdrop-blur-md active:scale-95"
+            title="Bypass Lock & Enter Workspace"
           >
-            <Unlock size={14} />
+            <Unlock size={13} />
             <span>Close Lock &amp; Enter</span>
           </button>
         </div>
@@ -261,14 +253,11 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
         <div className="absolute top-1/4 -left-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-        {/* Security Vault Card Container */}
-        <div
-          className="relative z-10 w-full max-w-sm mx-auto bg-[#091428] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl text-center flex flex-col items-center space-y-4"
-          style={{ backgroundColor: "#091428", borderColor: "rgba(255,255,255,0.12)" }}
-        >
+        {/* Security Vault Card Container - Pure Dark / Light Theme Adaptive */}
+        <div className="relative z-10 w-full max-w-sm mx-auto bg-white dark:bg-[#091428] border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl text-center flex flex-col items-center space-y-4 transition-colors duration-200">
           {/* ValarchiX Official Security Emblem */}
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-[#030914] border border-emerald-500/40 p-2.5 shadow-xl shadow-emerald-500/20 flex items-center justify-center group">
+            <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-[#030914] border border-emerald-500/30 dark:border-emerald-500/40 p-2.5 shadow-xl shadow-emerald-500/10 flex items-center justify-center group">
               <img
                 src="/logo.svg"
                 alt="ValarchiX"
@@ -277,26 +266,20 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             </div>
             <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-[#091428]"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white dark:border-[#091428]"></span>
             </span>
           </div>
 
           {/* User Name & Instruction */}
           <div className="space-y-1.5 pt-0.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-400">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
               <ShieldCheck size={13} />
               <span>ValarchiX Vault Protection</span>
             </div>
-            <h1
-              className="text-xl sm:text-2xl font-black text-white tracking-tight"
-              style={{ color: "#ffffff" }}
-            >
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               Welcome Back, {displayName} 👋
             </h1>
-            <p
-              className="text-xs font-medium leading-relaxed"
-              style={{ color: "#cbd5e1" }}
-            >
+            <p className="text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
               Enter your 4-digit PIN to securely unlock your financial workspace
             </p>
           </div>
@@ -317,7 +300,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
                       ? "w-4 h-4 rounded-full bg-emerald-500 border border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.8)] scale-110"
                       : filled
                       ? "w-4 h-4 rounded-full bg-emerald-500 border border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.6)] scale-110"
-                      : "w-3.5 h-3.5 rounded-full border border-slate-600 bg-slate-800/80"
+                      : "w-3.5 h-3.5 rounded-full border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/80"
                   }`}
                 />
               );
@@ -327,7 +310,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
           {/* Error Message Pill */}
           <div className="min-h-[22px] flex items-center justify-center">
             {errorMsg && (
-              <div className="text-[12px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-0.5 rounded-full animate-fadeIn max-w-[280px]">
+              <div className="text-[12px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-0.5 rounded-full animate-fadeIn max-w-[280px]">
                 {errorMsg}
               </div>
             )}
@@ -340,23 +323,13 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
                 key={item.num}
                 type="button"
                 onClick={() => handleDigitClick(item.num)}
-                className="h-13 sm:h-14 rounded-2xl transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm select-none active:scale-95"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                }}
+                className="h-13 sm:h-14 rounded-2xl bg-slate-50 hover:bg-slate-100 active:bg-emerald-500/15 border border-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.12] dark:active:bg-emerald-500/20 dark:border-white/10 transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm active:scale-95 select-none"
               >
-                <span
-                  className="text-xl font-bold tracking-tight leading-none pointer-events-none"
-                  style={{ color: "#ffffff" }}
-                >
+                <span className="text-xl font-bold tracking-tight leading-none text-slate-900 dark:text-white pointer-events-none">
                   {item.num}
                 </span>
                 {item.sub && (
-                  <span
-                    className="text-[9px] font-semibold tracking-widest uppercase mt-0.5 leading-none pointer-events-none"
-                    style={{ color: "#94a3b8" }}
-                  >
+                  <span className="text-[9px] font-semibold tracking-widest uppercase mt-0.5 leading-none text-slate-400 dark:text-slate-400 pointer-events-none">
                     {item.sub}
                   </span>
                 )}
@@ -364,7 +337,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             ))}
 
             {/* Row 4: Biometric/Vault indicator */}
-            <div className="h-13 sm:h-14 flex items-center justify-center text-slate-500 rounded-2xl pointer-events-none">
+            <div className="h-13 sm:h-14 flex items-center justify-center text-slate-400 dark:text-slate-500 rounded-2xl pointer-events-none">
               <Lock size={18} />
             </div>
 
@@ -372,22 +345,12 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             <button
               type="button"
               onClick={() => handleDigitClick("0")}
-              className="h-13 sm:h-14 rounded-2xl transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm select-none active:scale-95"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.08)",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-              }}
+              className="h-13 sm:h-14 rounded-2xl bg-slate-50 hover:bg-slate-100 active:bg-emerald-500/15 border border-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.12] dark:active:bg-emerald-500/20 dark:border-white/10 transition-all flex flex-col items-center justify-center cursor-pointer shadow-sm active:scale-95 select-none"
             >
-              <span
-                className="text-xl font-bold tracking-tight leading-none pointer-events-none"
-                style={{ color: "#ffffff" }}
-              >
+              <span className="text-xl font-bold tracking-tight leading-none text-slate-900 dark:text-white pointer-events-none">
                 0
               </span>
-              <span
-                className="text-[9px] font-semibold tracking-widest uppercase mt-0.5 leading-none pointer-events-none"
-                style={{ color: "#94a3b8" }}
-              >
+              <span className="text-[9px] font-semibold tracking-widest uppercase mt-0.5 leading-none text-slate-400 dark:text-slate-400 pointer-events-none">
                 +
               </span>
             </button>
@@ -396,12 +359,7 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             <button
               type="button"
               onClick={handleDelete}
-              className="h-13 sm:h-14 rounded-2xl transition-all flex items-center justify-center cursor-pointer shadow-sm select-none active:scale-95"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.06)",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-                color: "#cbd5e1",
-              }}
+              className="h-13 sm:h-14 rounded-2xl bg-slate-50 hover:bg-rose-500/10 active:scale-95 border border-slate-200 text-slate-600 hover:text-rose-600 dark:bg-white/[0.05] dark:hover:bg-rose-500/20 dark:border-white/10 dark:text-slate-300 dark:hover:text-rose-400 transition-all flex items-center justify-center cursor-pointer shadow-sm select-none"
               title="Delete digit"
             >
               <Delete size={20} className="pointer-events-none" />
@@ -413,22 +371,18 @@ export default function AppLockGate({ children }: { children: React.ReactNode })
             <button
               type="button"
               onClick={handleResetAndUnlock}
-              className="w-full py-2.5 px-4 rounded-xl text-emerald-300 hover:text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-98"
-              style={{
-                backgroundColor: "rgba(16, 185, 129, 0.2)",
-                border: "1px solid rgba(16, 185, 129, 0.4)",
-              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-98"
             >
               <Unlock size={14} className="pointer-events-none" />
               <span className="pointer-events-none">Forgot PIN? Reset Lock &amp; Enter</span>
             </button>
 
-            <div className="flex items-center justify-between px-1 text-[11px] text-slate-400">
+            <div className="flex items-center justify-between px-1 text-[11px] text-slate-500 dark:text-slate-400">
               <span>Need to switch account?</span>
               <button
                 type="button"
                 onClick={handleResetAndSignOut}
-                className="text-rose-400 hover:text-rose-300 underline font-medium cursor-pointer inline-flex items-center gap-1"
+                className="text-rose-600 dark:text-rose-400 hover:underline font-medium cursor-pointer inline-flex items-center gap-1"
               >
                 <LogOut size={11} className="pointer-events-none" />
                 <span className="pointer-events-none">Sign out</span>
