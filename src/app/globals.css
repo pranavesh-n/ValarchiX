@@ -85,28 +85,49 @@ body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-
    Ensures all numbers, values, headings and labels have deep, crisp contrast
    in Light Mode while preserving solid buttons and badges
    ========================================================================= */
-.light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
-  color: var(--heading-color);
+.light h1:not(.keep-white),
+.light h2:not(.keep-white),
+.light h3:not(.keep-white),
+.light h4:not(.keep-white),
+.light h5:not(.keep-white),
+.light h6:not(.keep-white) {
+  color: var(--heading-color) !important;
 }
 
-.light p.text-white,
-.light span.text-white,
-.light strong.text-white,
-.light b.text-white,
-.light div.text-white:not([class*="bg-"]):not([class*="bg-[#"]),
-.light .text-white:not(button):not([class*="bg-"]):not([class*="bg-[#"]):not(.keep-white) {
-  color: var(--heading-color);
+.light p.text-white:not(.keep-white),
+.light span.text-white:not(.keep-white):not([class*="!text-white"]),
+.light strong.text-white:not(.keep-white),
+.light b.text-white:not(.keep-white),
+.light div.text-white:not(.keep-white):not([class*="!text-white"]):not(button *),
+.light td.text-white:not(.keep-white),
+.light th.text-white:not(.keep-white),
+.light label.text-white:not(.keep-white),
+.light li.text-white:not(.keep-white),
+.light .text-white:not(button):not(.keep-white):not([class*="!text-white"]):not([class*="bg-emerald"]):not([class*="bg-indigo"]):not([class*="bg-teal"]):not([class*="bg-rose"]) {
+  color: var(--heading-color) !important;
 }
 
-/* Light pastel color adjustments for high contrast on light backgrounds */
-.light .text-cyan-300, .light .text-cyan-200 {
-  color: #0284c7; /* Sky-600 */
+/* Light pastel color adjustments for WCAG AA high contrast on light backgrounds */
+.light .text-cyan-400, .light .text-cyan-300, .light .text-cyan-200 {
+  color: #0284c7 !important; /* Sky-600 */
 }
-.light .text-amber-400, .light .text-amber-300, .light .text-amber-200 {
-  color: #d97706; /* Amber-600 */
+.light .text-amber-500, .light .text-amber-400, .light .text-amber-300, .light .text-amber-200 {
+  color: #d97706 !important; /* Amber-600 */
 }
 .light .text-emerald-400, .light .text-emerald-300, .light .text-emerald-200 {
-  color: #059669; /* Emerald-600 */
+  color: #059669 !important; /* Emerald-600 */
+}
+.light .text-teal-400, .light .text-teal-300, .light .text-teal-200 {
+  color: #0d9488 !important; /* Teal-600 */
+}
+.light .text-indigo-400, .light .text-indigo-300 {
+  color: #4f46e5 !important; /* Indigo-600 */
+}
+.light .text-purple-400, .light .text-purple-300 {
+  color: #7c3aed !important; /* Purple-600 */
+}
+.light .text-rose-400, .light .text-rose-300, .light .text-red-400, .light .text-red-300 {
+  color: #e11d48 !important; /* Rose-600 */
 }
 
 /* Saturated buttons and solid brand chips in Light Mode MUST keep pure white text */
@@ -118,10 +139,8 @@ body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-
 .light button[class*="bg-red"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
 .light button[class*="bg-amber"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
 .light .bg-emerald:not([class*="/"]),
-.light [class*="bg-[#"]:not([class*="/"]),
-.light [class*="bg-slate-900"],
-.light [class*="bg-slate-950"],
-.light [class*="bg-black"],
+.light .bg-indigo-600:not([class*="/"]),
+.light .bg-teal-600:not([class*="/"]),
 .light .keep-white,
 .light .keep-white * {
   color: #ffffff !important;
@@ -129,8 +148,7 @@ body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-
 
 .light button[class*="bg-emerald"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
 .light button[class*="bg-indigo"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
-.light button[class*="bg-blue"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
-.light [class*="bg-[#"]:not([class*="/"]) * {
+.light button[class*="bg-blue"]:not([class*="/5"]):not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) * {
   color: inherit;
 }
 
@@ -288,13 +306,21 @@ body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-
 
 /* Secondary muted text contrast in Light Mode */
 .light .text-slate-400,
-.light [class~="text-slate-400"] {
+.light [class~="text-slate-400"],
+.light .text-slate-300,
+.light [class~="text-slate-300"],
+.light .text-gray-400,
+.light [class~="text-gray-400"],
+.light .text-gray-300,
+.light [class~="text-gray-300"],
+.light .text-neutral-400,
+.light [class~="text-neutral-400"] {
   color: #475569 !important; /* Slate-600: rich, legible */
 }
 
 .light .text-slate-500,
 .light [class~="text-slate-500"] {
-  color: #64748b !important; /* Slate-500 */
+  color: #334155 !important; /* Slate-700: high contrast */
 }
 
 /* =========================================================================
@@ -354,14 +380,6 @@ body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-
 .bg-rose-600,
 .bg-rose-700,
 .bg-red-600,
-.bg-slate-900,
-.bg-slate-800,
-.bg-slate-950,
-.bg-black,
-[class~="bg-slate-900"],
-[class~="bg-slate-800"],
-[class~="bg-slate-950"],
-[class~="bg-black"],
 .light .bg-indigo-600,
 .light .bg-indigo-700,
 .light .bg-teal-600,
@@ -389,11 +407,9 @@ body, header, nav, main, footer, aside, section, article, .bg-navy-bg, .bg-navy-
 .light [class*="bg-indigo-600"] *,
 .light [class*="bg-gradient-to-r"] *,
 .light [class*="from-indigo-"] *,
-.light [class~="bg-slate-900"] *,
-.light [class~="bg-slate-800"] *,
-.light [class~="bg-slate-950"] *,
-.light [class~="bg-black"] * {
-  color: #ffffff;
+.light .btn-dark *,
+.light .keep-white * {
+  color: #ffffff !important;
 }
 
 /* =========================================================================

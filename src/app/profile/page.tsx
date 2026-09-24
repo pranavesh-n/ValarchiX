@@ -1241,13 +1241,13 @@ export default function ProfilePage() {
 
       {/* Full-Screen Set/Change Passcode Screen (Matches App Lock Gate UI) */}
       {passcodeModalOpen && (
-        <div className="fixed inset-0 z-[99999] bg-slate-50/95 dark:bg-[#020817]/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 select-none overflow-y-auto animate-fadeIn transition-colors duration-200">
+        <div className="fixed inset-0 z-[99999] bg-slate-50/95 dark:bg-[#020817]/95 backdrop-blur-2xl flex flex-col items-center justify-start sm:justify-center p-4 py-8 sm:py-6 select-none min-h-[100dvh] overflow-y-auto animate-fadeIn transition-colors duration-200">
           {/* Ambient background glow accents */}
           <div className="absolute top-1/4 -left-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
           <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none" />
 
           {/* Security Vault Card Container */}
-          <div className="relative z-10 w-full max-w-sm mx-auto bg-white dark:bg-[#0c1322] border border-slate-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl text-center flex flex-col items-center space-y-5 transition-colors duration-200">
+          <div className="relative z-10 w-full max-w-sm mx-auto my-auto bg-white dark:bg-[#0c1322] border border-slate-200/90 dark:border-white/10 rounded-3xl p-5 sm:p-8 shadow-2xl text-center flex flex-col items-center space-y-4 sm:space-y-5 transition-colors duration-200">
             
             {/* ValarchiX Official Security Emblem */}
             <div className="relative">

@@ -167,15 +167,15 @@ export default function RentVsBuyPage() {
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Top Hero: Affordability Reality Check */}
         <div className="bg-navy-card border border-border-navy rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-navy pb-4 gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 font-bold text-slate-200 text-base">
-                <Building className="w-5 h-5 text-emerald-400" /> Affordability Reality Check
+              <div className="flex items-center gap-2 font-bold text-heading text-base">
+                <Building className="w-5 h-5 text-emerald" /> Affordability Reality Check
               </div>
               <select
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1 text-emerald-400 font-semibold text-xs focus:border-emerald-500 focus:outline-none"
+                className="bg-navy-bg border border-border-navy rounded-xl px-3 py-1 text-emerald font-semibold text-xs focus:border-emerald focus:outline-none"
               >
                 <option value="Bangalore">Bangalore (5% Stamp Duty)</option>
                 <option value="Mumbai">Mumbai (6% Stamp Duty)</option>
@@ -186,7 +186,7 @@ export default function RentVsBuyPage() {
                 <option value="Other">Other City (5% Stamp Duty)</option>
               </select>
             </div>
-            <span className="text-xs text-slate-400">Bank caps EMI at ~50% of income. The 30% rule is the &quot;sleep peacefully&quot; zone.</span>
+            <span className="text-xs text-muted-grey">Bank caps EMI at ~50% of income. The 30% rule is the &quot;sleep peacefully&quot; zone.</span>
           </div>
 
           {/* Property Type Tabs */}
@@ -242,46 +242,46 @@ export default function RentVsBuyPage() {
                 <span className="text-muted-grey">Property Cost</span>
                 <span className="font-bold text-heading">{formatINR(propertyPrice)}</span>
               </div>
-              <div className="flex justify-between text-xs text-slate-400">
+              <div className="flex justify-between text-xs text-muted-grey">
                 <span>+ Stamp Duty ({(calc.stampDutyRate * 100).toFixed(0)}%)</span>
                 <span>{formatINR(calc.stampDuty)}</span>
               </div>
-              <div className="flex justify-between text-xs text-slate-400">
+              <div className="flex justify-between text-xs text-muted-grey">
                 <span>+ Registration (1%)</span>
                 <span>{formatINR(calc.registration)}</span>
               </div>
-              <div className="flex justify-between text-xs text-slate-400">
+              <div className="flex justify-between text-xs text-muted-grey">
                 <span>+ GST ({(calc.gstRate * 100).toFixed(0)}%)</span>
                 <span>{formatINR(calc.gst)}</span>
               </div>
-              <div className="flex justify-between text-xs text-slate-400">
+              <div className="flex justify-between text-xs text-muted-grey">
                 <span>+ Interiors & misc (4%)</span>
                 <span>{formatINR(calc.interiorsMisc)}</span>
               </div>
 
-              <div className="border-t border-slate-800 pt-2 flex justify-between font-bold text-white">
+              <div className="border-t border-border-navy pt-2 flex justify-between font-bold text-heading">
                 <span>Total Actual Cost</span>
                 <span>{formatINR(calc.totalActualCost)}</span>
               </div>
 
-              <div className="border-t border-slate-800/80 pt-2 space-y-1.5 text-xs">
-                <div className="flex justify-between text-slate-400">
+              <div className="border-t border-border-navy pt-2 space-y-1.5 text-xs">
+                <div className="flex justify-between text-muted-grey">
                   <span>Down Payment ({downPaymentPct}%)</span>
                   <span>{formatINR(calc.downPaymentAmount)}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-muted-grey">
                   <span>Hidden Costs (cash)</span>
                   <span>{formatINR(calc.hiddenCashOutflow)}</span>
                 </div>
-                <div className="flex justify-between font-bold text-emerald-400 text-sm">
+                <div className="flex justify-between font-bold text-emerald text-sm">
                   <span>Cash You Need Upfront</span>
                   <span>{formatINR(calc.cashYouNeedUpfront)}</span>
                 </div>
-                <div className="flex justify-between text-slate-400 pt-1">
+                <div className="flex justify-between text-muted-grey pt-1">
                   <span>Loan Amount</span>
                   <span>{formatINR(calc.loanAmount)}</span>
                 </div>
-                <div className="flex justify-between font-bold text-white text-sm">
+                <div className="flex justify-between font-bold text-heading text-sm">
                   <span>EMI ({loanRate}%, {loanTenure} yrs)</span>
                   <span>{formatINR(calc.monthlyEmi)} / mo</span>
                 </div>
@@ -291,19 +291,19 @@ export default function RentVsBuyPage() {
             {/* Right Anxiety & Salary Needed Spotlight Cards */}
             <div className="lg:col-span-6 space-y-4 flex flex-col justify-between">
               {/* Salary Needed */}
-              <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-5">
-                <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">SALARY NEEDED (NET IN-HAND)</div>
-                <div className="text-3xl font-black text-emerald-300 mt-1">{formatINR(calc.requiredSalaryFor30PctEmi)} / mo</div>
-                <div className="text-xs text-emerald-400/80 mt-1 font-medium">so EMI stays ≤ 30% of your income</div>
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/40 rounded-2xl p-5">
+                <div className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">SALARY NEEDED (NET IN-HAND)</div>
+                <div className="text-3xl font-black text-emerald-700 dark:text-emerald-300 mt-1">{formatINR(calc.requiredSalaryFor30PctEmi)} / mo</div>
+                <div className="text-xs text-emerald-800 dark:text-emerald-400/80 mt-1 font-medium">so EMI stays ≤ 30% of your income</div>
               </div>
 
               {/* EMI Anxiety Zone Alert Card */}
               <div className={`p-5 rounded-2xl border space-y-2 ${
                 calc.emiToSalaryPct > 50
-                  ? "bg-rose-950/60 border-rose-600 text-rose-200"
+                  ? "bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-600 text-rose-800 dark:text-rose-200"
                   : calc.emiToSalaryPct > 30
-                    ? "bg-amber-950/60 border-amber-600 text-amber-200"
-                    : "bg-emerald-950/60 border-emerald-600 text-emerald-200"
+                    ? "bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-600 text-amber-800 dark:text-amber-200"
+                    : "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-600 text-emerald-800 dark:text-emerald-200"
               }`}>
                 <div className="flex items-center gap-2 font-extrabold text-sm uppercase tracking-wider">
                   <AlertTriangle className="w-4 h-4" /> 
@@ -326,35 +326,35 @@ export default function RentVsBuyPage() {
 
         {/* Middle Verdict Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-2">
-            <div className="text-xs font-bold text-slate-400 uppercase">BUY — NET WORTH ({horizonYears} YRS)</div>
-            <div className="text-3xl font-black text-white">{formatINRWords(calc.finalBuyNetWorth)}</div>
-            <div className="text-xs text-slate-500 border-t border-slate-800/80 pt-2 space-y-0.5">
+          <div className="bg-navy-card border border-border-navy rounded-3xl p-6 shadow-xl space-y-2">
+            <div className="text-xs font-bold text-muted-grey uppercase">BUY — NET WORTH ({horizonYears} YRS)</div>
+            <div className="text-3xl font-black text-heading">{formatINRWords(calc.finalBuyNetWorth)}</div>
+            <div className="text-xs text-muted-grey border-t border-border-navy pt-2 space-y-0.5">
               <div>Property Val: {formatINRWords(calc.finalBuyNetWorth)}</div>
               <div>Loan Left: ₹0</div>
               <div>Total EMI Paid: {formatINRWords(calc.totalEmiPaidCum)}</div>
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-emerald-500/50 rounded-3xl p-6 shadow-xl space-y-2 relative overflow-hidden">
+          <div className="bg-navy-card border border-emerald-500/50 rounded-3xl p-6 shadow-xl space-y-2 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-            <div className="text-xs font-bold text-emerald-400 uppercase">RENT + INVEST — NET WORTH</div>
-            <div className="text-3xl font-black text-emerald-300">{formatINRWords(calc.finalRentNetWorth)}</div>
-            <div className="text-xs text-slate-400 border-t border-slate-800/80 pt-2 space-y-0.5">
+            <div className="text-xs font-bold text-emerald uppercase">RENT + INVEST — NET WORTH</div>
+            <div className="text-3xl font-black text-emerald">{formatINRWords(calc.finalRentNetWorth)}</div>
+            <div className="text-xs text-muted-grey border-t border-border-navy pt-2 space-y-0.5">
               <div>Invested Corpus: {formatINRWords(calc.finalRentNetWorth)}</div>
               <div>Total Rent Paid: {formatINRWords(calc.totalRentPaidCum)}</div>
               <div>Upfront Seed: {formatINR(calc.cashYouNeedUpfront)}</div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-950/60 to-slate-900 border border-emerald-500/60 rounded-3xl p-6 shadow-xl space-y-2">
-            <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-xs uppercase tracking-widest">
+          <div className="bg-emerald-50 dark:bg-gradient-to-br dark:from-emerald-950/60 dark:to-navy-card border border-emerald-300 dark:border-emerald-500/60 rounded-3xl p-6 shadow-xl space-y-2">
+            <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400 font-extrabold text-xs uppercase tracking-widest">
               <Award className="w-4 h-4" /> VERDICT
             </div>
-            <div className="text-2xl font-black text-emerald-400">
+            <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400">
               {calc.rentWins ? "Renting Wins" : "Buying Wins"}
             </div>
-            <div className="text-xs text-slate-300 space-y-1 pt-1">
+            <div className="text-xs text-slate-700 dark:text-slate-300 space-y-1 pt-1">
               <div>Δ Net Worth Advantage: <strong>{formatINR(calc.netWorthDelta)}</strong></div>
               <div>EMI: <strong>{formatINR(calc.monthlyEmi)} / mo</strong></div>
               <div>EMI / Salary Ratio: <strong>{calc.emiToSalaryPct}%</strong></div>
@@ -363,19 +363,19 @@ export default function RentVsBuyPage() {
         </div>
 
         {/* 20-Year Net Worth Over Time Chart */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-emerald-400" /> Net Worth Over Time Comparison
+        <div className="bg-navy-card border border-border-navy rounded-3xl p-6 shadow-2xl space-y-4">
+          <h3 className="text-lg font-bold text-heading flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-emerald" /> Net Worth Over Time Comparison
           </h3>
 
           <div className="h-80 w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={calc.chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="year" stroke="#64748b" tickFormatter={(y) => `Yr ${y}`} />
-                <YAxis stroke="#64748b" tickFormatter={(val) => `₹${(val / 10000000).toFixed(1)}Cr`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                <XAxis dataKey="year" stroke="var(--text-muted-color)" tickFormatter={(y) => `Yr ${y}`} />
+                <YAxis stroke="var(--text-muted-color)" tickFormatter={(val) => `₹${(val / 10000000).toFixed(1)}Cr`} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "12px", color: "#f8fafc" }}
+                  contentStyle={{ backgroundColor: "var(--card-bg-color)", borderColor: "var(--border-color)", borderRadius: "12px", color: "var(--text-main-color)" }}
                   formatter={(val: any) => [formatINR(Number(val)), "Net Worth"]}
                 />
                 <Legend />
@@ -388,18 +388,18 @@ export default function RentVsBuyPage() {
 
         {/* Left Interactive Input Sliders Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6 shadow-xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-emerald-400" /> Property & Loan Inputs
+          <div className="lg:col-span-6 bg-navy-card border border-border-navy rounded-3xl p-6 space-y-6 shadow-xl">
+            <h3 className="text-lg font-bold text-heading flex items-center gap-2">
+              <Sliders className="w-5 h-5 text-emerald" /> Property & Loan Inputs
             </h3>
 
             {/* City */}
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase">City Preset</label>
+              <label className="text-xs font-semibold text-muted-grey uppercase">City Preset</label>
               <select
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-sm mt-1 focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-navy-bg border border-border-navy rounded-xl px-4 py-2.5 text-heading text-sm mt-1 focus:border-emerald focus:outline-none"
               >
                 <option value="Bangalore">Bangalore</option>
                 <option value="Mumbai">Mumbai</option>
@@ -413,14 +413,14 @@ export default function RentVsBuyPage() {
             {/* Salary */}
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="text-slate-400 uppercase">Net Monthly Salary</span>
-                <span className="text-emerald-400 font-bold">{formatINR(salary)}</span>
+                <span className="text-muted-grey uppercase">Net Monthly Salary</span>
+                <span className="text-emerald font-bold">{formatINR(salary)}</span>
               </div>
               <input
                 type="number"
                 value={salary}
                 onChange={(e) => setSalary(Number(e.target.value))}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white font-bold text-sm mb-2"
+                className="w-full bg-navy-bg border border-border-navy rounded-xl px-4 py-2 text-heading font-bold text-sm mb-2"
               />
               <input
                 type="range"
@@ -429,7 +429,7 @@ export default function RentVsBuyPage() {
                 step={5000}
                 value={salary}
                 onChange={(e) => setSalary(Number(e.target.value))}
-                className="w-full accent-emerald-500 cursor-pointer"
+                className="w-full accent-emerald cursor-pointer"
               />
             </div>
 
@@ -437,27 +437,27 @@ export default function RentVsBuyPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-400 uppercase">Size (sqft)</span>
-                  <span className="text-emerald-400">{propertySizeSqft} sqft</span>
+                  <span className="text-muted-grey uppercase">Size (sqft)</span>
+                  <span className="text-emerald">{propertySizeSqft} sqft</span>
                 </div>
                 <input
                   type="number"
                   value={propertySizeSqft}
                   onChange={(e) => setPropertySizeSqft(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm"
+                  className="w-full bg-navy-bg border border-border-navy rounded-xl px-3 py-2 text-heading text-sm"
                 />
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-400 uppercase">Price / sqft</span>
-                  <span className="text-emerald-400">{formatINR(pricePerSqft)}</span>
+                  <span className="text-muted-grey uppercase">Price / sqft</span>
+                  <span className="text-emerald">{formatINR(pricePerSqft)}</span>
                 </div>
                 <input
                   type="number"
                   value={pricePerSqft}
                   onChange={(e) => setPricePerSqft(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm"
+                  className="w-full bg-navy-bg border border-border-navy rounded-xl px-3 py-2 text-heading text-sm"
                 />
               </div>
             </div>
@@ -465,14 +465,14 @@ export default function RentVsBuyPage() {
             {/* Monthly Rent */}
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="text-slate-400 uppercase">Current Monthly Rent</span>
-                <span className="text-emerald-400 font-bold">{formatINR(monthlyRent)}</span>
+                <span className="text-muted-grey uppercase">Current Monthly Rent</span>
+                <span className="text-emerald font-bold">{formatINR(monthlyRent)}</span>
               </div>
               <input
                 type="number"
                 value={monthlyRent}
                 onChange={(e) => setMonthlyRent(Number(e.target.value))}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-sm mb-2"
+                className="w-full bg-navy-bg border border-border-navy rounded-xl px-4 py-2 text-heading text-sm mb-2"
               />
               <input
                 type="range"
@@ -481,55 +481,55 @@ export default function RentVsBuyPage() {
                 step={2000}
                 value={monthlyRent}
                 onChange={(e) => setMonthlyRent(Number(e.target.value))}
-                className="w-full accent-emerald-500 cursor-pointer"
+                className="w-full accent-emerald cursor-pointer"
               />
             </div>
 
             {/* Loan parameters */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-[11px] text-slate-400 uppercase">Down Pmt %</label>
+                <label className="text-[11px] text-muted-grey uppercase">Down Pmt %</label>
                 <input
                   type="number"
                   value={downPaymentPct}
                   onChange={(e) => setDownPaymentPct(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm mt-1"
+                  className="w-full bg-navy-bg border border-border-navy rounded-xl px-3 py-2 text-heading text-sm mt-1"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] text-slate-400 uppercase">Loan Rate %</label>
+                <label className="text-[11px] text-muted-grey uppercase">Loan Rate %</label>
                 <input
                   type="number"
                   value={loanRate}
                   onChange={(e) => setLoanRate(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm mt-1"
+                  className="w-full bg-navy-bg border border-border-navy rounded-xl px-3 py-2 text-heading text-sm mt-1"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] text-slate-400 uppercase">Tenure (Yrs)</label>
+                <label className="text-[11px] text-muted-grey uppercase">Tenure (Yrs)</label>
                 <input
                   type="number"
                   value={loanTenure}
                   onChange={(e) => setLoanTenure(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm mt-1"
+                  className="w-full bg-navy-bg border border-border-navy rounded-xl px-3 py-2 text-heading text-sm mt-1"
                 />
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6 shadow-xl flex flex-col justify-between">
+          <div className="lg:col-span-6 bg-navy-card border border-border-navy rounded-3xl p-6 space-y-6 shadow-xl flex flex-col justify-between">
             <div className="space-y-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-emerald-400" /> Economic Assumptions
+              <h3 className="text-lg font-bold text-heading flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-emerald" /> Economic Assumptions
               </h3>
 
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-1">
-                    <span className="text-slate-400 uppercase">Equity SIP CAGR Return</span>
-                    <span className="text-emerald-400 font-bold">{equityReturn}%</span>
+                    <span className="text-muted-grey uppercase">Equity SIP CAGR Return</span>
+                    <span className="text-emerald font-bold">{equityReturn}%</span>
                   </div>
                   <input
                     type="range"
@@ -538,13 +538,13 @@ export default function RentVsBuyPage() {
                     step={0.5}
                     value={equityReturn}
                     onChange={(e) => setEquityReturn(Number(e.target.value))}
-                    className="w-full accent-emerald-500 cursor-pointer"
+                    className="w-full accent-emerald cursor-pointer"
                   />
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center text-xs font-semibold mb-1">
-                    <span className="text-slate-400 uppercase">Property Appreciation %</span>
+                    <span className="text-muted-grey uppercase">Property Appreciation %</span>
                     <NumericInput
                       value={propertyAppreciation}
                       onChange={setPropertyAppreciation}
@@ -552,7 +552,7 @@ export default function RentVsBuyPage() {
                       max={25}
                       step={0.5}
                       type="percent"
-                      className="text-emerald-400 font-bold bg-slate-900 border-slate-700"
+                      className="text-emerald font-bold bg-navy-bg border-border-navy"
                     />
                   </div>
                   <input
@@ -562,13 +562,13 @@ export default function RentVsBuyPage() {
                     step={0.5}
                     value={propertyAppreciation}
                     onChange={(e) => setPropertyAppreciation(Number(e.target.value))}
-                    className="w-full accent-emerald-500 cursor-pointer"
+                    className="w-full accent-emerald cursor-pointer"
                   />
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center text-xs font-semibold mb-1">
-                    <span className="text-slate-400 uppercase">Rent Inflation %</span>
+                    <span className="text-muted-grey uppercase">Rent Inflation %</span>
                     <NumericInput
                       value={rentInflation}
                       onChange={setRentInflation}
@@ -576,7 +576,7 @@ export default function RentVsBuyPage() {
                       max={25}
                       step={0.5}
                       type="percent"
-                      className="text-emerald-400 font-bold bg-slate-900 border-slate-700"
+                      className="text-emerald font-bold bg-navy-bg border-border-navy"
                     />
                   </div>
                   <input
@@ -586,28 +586,28 @@ export default function RentVsBuyPage() {
                     step={0.5}
                     value={rentInflation}
                     onChange={(e) => setRentInflation(Number(e.target.value))}
-                    className="w-full accent-emerald-500 cursor-pointer"
+                    className="w-full accent-emerald cursor-pointer"
                   />
                 </div>
               </div>
             </div>
 
             {/* ValarchiX 6-Engine Connect Action Banner */}
-            <div className="bg-slate-950 border border-emerald-900/60 rounded-2xl p-4 space-y-3">
-              <div className="text-xs font-bold text-emerald-400 uppercase">ValarchiX 6-Engine Connect</div>
-              <p className="text-xs text-slate-400">
+            <div className="bg-navy-bg border border-border-navy rounded-2xl p-4 space-y-3">
+              <div className="text-xs font-bold text-emerald uppercase">ValarchiX 6-Engine Connect</div>
+              <p className="text-xs text-muted-grey">
                 Project this home purchase decision into your Time Machine parallel universes or update your Financial DNA debt pillars.
               </p>
               <div className="flex flex-col sm:flex-row gap-2">
                 <a
                   href="/time-machine"
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs py-2 px-3 rounded-xl text-center transition"
+                  className="flex-1 bg-emerald hover:bg-emerald/90 text-slate-950 font-bold text-xs py-2 px-3 rounded-xl text-center transition"
                 >
                   Simulate in Time Machine
                 </a>
                 <a
                   href="/financial-dna"
-                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs py-2 px-3 rounded-xl text-center transition"
+                  className="flex-1 bg-navy-card hover:bg-navy-light text-heading font-bold text-xs py-2 px-3 rounded-xl text-center transition border border-border-navy"
                 >
                   Update Financial DNA
                 </a>
