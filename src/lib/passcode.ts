@@ -151,12 +151,42 @@ export function getPrimaryFirstName(nameOrEmail?: string | null): string {
   return "Investor";
 }
 
+// In-memory runtime session unlock state.
+// Resets to false whenever the browser page is refreshed/reloaded,
+// guaranteeing that refresh ALWAYS asks for PIN first when lock is enabled.
+let isSessionUnlockedInMemory = false;
+
+export function isAppUnlockedInSession(): boolean {
+  return isSessionUnlockedInMemory;
+}
+
+export function setAppUnlockedInSession(unlocked: boolean): void {
+  isSessionUnlockedInMemory = unlocked;
+  if (!unlocked && typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem("valarchix_session_unlocked");
+      const activeUserId = localStorage.getItem("valarchix_active_user_id");
+      if (activeUserId) {
+        sessionStorage.removeItem(getUserSessionUnlockedKey(activeUserId));
+      }
+    } catch {
+      // ignore
+    }
+  }
+}
+
 /**
- * Synchronously checks if the app is currently locked by inspecting browser storage immediately (0.001ms latency)
- * Only locks if the user has explicitly enabled app lock in their settings and has a PIN.
+ * Synchronously checks if the app is currently locked by inspecting storage immediately (0.001ms latency).
+ * If the user has explicitly enabled PIN lock and has not unlocked in the current page session, returns true.
+ * This guarantees that on page refresh or initial visit, the PIN screen appears FIRST.
  */
 export function checkIsAppLockedSync(): boolean {
   if (typeof window === "undefined") return false;
+
+  // If already unlocked in the active in-memory session, do not lock
+  if (isSessionUnlockedInMemory) {
+    return false;
+  }
 
   try {
     const activeUserId = localStorage.getItem("valarchix_active_user_id");
@@ -171,10 +201,7 @@ export function checkIsAppLockedSync(): boolean {
         localStorage.getItem("valarchix_app_pin");
 
       if (userPin && isLockExplicitlyEnabled) {
-        const isUnlocked =
-          sessionStorage.getItem(getUserSessionUnlockedKey(activeUserId)) === "true" ||
-          sessionStorage.getItem("valarchix_session_unlocked") === "true";
-        return !isUnlocked;
+        return true;
       }
     }
 
@@ -182,8 +209,7 @@ export function checkIsAppLockedSync(): boolean {
     const legacyPin = localStorage.getItem("valarchix_app_pin");
     const isLegacyLockEnabled = localStorage.getItem("valarchix_app_lock_enabled") === "true";
     if (legacyPin && isLegacyLockEnabled) {
-      const isLegacyUnlocked = sessionStorage.getItem("valarchix_session_unlocked") === "true";
-      return !isLegacyUnlocked;
+      return true;
     }
   } catch (err) {
     console.warn("Sync lock check error:", err);
@@ -198,17 +224,18 @@ export function checkIsAppLockedSync(): boolean {
 export function disableAllPasscodes(): void {
   if (typeof window === "undefined") return;
   try {
+    setAppUnlockedInSession(true);
     localStorage.setItem("valarchix_app_lock_disabled_by_user", "true");
     localStorage.setItem("valarchix_vault_unlocked", "true");
     localStorage.removeItem("valarchix_app_pin");
     localStorage.removeItem("valarchix_app_lock_enabled");
-    sessionStorage.setItem("valarchix_session_unlocked", "true");
+    sessionStorage.removeItem("valarchix_session_unlocked");
 
     const activeUserId = localStorage.getItem("valarchix_active_user_id");
     if (activeUserId) {
       localStorage.removeItem(getUserPasscodeKey(activeUserId));
       localStorage.removeItem(getUserLockEnabledKey(activeUserId));
-      sessionStorage.setItem(getUserSessionUnlockedKey(activeUserId), "true");
+      sessionStorage.removeItem(getUserSessionUnlockedKey(activeUserId));
     }
 
     // Remove any user-specific pin keys

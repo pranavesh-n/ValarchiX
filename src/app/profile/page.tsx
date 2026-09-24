@@ -47,7 +47,8 @@ import {
   getUserLockEnabledKey,
   getUserSessionUnlockedKey,
   getPrimaryFirstName,
-  setCachedUserInfo
+  setCachedUserInfo,
+  setAppUnlockedInSession
 } from "@/lib/passcode";
 
 const KEYPAD_DIGITS = [
@@ -549,6 +550,7 @@ export default function ProfilePage() {
         // Backwards compatibility keys
         localStorage.setItem("valarchix_app_pin", hashed);
         sessionStorage.setItem("valarchix_session_unlocked", "true");
+        setAppUnlockedInSession(true);
         setCachedUserInfo(session.user);
 
         setPasscodeEnabled(true);
@@ -616,6 +618,7 @@ export default function ProfilePage() {
         }
         localStorage.removeItem("valarchix_app_pin");
         sessionStorage.removeItem("valarchix_session_unlocked");
+        setAppUnlockedInSession(false);
         setPasscodeEnabled(false);
         showToast("App Passcode Lock disabled");
       } else {
