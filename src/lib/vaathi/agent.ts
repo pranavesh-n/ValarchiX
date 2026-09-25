@@ -6,38 +6,70 @@ import { VAATHI_SYSTEM_PROMPT } from "./system-prompt";
 import { vaathiTools } from "./tools";
 import { formatOptimizedMemory } from "./memory";
 
+export const DEPRECATED_GROQ_MODELS: Record<string, string> = {
+  "llama-3.1-8b-instant": "qwen/qwen3.8-27b",
+  "llama-3.3-70b-versatile": "qwen/qwen3.8-27b",
+  "llama-3.3-70b-specdec": "qwen/qwen3.8-27b",
+  "llama3-70b-8192": "qwen/qwen3.8-27b",
+  "llama3-8b-8192": "qwen/qwen3.8-27b",
+  "llama-3.2-1b-preview": "qwen/qwen3.8-27b",
+  "llama-3.2-3b-preview": "qwen/qwen3.8-27b",
+  "llama-3.2-11b-vision-preview": "qwen/qwen3.8-27b",
+  "llama-3.2-90b-vision-preview": "qwen/qwen3.8-27b",
+  "openai/gpt-oss-20b": "qwen/qwen3.8-27b",
+  "openai/gpt-oss-120b": "qwen/qwen3.8-27b",
+  "openai/gpt-oss-safeguard-20b": "qwen/qwen3.8-27b",
+};
+
+export const DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b";
+
+export function resolveGroqModel(model?: string): string {
+  const chosen = model || process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL;
+  return DEPRECATED_GROQ_MODELS[chosen] || chosen;
+}
+
+export function isGeminiModel(modelName?: string): boolean {
+  return !!modelName && (modelName.startsWith("gemini") || modelName.includes("google"));
+}
+
 /**
  * Create the valarchi Vaathi agent
- * Supports Groq (llama-3.3-70b-versatile) and Google Gemini with ReAct pattern + 25 calculator tools
+ * Tier 1: Groq (qwen/qwen3.8-27b)
+ * Tier 2: Google Gemini (gemini-flash-latest)
  */
 export function createVaathiAgent(overrideModel?: string) {
   const groqApiKey = process.env.GROQ_API_KEY;
   const googleApiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
-  if (groqApiKey && (!overrideModel || overrideModel.startsWith("llama") || overrideModel.startsWith("mixtral"))) {
-    const groqModel = overrideModel || process.env.GROQ_MODEL || "llama-3.1-8b-instant";
-    const groqLlm = new ChatGroq({
-      model: groqModel,
-      apiKey: groqApiKey,
-      temperature: 0.5,
-      maxTokens: 1024,
+  if (isGeminiModel(overrideModel) || (!groqApiKey && googleApiKey)) {
+    const modelName = overrideModel || process.env.GEMINI_MODEL || "gemini-flash-latest";
+    const geminiLlm = new ChatGoogleGenerativeAI({
+      model: modelName,
+      apiKey: googleApiKey,
+      temperature: 0.7,
+      maxOutputTokens: 2048,
     });
-    return createReactAgent({ llm: groqLlm, tools: vaathiTools.slice(0, 8) });
+    return createReactAgent({ llm: geminiLlm, tools: vaathiTools });
   }
 
-  const modelName = overrideModel || process.env.GEMINI_MODEL || "gemini-flash-latest";
-  const geminiLlm = new ChatGoogleGenerativeAI({
-    model: modelName,
-    apiKey: googleApiKey,
-    temperature: 0.7,
-    maxOutputTokens: 2048,
+  if (!groqApiKey) {
+    throw new Error("No AI API key found. Please configure GROQ_API_KEY or GOOGLE_API_KEY.");
+  }
+
+  const groqModel = resolveGroqModel(overrideModel);
+  const groqLlm = new ChatGroq({
+    model: groqModel,
+    apiKey: groqApiKey,
+    temperature: 0.5,
+    maxTokens: 2048,
   });
-  return createReactAgent({ llm: geminiLlm, tools: vaathiTools });
+  return createReactAgent({ llm: groqLlm, tools: vaathiTools.slice(0, 8) });
 }
 
 /**
- * Execute Vaathi using single-pass 1-call LLM execution (80% API call reduction)
- * Exactly 1 API call per user question just like Sikkanam!
+ * Execute Vaathi using single-pass 1-call LLM execution
+ * Tier 1: Groq models (Primary sub-second inference)
+ * Tier 2: Google Gemini (Failover secondary tier)
  */
 export async function executeSinglePassVaathi(
   messages: Array<{ role: string; content: string }>,
@@ -48,15 +80,10 @@ export async function executeSinglePassVaathi(
 
   let llm: any;
 
-  if (groqApiKey && (!overrideModel || overrideModel.startsWith("llama") || overrideModel.startsWith("mixtral"))) {
-    const groqModel = overrideModel || process.env.GROQ_MODEL || "llama-3.1-8b-instant";
-    llm = new ChatGroq({
-      model: groqModel,
-      apiKey: groqApiKey,
-      temperature: 0.5,
-      maxTokens: 1024,
-    }).bindTools(vaathiTools.slice(0, 8));
-  } else if (googleApiKey) {
+  if (isGeminiModel(overrideModel) || (!groqApiKey && googleApiKey)) {
+    if (!googleApiKey) {
+      throw new Error("GOOGLE_API_KEY is not configured in environment variables.");
+    }
     const modelName = overrideModel || process.env.GEMINI_MODEL || "gemini-flash-latest";
     llm = new ChatGoogleGenerativeAI({
       model: modelName,
@@ -64,8 +91,16 @@ export async function executeSinglePassVaathi(
       temperature: 0.7,
       maxOutputTokens: 2048,
     }).bindTools(vaathiTools);
+  } else if (groqApiKey) {
+    const groqModel = resolveGroqModel(overrideModel);
+    llm = new ChatGroq({
+      model: groqModel,
+      apiKey: groqApiKey,
+      temperature: 0.5,
+      maxTokens: 2048,
+    }).bindTools(vaathiTools.slice(0, 8));
   } else {
-    throw new Error("No AI API key found. Please add GROQ_API_KEY or GOOGLE_API_KEY.");
+    throw new Error("No AI API key found. Please configure GROQ_API_KEY or GOOGLE_API_KEY.");
   }
 
   // Token-Optimized Memory: Sliding Window (Last 4 Messages) + Key Entity Extraction

@@ -59,7 +59,7 @@ Every engine, calculator, and diagnostic tool in ValarchiX is strictly segregate
 * **Single-Pass 1-Call LLM Execution**: Sub-second (~0.6s) response latency by eliminating multi-turn tool-calling overhead, reducing API token costs by **80%**.
 * **0-Token Pre-LLM Guardrail Interceptor**: Edge-level classifier that filters non-financial or malicious prompts at 0 token cost and 0ms latency.
 * **Zero-Latency Semantic Response Cache**: Instant responses for frequently asked financial queries with 0ms network lag.
-* **Zero-Downtime Multi-Model Failover**: Seamless automatic failover across **Llama 3.1 8B Instant**, **Llama 3.3 70B Versatile**, and **Google Gemini Flash**.
+* **Zero-Downtime Multi-Model Failover**: Seamless tiered failover — **1st: Groq** (Qwen 3.8 27B @ ~0.10s ultra-low latency) ➔ **2nd: Google Gemini** (Gemini Flash).
 * **25+ Bound Financial Solvers**: Directly bound to internal mathematical solvers (SIP, FIRE, CAGR, XIRR, Union Budget Slabs) with fallback parameter safeguards against `₹0` output anomalies.
 
 ### 7. 📈 Brent-Dekker Numerical XIRR Engine
@@ -160,7 +160,7 @@ Every engine, calculator, and diagnostic tool in ValarchiX is strictly segregate
 * **Vaathi (வாத்தி) Financial AI Mentor**: Single-Pass Sub-Second LLM Execution (~0.6s latency) reducing token overhead by 80%.
 * **0-Token Pre-LLM Guardrail Interceptor**: Edge-level classifier rejecting non-financial queries at 0 token cost.
 * **Zero-Latency Semantic Response Cache**: Instantaneous responses for common financial definitions.
-* **Resilient Multi-Model Failover**: Automatic routing across Llama 3.1 8B Instant, Llama 3.3 70B, and Google Gemini Flash.
+* **Resilient Multi-Model Failover**: Automatic routing across 1st Groq (Qwen 3.8 27B) and 2nd Google Gemini (Gemini Flash).
 * **25+ Bound Financial Solvers**: Custom mathematical solvers with parameter safeguards against `₹0` anomalies.
 
 ### 🪙 v1.0.0 (Genesis) — February 2026
@@ -179,7 +179,7 @@ Every engine, calculator, and diagnostic tool in ValarchiX is strictly segregate
 * **Authentication & Vault**: [Supabase](https://supabase.com/) (Google OAuth 2.0, session recovery, AES-GCM 256-bit encrypted client-side storage)
 * **PWA & Offline Engine**: Service Workers (`/sw.js`), Web App Manifest, real-time `getInstalledRelatedApps` & `beforeinstallprompt` status tracking
 * **AI Orchestration**: [LangChain](https://www.langchain.com/) & custom Single-Pass Tool-Binding Pipeline
-* **LLM Engine**: Groq ([Llama 3.1 8B Instant](https://groq.com/) / Llama 3.3 70B) & Google Gemini ([Gemini Flash](https://ai.google.dev/)) with dynamic automated failover
+* **LLM Engine**: Multi-tiered AI pipeline with **1st: Groq** ([Qwen 3.8 27B](https://groq.com/) @ ~0.10s latency) ➔ **2nd: Google Gemini** ([Gemini Flash](https://ai.google.dev/)) with dynamic automated failover
 * **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) (Universal WCAG AA compliance, dark/light theme tokens, responsive layouts)
 * **Mathematical Solvers**: Custom Brent-Dekker numerical solver, quarterly compounding algorithms, and actuarial cash flow engines
 * **Charts**: [Recharts](https://recharts.org/) (smooth vector graphs, rebased line charts, dynamic tooltips, and legends)

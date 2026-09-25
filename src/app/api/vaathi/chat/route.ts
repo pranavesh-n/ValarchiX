@@ -37,11 +37,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // PIPELINE STEP 3: Single-Pass 1-Call LLM Execution (80% Token & API Call Reduction)
+    // PIPELINE STEP 3: Multi-Tier Failover (1st: Groq Qwen, 2nd: Google Gemini)
     const candidateModels = [
-      "llama-3.1-8b-instant",
-      "llama-3.3-70b-versatile",
-      "gemini-flash-latest"
+      // 1st: Groq Models (Ultra-fast inference & reasoning)
+      process.env.GROQ_MODEL || "qwen/qwen3.8-27b",
+      // 2nd: Google Gemini (Secondary resilient enterprise failover)
+      process.env.GEMINI_MODEL || "gemini-flash-latest"
     ];
 
     let result: { content: string; toolsUsed: string[] } | null = null;
@@ -53,9 +54,17 @@ export async function POST(req: NextRequest) {
         break; // Success!
       } catch (err: any) {
         lastErr = err;
-        const is429 = err.status === 429 || String(err).includes("429") || String(err).includes("Rate limit") || String(err).includes("Quota exceeded");
-        if (is429) {
-          console.warn(`429 Rate limit on ${modelName}, trying fallback model...`);
+        const isTransientOrUnavailable =
+          err.status === 429 ||
+          err.status === 404 ||
+          String(err).includes("429") ||
+          String(err).includes("Rate limit") ||
+          String(err).includes("Quota exceeded") ||
+          String(err).includes("model_not_found") ||
+          String(err).includes("does not exist") ||
+          String(err).includes("decommissioned");
+        if (isTransientOrUnavailable) {
+          console.warn(`Model ${modelName} unavailable (${err.message || err}), trying fallback model...`);
           continue;
         }
         throw err;
