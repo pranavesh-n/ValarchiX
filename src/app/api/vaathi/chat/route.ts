@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { evaluatePreLLMGuardrail } from "@/lib/vaathi/guardrails";
 import { checkSemanticCache } from "@/lib/vaathi/cache";
-import { executeSinglePassVaathi } from "@/lib/vaathi/agent";
+import { executeSinglePassVaathi, resolveGroqModel } from "@/lib/vaathi/agent";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     // PIPELINE STEP 3: Multi-Tier Failover (1st: Groq Qwen, 2nd: Google Gemini)
     const candidateModels = [
       // 1st: Groq Models (Ultra-fast inference & reasoning)
-      process.env.GROQ_MODEL || "qwen/qwen3.8-27b",
+      resolveGroqModel(process.env.GROQ_MODEL),
       // 2nd: Google Gemini (Secondary resilient enterprise failover)
       process.env.GEMINI_MODEL || "gemini-flash-latest"
     ];
